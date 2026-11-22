@@ -21,6 +21,15 @@ The installer payload and package repository must be assembled from the same
 `verified-stack.json`. Publishing them independently would allow a fresh image
 and an updated system to diverge.
 
+## Image build
+
+`scripts/build-rom3-image.sh` checks out the exact upstream `alarm-aurora`
+commit, applies
+`patches/0001-build-image-add-rom3-overlay.patch`, authenticates the ROM3 key
+inside the image, and installs the signed `rom3-j613-release` package set.
+
+It intentionally supports only `arch-kde` and requires a native aarch64 host.
+
 ## Later work
 
 ROM3 branding, a dedicated profile identifier or installer UI changes should

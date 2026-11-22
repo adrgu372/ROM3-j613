@@ -19,6 +19,8 @@ jobs:
         run: python3 scripts/validate-installer-plan.py
       - name: Validate shell scripts
         run: bash -n scripts/*.sh
+      - name: Validate image patch
+        run: scripts/check-image-patch.sh
       - name: Validate PKGBUILDs
         run: |
           for package in packages/*/PKGBUILD; do

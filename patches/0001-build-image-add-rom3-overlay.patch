@@ -1,0 +1,81 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: ROM3-j613 <packages@rom3-j613.invalid>
+Date: Sun, 22 Nov 2026 14:00:00 +0200
+Subject: [PATCH] build-image: install the ROM3-j613 compatibility overlay
+
+Build only the J613 KDE image, authenticate the ROM3 package key, and add
+the signed ROM3 package feed before the Aurora testing feed. The image uses
+the existing ALARM layout and Aurora distribution profile while installing
+the exact tested J613 package set.
+---
+ scripts/build-image | 43 +++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 38 insertions(+), 5 deletions(-)
+
+--- a/scripts/build-image
++++ b/scripts/build-image
+@@ -4,8 +4,12 @@
+ root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+ source "$root/scripts/testlib.sh"
+ # An image serves every Mac, whichever one builds it.
++rom3_feed=${ROM3_FEED:-https://github.com/adrgu372/ROM3-j613/releases/latest/download}
++rom3_key_url=${ROM3_KEY_URL:-https://raw.githubusercontent.com/adrgu372/ROM3-j613/main/repo/keys/rom3-j613-packages.pub}
++rom3_fingerprint=${ROM3_FINGERPRINT:-FA80FF234BCDF36211649321EB9845C8BAA89A4A}
+ export AURORA_DEVICE_TREE_COMPATIBLE=/nonexistent
+-profile=${1:?arch-kde, arch-gnome or arch-minimal required}
++profile=${1:?arch-kde required}
++[[ $profile == arch-kde ]] || { echo 'ROM3-j613 supports only arch-kde' >&2; exit 1; }
+ tag=${2:?immutable signed Aurora testing snapshot required}
+ # The update channel the installed system follows afterwards.
+ channel=${3:-testing}
+@@ -76,6 +80,24 @@
+ chroot "$mountroot" pacman-key --lsign-key 12CE6799A94A3F1B5DDFFE88F576553597FB8FEB
+ chroot "$mountroot" pacman-key --add /tmp/aurora-alarm.asc
+ chroot "$mountroot" pacman-key --lsign-key "$(cat "$root/keys/fingerprint.txt")"
++python3 - "$rom3_key_url" "$mountroot/tmp/rom3-j613-packages.pub" <<'PY'
++import sys
++import urllib.request
++urllib.request.urlretrieve(sys.argv[1], sys.argv[2])
++PY
++chroot "$mountroot" pacman-key --add /tmp/rom3-j613-packages.pub
++chroot "$mountroot" pacman-key --lsign-key "$rom3_fingerprint"
++install -Dm644 /dev/stdin "$mountroot/etc/pacman.d/rom3-j613-mirrorlist" <<EOF
++Server = $rom3_feed
++EOF
++install -Dm644 /dev/stdin "$mountroot/etc/pacman.d/rom3-j613.conf" <<'EOF'
++[rom3-j613]
++SigLevel = Required DatabaseOptional
++Include = /etc/pacman.d/rom3-j613-mirrorlist
++EOF
++if ! grep -q '^Include = /etc/pacman.d/rom3-j613.conf$' "$mountroot/etc/pacman.conf"; then
++  printf '\nInclude = /etc/pacman.d/rom3-j613.conf\n' >> "$mountroot/etc/pacman.conf"
++fi
+ python3 - "$root/scripts" "$mountroot/etc/pacman.conf" "$tag" "$edge_tag" <<'PY'
+ from pathlib import Path
+ import sys
+@@ -92,7 +114,7 @@
+ # where a Mac has four or more, schedutil kept); Aurora's `steam` starts every
+ # game under it.
+ case $profile in
+-  arch-kde) packages+=(kwin-aurora iio-sensor-proxy-aurora plasma-meta plasma-workspace-wallpapers kinfocenter plasma-login-manager konsole dolphin plasma-nm firefox xdg-desktop-portal-kde plasma-setup plymouth plymouth-theme-aurora gamemode aurora-gamemode);;
++  arch-kde) packages+=(kwin iio-sensor-proxy plasma-meta plasma-workspace-wallpapers kinfocenter plasma-login-manager konsole dolphin plasma-nm firefox xdg-desktop-portal-kde plasma-setup plymouth plymouth-theme-aurora gamemode aurora-gamemode rom3-j613-release);;
+   arch-gnome) packages+=(mutter-aurora gnome-settings-daemon-aurora iio-sensor-proxy-aurora gnome-shell gdm gnome-control-center nautilus gnome-terminal gnome-keyring gvfs firefox xdg-desktop-portal-gnome gnome-initial-setup gnome-backgrounds plymouth plymouth-theme-aurora gamemode aurora-gamemode);;
+ esac
+ # GitHub release downloads sometimes stall; finished packages stay cached.
+@@ -101,6 +123,9 @@
+   (( attempt++ < 3 ))
+   sleep 30
+ done
++chroot "$mountroot" rom3-j613-check
++chroot "$mountroot" pacman -Q rom3-j613-release rom3-j613-meta rom3-j613-guard rom3-j613-keyring
++chroot "$mountroot" pacman -Q kwin pipewire wireplumber speakersafetyd aurora-audio
+ # A fresh Arch root generates no locale, so sessions ran in the C locale and
+ # gnome-terminal refused to start. Generate a UTF-8 default; first-boot
+ # setup may change the language afterwards.
+@@ -248,6 +273,7 @@
+ sys.path.insert(0, sys.argv[1])
+ import edgelib
+ p=Path(sys.argv[2])
++# The ROM3 include is intentionally retained by seal().
+ p.write_text(edgelib.seal(p.read_text(), sys.argv[3], sys.argv[4] or None, sys.argv[5]))
+ PY
+ if [[ -n $edge_tag ]]; then

@@ -42,6 +42,7 @@ system; these boxes will be checked as their repeatability evidence is added.
 ## Phase 3: installer payload
 
 - [x] Define the J613-only installer profile and payload plan.
+- [x] Add the upstream image build patch and native build wrapper.
 - [ ] Build an Arch ARM KDE image from the verified ROM3 stack.
 - [ ] Add a signed catalog restricted to `apple,j613`.
 - [ ] Reuse the existing Aurora Installer `arch-kde` profile.
