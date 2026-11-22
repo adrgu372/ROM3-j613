@@ -21,6 +21,10 @@ The script:
 7. installs `rom3-j613-release`, which pulls the exact meta and guard packages;
 8. verifies the installed package set.
 
+The two pacman configuration files are created before the repository can be
+used, then adopted by `rom3-j613-release`. The package install therefore uses
+an overwrite exception limited to those exact ROM3 paths.
+
 It deliberately does not run `pacman -Syu`.
 
 Expected signing fingerprint:

@@ -47,7 +47,10 @@ EOF
 fi
 
 pacman -Sy --noconfirm
-pacman -S --needed --noconfirm rom3-j613-release
+pacman -S --needed --noconfirm \
+    --overwrite /etc/pacman.d/rom3-j613.conf \
+    --overwrite /etc/pacman.d/rom3-j613-mirrorlist \
+    rom3-j613-release
 
 echo
 /usr/bin/rom3-j613-check
