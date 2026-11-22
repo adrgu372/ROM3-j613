@@ -1,0 +1,27 @@
+diff --git a/macOS/Packaging/build-app.sh b/macOS/Packaging/build-app.sh
+index 8436458..6292883 100755
+--- a/macOS/Packaging/build-app.sh
++++ b/macOS/Packaging/build-app.sh
+@@ -401,7 +401,8 @@ codesign --force --sign "$signing_identity" "${timestamp_arguments[@]}" \
+   --options runtime --identifier "$restore_image_identifier" "$restore_image_path"
+ source "$script_directory/code-identity.sh"
+ if [[ $signing_identity == "-" ]]; then
+-  restore_image_requirement=$(installer_code_requirement "$restore_image_path" "$restore_image_identifier")
++  restore_image_requirement=$(installer_code_requirement "$restore_image_path" "$restore_image_identifier") \
++    || fail "cannot determine the exact signed restore image identity"
+ else
+   restore_image_requirement="anchor apple generic and identifier \"$restore_image_identifier\" and certificate 1[field.1.2.840.113635.100.6.2.6] and certificate leaf[field.1.2.840.113635.100.6.1.13] and certificate leaf[subject.OU] = \"$team_identifier\""
+ fi
+diff --git a/macOS/Packaging/code-identity.sh b/macOS/Packaging/code-identity.sh
+index 016ba4a..a5f4cbb 100644
+--- a/macOS/Packaging/code-identity.sh
++++ b/macOS/Packaging/code-identity.sh
+@@ -5,7 +5,7 @@ installer_code_hash() {
+   /usr/bin/codesign --verify --strict "$1" || return 1
+   details=$(/usr/bin/codesign --display --verbose=4 "$1" 2>&1) || return 1
+   digest=$(printf '%s\n' "$details" | /usr/bin/sed -n 's/^CDHash=//p')
+-  [[ $digest =~ ^[0-9a-f]{40}$ ]] || return 1
++  [[ $digest =~ ^([0-9a-f]{40}|[0-9a-f]{64})$ ]] || return 1
+   printf '%s\n' "$digest"
+ }
+ 
