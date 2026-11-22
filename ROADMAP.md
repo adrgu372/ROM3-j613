@@ -20,20 +20,23 @@
   tooling.
 - [x] Validate package signing, database signing and keyring generation with
   ephemeral keys.
-- [ ] Create the ROM3 signing key outside the Git tree.
-- [ ] Build the initial `rom3-j613` pacman repository.
-- [ ] Sign packages and repository databases.
-- [ ] Publish immutable snapshots.
-- [ ] Test install and reinstall from the signed feed.
+- [x] Create the ROM3 signing key outside the Git tree.
+- [x] Build the initial `rom3-j613` pacman repository.
+- [x] Sign packages and repository databases.
+- [x] Publish immutable snapshots.
+- [x] Test install and reinstall from the signed feed.
 
 ## Phase 2: fail-closed update guard
 
-- [ ] Implement `rom3-j613-update`.
-- [ ] Read and enforce `verified-stack.json`.
-- [ ] Refuse unqualified changes to quarantined packages.
+- [x] Implement `rom3-j613-update`.
+- [x] Read and enforce `verified-stack.json`.
+- [x] Refuse unqualified changes to quarantined packages.
 - [ ] Create a Btrfs snapshot and ESP backup before sensitive changes.
 - [ ] Generate Stage 2 as a separate candidate.
 - [ ] Require cold-boot verification after publishing.
+
+The initial signed feed has since been published and attached to the live J613
+system; these boxes will be checked as their repeatability evidence is added.
 
 ## Phase 3: installer payload
 
