@@ -39,3 +39,20 @@ ROM3 Ed25519 catalog key and admits only `apple,j613`. It cannot be used with an
 installer binary that trusts the upstream Aurora catalog root; a ROM3 installer
 build must bundle `installer/keys/catalog-signing.ed25519.pub`.
 
+## Technical-preview macOS build
+
+On a macOS host with Xcode and Swift 6.2 or newer, the preparation script pins
+the upstream installer revision, applies the ROM3 identity and trust root,
+restricts its model manifest to `apple,j613`, downloads the signed catalog, and
+builds an ad-hoc developer app:
+
+```bash
+ROM3_INSTALLER_OUTPUT="$HOME/ROM3-j613-installer-output" \
+  ./scripts/build-rom3-installer-macos.sh
+```
+
+This produces a technical-preview package. It is not Developer ID signed or
+notarized and is not a production download. A public installer build still
+requires an Apple Developer ID identity, notarization and a clean-install
+qualification on this board.
+

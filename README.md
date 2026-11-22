@@ -113,6 +113,11 @@ The release also publishes the J613-only schema-5 catalog on the `testing`
 channel. The upstream Aurora installer does not trust this catalog; a ROM3
 installer build must bundle the ROM3 catalog root.
 
+`scripts/build-rom3-installer-macos.sh` prepares that installer on macOS from
+the pinned upstream revision. It produces an ad-hoc technical-preview build;
+Developer ID signing, notarization and clean-install qualification remain
+separate release gates.
+
 See [ROADMAP.md](ROADMAP.md).
 
 ## Safety

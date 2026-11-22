@@ -2,11 +2,20 @@
   "schema_version": 3,
   "default_channel": "testing",
   "channels": {
+    "stable": {
+      "catalog_url": "https://github.com/adrgu372/ROM3-j613/releases/download/image-20261122.5/catalog-stable.signed.json"
+    },
+    "rc": {
+      "catalog_url": "https://github.com/adrgu372/ROM3-j613/releases/download/image-20261122.5/catalog-rc.signed.json"
+    },
     "testing": {
       "catalog_url": "https://github.com/adrgu372/ROM3-j613/releases/download/image-20261122.5/catalog.signed.json"
+    },
+    "edge": {
+      "catalog_url": "https://github.com/adrgu372/ROM3-j613/releases/download/image-20261122.5/catalog-edge.signed.json"
     }
   },
   "trust_root_fingerprint": "sha256:2b7e847f34019f26eb9fc0dbd675611446357078f3057434be9491ba97c4404c",
-  "helper_mach_service_name": "org.aurorasilicon.installer.helper",
-  "helper_code_signing_requirement": "identifier \"org.aurorasilicon.installer.helper\""
+  "helper_mach_service_name": "org.rom3j613.installer.helper",
+  "helper_code_signing_requirement": "identifier \"org.rom3j613.installer.helper\""
 }

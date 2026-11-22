@@ -9,6 +9,8 @@
   ],
   "catalog_status": "published-testing",
   "payload_status": "published",
-  "signing_status": "signed-project-key"
+  "catalog_signing_status": "signed-project-ed25519",
+  "installer_build_status": "technical-preview-script-ready",
+  "installer_signing_status": "developer-id-required"
 }
 

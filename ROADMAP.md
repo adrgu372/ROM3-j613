@@ -46,7 +46,7 @@ system; these boxes will be checked as their repeatability evidence is added.
 - [x] Build an Arch ARM KDE image from the verified ROM3 stack.
 - [x] Add a signed catalog restricted to `apple,j613`.
 - [x] Reuse the existing Aurora Installer `arch-kde` profile.
-- [ ] Replace only the payload and trust metadata initially.
+- [x] Replace only the payload and trust metadata initially.
 - [ ] Test clean install, first boot, cold boot and recovery.
 
 ## Phase 4: release
