@@ -36,7 +36,7 @@ Built by
 on the macOS 26 arm64 runner with Xcode 26.2.
 
 ```text
-fde885920ecd110179c6133d23460d9d1e9ffe015e0770dc93f9bf6099419ef8  rom3-installer-output/ROM3-j613-Installer-0.1.0.pkg
+fde885920ecd110179c6133d23460d9d1e9ffe015e0770dc93f9bf6099419ef8  ROM3-j613-Installer-0.1.0.pkg
 36d6ae48325f49c90de59474b9229d1549ace0c6f752bb6fbaa28455ef597b5f  ROM3-j613-Installer-0.1.0.app.zip
 ```
 
