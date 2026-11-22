@@ -11,6 +11,7 @@ alsa-ucm-conf-aurora
 alsa-utils-aurora
 bankstown
 lsp-plugins-lv2
+spandsp
 speakerguardd
 speakersafetyd
 speakersafetyd-aurora-profiles

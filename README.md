@@ -94,9 +94,9 @@ update guard and initial local test packages now exist.
 
 The signed package feed is public:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/stable-20261122.2
+https://github.com/adrgu372/ROM3-j613/releases/tag/stable-20261122.4
 
-The snapshot contains all 25 direct sensitive dependencies of the meta-package.
+The snapshot contains all 27 direct sensitive dependencies of the meta-package.
 There is no ROM3 installer payload yet.
 
 See [ROADMAP.md](ROADMAP.md).

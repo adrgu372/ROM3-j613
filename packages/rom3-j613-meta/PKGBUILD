@@ -1,6 +1,6 @@
 pkgname=rom3-j613-meta
 pkgver=1
-pkgrel=3
+pkgrel=4
 pkgdesc='Exact tested package set for ROM3-j613'
 arch=('any')
 url='https://github.com/adrgu372/ROM3-j613'
@@ -19,6 +19,7 @@ depends=(
   'alsa-utils-aurora=1.2.16-1'
   'bankstown=1.1.0-1'
   'lsp-plugins-lv2=1.2.37-1'
+  'spandsp=0.0.6-7'
   'speakerguardd=0.1.12-4'
   'speakersafetyd=2.0.1-1'
   'speakersafetyd-aurora-profiles=1-1'
