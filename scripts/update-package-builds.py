@@ -16,7 +16,9 @@ def field(info: str, name: str) -> str:
     prefix = name + " "
     for line in info.splitlines():
         if line.startswith(prefix):
-            return line[len(prefix):].strip()
+            # pacman separates labels and values with whitespace and a colon.
+            # Split only once so epoch versions such as 1:1.6.10 stay intact.
+            return line.partition(":")[2].strip()
     raise SystemExit(f"missing {name} in package metadata")
 
 

@@ -22,7 +22,7 @@ Build only the J613 KDE image, preinstall and pin the exact tested ROM3 package 
  tag=${2:?immutable signed Aurora testing snapshot required}
  # The update channel the installed system follows afterwards.
  channel=${3:-testing}
-@@ -76,6 +81,45 @@
+@@ -76,6 +81,58 @@
  chroot "$mountroot" pacman-key --lsign-key 12CE6799A94A3F1B5DDFFE88F576553597FB8FEB
  chroot "$mountroot" pacman-key --add /tmp/aurora-alarm.asc
  chroot "$mountroot" pacman-key --lsign-key "$(cat "$root/keys/fingerprint.txt")"
@@ -33,12 +33,23 @@ Build only the J613 KDE image, preinstall and pin the exact tested ROM3 package 
 +PY
 +chroot "$mountroot" pacman-key --add /tmp/rom3-j613-packages.pub
 +chroot "$mountroot" pacman-key --lsign-key "$rom3_fingerprint"
-+python3 - "$rom3_manifest_url" "$rom3_feed" "$mountroot/var/cache/pacman/pkg" "$mountroot/tmp/rom3-ignore.txt" <<'PY'
++# Bootstrap the repository from a temporary include. The release package owns
++# the persistent files and installs them later in this transaction.
++install -Dm644 /dev/stdin "$mountroot/tmp/rom3-j613-bootstrap.conf" <<EOF
++[rom3-j613]
++SigLevel = Required DatabaseOptional
++Server = $rom3_feed
++EOF
++if ! grep -q '^Include = /tmp/rom3-j613-bootstrap.conf$' "$mountroot/etc/pacman.conf"; then
++  printf '\nInclude = /tmp/rom3-j613-bootstrap.conf\n' >> "$mountroot/etc/pacman.conf"
++fi
++chroot "$mountroot" pacman -Sy --noconfirm
++python3 - "$rom3_manifest_url" "$rom3_feed" "$mountroot/var/cache/pacman/pkg" "$mountroot/tmp/rom3-ignore.txt" "$mountroot/tmp/rom3-pinned-names.txt" <<'PY'
 +import json
 +import pathlib
 +import sys
 +import urllib.request
-+manifest_url, feed, cache, ignore_file = sys.argv[1:]
++manifest_url, feed, cache, ignore_file, names_file = sys.argv[1:]
 +with urllib.request.urlopen(manifest_url) as response:
 +    data = json.load(response)
 +cache_dir = pathlib.Path(cache)
@@ -51,33 +62,46 @@ Build only the J613 KDE image, preinstall and pin the exact tested ROM3 package 
 +        if not target.exists():
 +            urllib.request.urlretrieve(feed + "/" + item["file"] + suffix, target)
 +pathlib.Path(ignore_file).write_text("IgnorePkg = " + " ".join(names) + "\n")
++pathlib.Path(names_file).write_text("\n".join(names) + "\n")
 +PY
-+sed -i "/^\[options\]/r $mountroot/tmp/rom3-ignore.txt" "$mountroot/etc/pacman.conf"
 +pinned=()
 +for pkg in "$mountroot"/var/cache/pacman/pkg/*.pkg.tar.*; do
 +  [[ $pkg == *.sig ]] && continue
 +  pinned+=("/${pkg#"$mountroot"/}")
 +done
-+chroot "$mountroot" pacman -U -dd --noconfirm "${pinned[@]}"
-+# rom3-j613-release owns the repository files. Add the include only after its
-+# transaction so pacman does not reject pre-created overlay files.
++chroot "$mountroot" pacman -U --noconfirm "${pinned[@]}"
++sed -i '\|^Include = /tmp/rom3-j613-bootstrap.conf$|d' "$mountroot/etc/pacman.conf"
++rm -f "$mountroot/tmp/rom3-j613-bootstrap.conf"
++# Switch from the temporary bootstrap to the package-owned configuration.
++sed -i "s|^Server = .*|Server = $rom3_feed|" "$mountroot/etc/pacman.d/rom3-j613-mirrorlist"
 +if ! grep -q '^Include = /etc/pacman.d/rom3-j613.conf$' "$mountroot/etc/pacman.conf"; then
 +  printf '\nInclude = /etc/pacman.d/rom3-j613.conf\n' >> "$mountroot/etc/pacman.conf"
 +fi
-+sed -i "s|^Server = .*|Server = $rom3_feed|" "$mountroot/etc/pacman.d/rom3-j613-mirrorlist"
++sed -i "/^\[options\]/r $mountroot/tmp/rom3-ignore.txt" "$mountroot/etc/pacman.conf"
  python3 - "$root/scripts" "$mountroot/etc/pacman.conf" "$tag" "$edge_tag" <<'PY'
  from pathlib import Path
  import sys
-@@ -92,7 +141,7 @@
+@@ -92,7 +149,18 @@
  # where a Mac has four or more, schedutil kept); Aurora's `steam` starts every
  # game under it.
  case $profile in
 -  arch-kde) packages+=(kwin-aurora iio-sensor-proxy-aurora plasma-meta plasma-workspace-wallpapers kinfocenter plasma-login-manager konsole dolphin plasma-nm firefox xdg-desktop-portal-kde plasma-setup plymouth plymouth-theme-aurora gamemode aurora-gamemode);;
-+  arch-kde) packages+=(kwin iio-sensor-proxy plasma-meta plasma-workspace-wallpapers kinfocenter plasma-login-manager konsole dolphin plasma-nm firefox xdg-desktop-portal-kde plasma-setup plymouth plymouth-theme-aurora gamemode aurora-gamemode rom3-j613-release);;
++  arch-kde) packages+=(kwin iio-sensor-proxy plasma-meta plasma-workspace-wallpapers kinfocenter plasma-login-manager konsole dolphin plasma-nm firefox xdg-desktop-portal-kde plasma-setup plymouth plymouth-theme-aurora gamemode aurora-gamemode rom3-j613-release jack2);;
    arch-gnome) packages+=(mutter-aurora gnome-settings-daemon-aurora iio-sensor-proxy-aurora gnome-shell gdm gnome-control-center nautilus gnome-terminal gnome-keyring gvfs firefox xdg-desktop-portal-gnome gnome-initial-setup gnome-backgrounds plymouth plymouth-theme-aurora gamemode aurora-gamemode);;
  esac
++# IgnorePkg protects unqualified upgrades. Filter the pinned names from the
++# explicit package list too, otherwise -Syu would bypass that protection.
++declare -A rom3_pinned=()
++while IFS= read -r package; do
++  rom3_pinned["$package"]=1
++done < "$mountroot/tmp/rom3-pinned-names.txt"
++filtered=()
++for package in "${packages[@]}"; do
++  [[ -v rom3_pinned[$package] ]] || filtered+=("$package")
++done
++packages=("${filtered[@]}")
  # GitHub release downloads sometimes stall; finished packages stay cached.
-@@ -101,6 +150,9 @@
+@@ -101,6 +169,9 @@
    (( attempt++ < 3 ))
    sleep 30
  done
@@ -87,7 +111,7 @@ Build only the J613 KDE image, preinstall and pin the exact tested ROM3 package 
  # A fresh Arch root generates no locale, so sessions ran in the C locale and
  # gnome-terminal refused to start. Generate a UTF-8 default; first-boot
  # setup may change the language afterwards.
-@@ -248,6 +300,7 @@
+@@ -248,6 +316,7 @@
  sys.path.insert(0, sys.argv[1])
  import edgelib
  p=Path(sys.argv[2])
