@@ -1,0 +1,140 @@
+name: rom3-j613-installer-payload
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  assemble:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: Check out ROM3 metadata
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          path: rom3
+          persist-credentials: false
+
+      - name: Check out pinned installer assembly tools
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: aurora-silicon/aurora-installer
+          ref: a0b34140669f69e3a777c70480e60244a470d50f
+          path: upstream
+          persist-credentials: false
+
+      - name: Install assembly tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y unzip zstd
+
+      - name: Download verified image and Recovery app
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p input/image input/recovery
+          gh release download image-20261122.5 \
+            --repo adrgu372/ROM3-j613 \
+            --dir input/image \
+            --pattern 'arch-kde-filesystems.tar.zst.part.*' \
+            --pattern 'arch-kde-image.json' \
+            --pattern 'arch-kde-payload.json'
+          gh release download installer-preview-0.1.0 \
+            --repo adrgu372/ROM3-j613 \
+            --dir input/recovery \
+            --pattern 'ROM3-j613-Installer-0.1.0.app.zip'
+
+      - name: Reassemble and verify filesystem bundle
+        run: |
+          set -euo pipefail
+          archive=input/image/arch-kde-filesystems.tar.zst
+          cat input/image/arch-kde-filesystems.tar.zst.part.* > "$archive"
+          echo "0f01a50a55c3e48bd4fecfe45883b7f4e28e90328b88bf6a90a847e2a7951f68  $archive" \
+            | sha256sum -c -
+          mkdir input/bundle
+          tar --zstd -xf "$archive" -C input/bundle
+          unzip -q input/recovery/ROM3-j613-Installer-0.1.0.app.zip -d input/recovery/unpacked
+          recovery=input/recovery/unpacked/ROM3-j613\ Installer.app/Contents/Resources/RecoveryTemplate/ROM3-j613\ Installer.app
+          test -d "$recovery"
+          test -f "$recovery/Contents/Info.plist"
+
+      - name: Assemble native installer payload
+        run: |
+          set -euo pipefail
+          recovery="input/recovery/unpacked/ROM3-j613 Installer.app/Contents/Resources/RecoveryTemplate/ROM3-j613 Installer.app"
+          python3 upstream/macOS/scripts/assemble-distribution-payload.py \
+            --filesystems input/bundle \
+            --recovery-app "$recovery" \
+            --output output \
+            --release-id 20261122.6 \
+            2>&1 | tee installer-payload.log
+          payload=output/arch-kde-20261122.6.zip
+          metadata=output/installer-data-arch-kde.json
+          test -s "$payload"
+          test -s "$metadata"
+          test -s output/delivery.json
+          python3 - "$payload" "$metadata" <<'PY'
+          import json
+          import sys
+          import zipfile
+          from pathlib import Path
+
+          payload, metadata = map(Path, sys.argv[1:])
+          document = json.loads(metadata.read_text())
+          templates = document["os_list"]
+          assert len(templates) == 1
+          template = templates[0]
+          assert template["installation_profile"] == "arch-kde"
+          assert template["layout_kind"] == "alarm-btrfs-v1"
+          assert template["package"] == payload.name
+          with zipfile.ZipFile(payload) as archive:
+              assert archive.testzip() is None
+              names = set(archive.namelist())
+              for name in ("boot.img", "root.img", "esp/m1n1/boot.bin"):
+                  assert name in names, name
+          print("native installer metadata and ZIP inventory are valid")
+          PY
+
+      - name: Split payload for GitHub releases
+        run: |
+          set -euo pipefail
+          payload=output/arch-kde-20261122.6.zip
+          split -b 1073741824 -d -a 2 "$payload" "$payload.part."
+          test "$(find output -maxdepth 1 -name 'arch-kde-20261122.6.zip.part.*' | wc -l)" -ge 2
+          (
+            cd output
+            sha256sum arch-kde-20261122.6.zip.part.* \
+              installer-data-arch-kde.json delivery.json > SHA256SUMS
+            sha256sum -c SHA256SUMS
+          )
+
+      - name: Attest native installer payload
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8
+        with:
+          subject-path: output/arch-kde-20261122.6.zip
+
+      - name: Upload native installer payload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: rom3-j613-native-installer-payload
+          compression-level: 0
+          path: |
+            installer-payload.log
+            output/SHA256SUMS
+            output/arch-kde-20261122.6.zip.part.*
+            output/delivery.json
+            output/installer-data-arch-kde.json
+          retention-days: 14

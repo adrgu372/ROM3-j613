@@ -1,0 +1,270 @@
+diff --git a/macOS/Package.swift b/macOS/Package.swift
+index 8d0b389..2adff65 100644
+--- a/macOS/Package.swift
++++ b/macOS/Package.swift
+@@ -13,6 +13,10 @@ let omarchySettings: [SwiftSetting] =
+   ProcessInfo.processInfo.environment["AURORA_ENABLE_OMARCHY"] == "1"
+   ? [.define("AURORA_ENABLE_OMARCHY")] : []
+ 
++let rom3Settings: [SwiftSetting] =
++  ProcessInfo.processInfo.environment["AURORA_ROM3_J613"] == "1"
++  ? [.define("AURORA_ROM3_J613")] : []
++
+ let package = Package(
+   name: "AuroraAppleInstallerTrustCore",
+   platforms: [
+@@ -93,7 +97,7 @@ let package = Package(
+       name: "AuroraAppleInstallerTrustCore",
+       dependencies: ["AuroraInstallerSystem", "RecoveryAccountCore", "AuroraFirmware"],
+       path: "Sources/AuroraAppleInstaller",
+-      swiftSettings: localPayloadTestSettings + omarchySettings,
++      swiftSettings: localPayloadTestSettings + omarchySettings + rom3Settings,
+       plugins: ["AuroraInstallerIdentityPlugin"]
+     ),
+     .target(
+@@ -108,7 +112,8 @@ let package = Package(
+         "AuroraInstallerUXCore",
+         "RecoveryAccountCore",
+       ],
+-      path: "Sources/AuroraAppleInstallerApp"
++      path: "Sources/AuroraAppleInstallerApp",
++      swiftSettings: rom3Settings
+     ),
+     .executableTarget(
+       name: "AuroraAppleInstallerHelper",
+@@ -122,7 +127,7 @@ let package = Package(
+       ],
+       path: "Tests/AuroraAppleInstallerTrustCoreTests",
+       resources: [.copy("Fixtures")],
+-      swiftSettings: localPayloadTestSettings
++      swiftSettings: localPayloadTestSettings + rom3Settings
+     ),
+     .testTarget(
+       name: "AuroraInstallerLifecycleTests",
+@@ -132,7 +137,8 @@ let package = Package(
+     .testTarget(
+       name: "AuroraAppleInstallerAppTests",
+       dependencies: ["AuroraAppleInstallerApp"],
+-      path: "Tests/AuroraAppleInstallerAppTests"
++      path: "Tests/AuroraAppleInstallerAppTests",
++      swiftSettings: rom3Settings
+     ),
+     .testTarget(
+       name: "AuroraInstallerUXCoreTests",
+diff --git a/macOS/Sources/AuroraAppleInstaller/InstallationSelection.swift b/macOS/Sources/AuroraAppleInstaller/InstallationSelection.swift
+index 81e8436..378643f 100644
+--- a/macOS/Sources/AuroraAppleInstaller/InstallationSelection.swift
++++ b/macOS/Sources/AuroraAppleInstaller/InstallationSelection.swift
+@@ -3,28 +3,43 @@ import Foundation
+ public enum AuroraDistribution: String, CaseIterable, Codable, Identifiable, Sendable {
+   case fedora, arch, nixos, omarchy
+   public static var installable: [Self] {
++    #if AURORA_ROM3_J613
++      [.arch]
++    #else
+     #if AURORA_ENABLE_OMARCHY
+       allCases
+     #else
+       [.fedora, .arch, .nixos]
+     #endif
++    #endif
+   }
+ 
+   public var id: String { rawValue }
+   public var title: String {
+     switch self {
+     case .fedora: "Aurora Fedora Remix"
+-    case .arch: "Aurora Alarm"
++    case .arch:
++      #if AURORA_ROM3_J613
++        "ROM3-j613"
++      #else
++        "Aurora Alarm"
++      #endif
+     case .nixos: "Aurora NixOS"
+     case .omarchy: "Omarchy Aurora"
+     }
+   }
+   /// Names earlier installers gave these installations. Erase Linux and
+   /// reinstall still recognize them.
+-  public static let legacyTitles = ["Fedora Aurora Remix", "Aurora ALARM"]
++  public static let legacyTitles = [
++    "Fedora Aurora Remix", "Aurora ALARM", "Aurora Alarm", "ROM3-j613",
++  ]
+   public var supportsDesktop: Bool { true }
+   public var availableDesktops: [AuroraDesktop] {
++    #if AURORA_ROM3_J613
++      self == .arch ? [.kde] : []
++    #else
+     self == .omarchy ? [.hyprland] : [.kde, .gnome, .minimal]
++    #endif
+   }
+ }
+ 
+@@ -47,9 +62,14 @@ public struct AuroraInstallationSelection: Equatable, Codable, Sendable {
+   public var distribution: AuroraDistribution
+   public var desktop: AuroraDesktop
+ 
+-  public init(distribution: AuroraDistribution = .fedora, desktop: AuroraDesktop? = nil) {
++  public init(distribution: AuroraDistribution? = nil, desktop: AuroraDesktop? = nil) {
++    #if AURORA_ROM3_J613
++      let distribution = distribution ?? .arch
++    #else
++      let distribution = distribution ?? .fedora
++    #endif
+     self.distribution = distribution
+-    self.desktop = desktop ?? distribution.availableDesktops[0]
++    self.desktop = desktop ?? distribution.availableDesktops.first ?? .kde
+   }
+ 
+   public var effectiveDesktop: AuroraDesktop? {
+@@ -72,8 +92,10 @@ public struct AuroraInstallationSelection: Equatable, Codable, Sendable {
+ 
+   public mutating func selectDistribution(_ distribution: AuroraDistribution) {
+     self.distribution = distribution
+-    if !distribution.availableDesktops.contains(desktop) {
+-      desktop = distribution.availableDesktops[0]
++    if !distribution.availableDesktops.contains(desktop),
++      let first = distribution.availableDesktops.first
++    {
++      desktop = first
+     }
+   }
+ 
+diff --git a/macOS/Sources/AuroraAppleInstallerApp/AuroraWelcomeView.swift b/macOS/Sources/AuroraAppleInstallerApp/AuroraWelcomeView.swift
+index f5f5bf1..51641dc 100644
+--- a/macOS/Sources/AuroraAppleInstallerApp/AuroraWelcomeView.swift
++++ b/macOS/Sources/AuroraAppleInstallerApp/AuroraWelcomeView.swift
+@@ -7,7 +7,12 @@ struct AuroraWelcomeView: View {
+   var device: MacHeaderDisplay = .unknown
+   var channel: ReleaseChannel? = nil
+   var onContinue: () -> Void
+-  private let columns = Array(repeating: GridItem(.flexible(minimum: 0), spacing: 18), count: 3)
++  #if AURORA_ROM3_J613
++    private let columns = [GridItem(.flexible(minimum: 0), spacing: 18)]
++  #else
++    private let columns = Array(
++      repeating: GridItem(.flexible(minimum: 0), spacing: 18), count: 3)
++  #endif
+   private let distributionColumns = Array(
+     repeating: GridItem(.flexible(minimum: 0), spacing: 18),
+     count: AuroraDistribution.installable.count)
+@@ -17,11 +22,11 @@ struct AuroraWelcomeView: View {
+       // The same column as every other page: the logo's left edge to the
+       // device identity's right edge.
+       InstallerMasthead(device: device, channel: channel).inPageColumn().padding(.top, 20)
+-      Text("Choose your distribution and desktop.")
++      Text(welcomeTitle)
+         .font(.system(size: 20, weight: .medium))
+         .inPageColumn().padding(.top, 28)
+       VStack(alignment: .leading, spacing: 10) {
+-        sectionTitle("Distribution")
++        sectionTitle(distributionSectionTitle)
+         LazyVGrid(columns: distributionColumns, spacing: 18) {
+           ForEach(AuroraDistribution.installable) { distribution in
+             SelectionCard(
+@@ -72,17 +77,23 @@ struct AuroraWelcomeView: View {
+   static func noticeMarkdown(for distribution: AuroraDistribution) -> String {
+     switch distribution {
+     case .fedora:
+-      "Aurora Fedora Remix contains modified Fedora® software and is not provided or supported "
++      return "Aurora Fedora Remix contains modified Fedora® software and is not provided or supported "
+         + "by the Fedora Project. Official Fedora is available at "
+         + "[fedoraproject.org](https://fedoraproject.org/). Fedora is a registered trademark of "
+         + "Red Hat, Inc., or its subsidiaries in the United States and other countries."
+     case .arch:
+-      "Aurora Alarm is based on Arch Linux ARM and is not provided or endorsed by the "
++      let title: String
++      #if AURORA_ROM3_J613
++        title = "ROM3-j613"
++      #else
++        title = "Aurora Alarm"
++      #endif
++      return title + " is based on Arch Linux ARM and is not provided or endorsed by the "
+         + "Arch Linux or Arch Linux ARM projects."
+     case .nixos:
+-      "Aurora NixOS is based on NixOS and is not provided or endorsed by the NixOS project."
++      return "Aurora NixOS is based on NixOS and is not provided or endorsed by the NixOS project."
+     case .omarchy:
+-      "Omarchy Aurora combines Omarchy with Aurora's Arch Linux ARM hardware stack and is not "
++      return "Omarchy Aurora combines Omarchy with Aurora's Arch Linux ARM hardware stack and is not "
+         + "provided or endorsed by the Omarchy project."
+     }
+   }
+@@ -96,6 +107,22 @@ struct AuroraWelcomeView: View {
+     Text(text).font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
+   }
+ 
++  private var welcomeTitle: String {
++    #if AURORA_ROM3_J613
++      "Install ROM3-j613."
++    #else
++      "Choose your distribution and desktop."
++    #endif
++  }
++
++  private var distributionSectionTitle: String {
++    #if AURORA_ROM3_J613
++      "Operating system"
++    #else
++      "Distribution"
++    #endif
++  }
++
+   private func desktopDescription(_ desktop: AuroraDesktop) -> String {
+     switch desktop {
+     case .kde: "Familiar and customizable"
+diff --git a/macOS/Tests/AuroraAppleInstallerAppTests/DistributionNoticeTests.swift b/macOS/Tests/AuroraAppleInstallerAppTests/DistributionNoticeTests.swift
+index c72efd1..c4bcaf9 100644
+--- a/macOS/Tests/AuroraAppleInstallerAppTests/DistributionNoticeTests.swift
++++ b/macOS/Tests/AuroraAppleInstallerAppTests/DistributionNoticeTests.swift
+@@ -57,6 +57,14 @@
+       XCTAssertEqual(icons, ["aurora.icns"])
+     }
+ 
++    #if AURORA_ROM3_J613
++    func testTheROM3ChooserUsesItsOwnIdentity() {
++      XCTAssertEqual(AuroraDistribution.installable, [.arch])
++      XCTAssertEqual(AuroraDistribution.arch.title, "ROM3-j613")
++      let notice = String(AuroraWelcomeView.notice(for: .arch).characters)
++      XCTAssertTrue(notice.hasPrefix("ROM3-j613 is based on Arch Linux ARM"))
++    }
++    #else
+     func testTheChooserNamesUpstreamsOnlyAsTheirTermsAllow() {
+       // Fedora's Remix mark follows the brand ("<name> Fedora Remix"); Arch is
+       // named as Asahi Alarm is, with no Arch mark; the notices say "based on".
+@@ -65,5 +73,6 @@
+       XCTAssertEqual(AuroraDistribution.nixos.title, "Aurora NixOS")
+       XCTAssertEqual(AuroraDistribution.legacyTitles, ["Fedora Aurora Remix", "Aurora ALARM"])
+     }
++    #endif
+   }
+ #endif
+diff --git a/macOS/Tests/AuroraAppleInstallerTrustCoreTests/InstallationSelectionTests.swift b/macOS/Tests/AuroraAppleInstallerTrustCoreTests/InstallationSelectionTests.swift
+index 5cf34ad..a907b94 100644
+--- a/macOS/Tests/AuroraAppleInstallerTrustCoreTests/InstallationSelectionTests.swift
++++ b/macOS/Tests/AuroraAppleInstallerTrustCoreTests/InstallationSelectionTests.swift
+@@ -5,6 +5,7 @@ import XCTest
+ @testable import AuroraAppleInstallerTrustCore
+ 
+ final class InstallationSelectionTests: XCTestCase {
++  #if !AURORA_ROM3_J613
+   func testEachLinuxDesktopHasItsOwnProfile() {
+     let optedIn = ProcessInfo.processInfo.environment["AURORA_ENABLE_OMARCHY"] == "1"
+     let distributions: [AuroraDistribution] = [.fedora, .arch, .nixos]
+@@ -96,4 +97,15 @@ final class InstallationSelectionTests: XCTestCase {
+       try AuroraInstallationSelection().requireMatchingProfile(record.installationProfile))
+   }
+ 
++  #else
++  func testROM3ExposesOnlyItsCompatibleArchKDEProfile() throws {
++    XCTAssertEqual(AuroraDistribution.installable, [.arch])
++    XCTAssertEqual(AuroraDistribution.arch.title, "ROM3-j613")
++    XCTAssertEqual(AuroraDistribution.arch.availableDesktops, [.kde])
++    XCTAssertEqual(AuroraInstallationSelection.allProfileIDs, ["arch-kde"])
++    let selection = AuroraInstallationSelection()
++    XCTAssertEqual(selection.summary, "ROM3-j613 · KDE Plasma")
++    try selection.requireMatchingProfile("arch-kde")
++  }
++  #endif
+ }

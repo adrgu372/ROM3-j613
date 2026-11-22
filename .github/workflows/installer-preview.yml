@@ -49,7 +49,7 @@ jobs:
         run: |
           set -euo pipefail
           app="$ROM3_INSTALLER_OUTPUT/app/ROM3-j613 Installer.app"
-          pkg="$ROM3_INSTALLER_OUTPUT/ROM3-j613-Installer-0.1.0.pkg"
+          pkg="$ROM3_INSTALLER_OUTPUT/ROM3-j613-Installer-0.1.1.pkg"
           test -d "$app"
           test -f "$pkg"
           codesign --verify --deep --strict "$app"
@@ -57,12 +57,12 @@ jobs:
           printf '%s\n' "$pkg_signature"
           grep -Fq "Status: no signature" <<<"$pkg_signature"
           ditto -c -k --sequesterRsrc --keepParent \
-            "$app" "$RUNNER_TEMP/ROM3-j613-Installer-0.1.0.app.zip"
+            "$app" "$RUNNER_TEMP/ROM3-j613-Installer-0.1.1.app.zip"
           (
             cd "$RUNNER_TEMP"
             shasum -a 256 \
-              "rom3-installer-output/ROM3-j613-Installer-0.1.0.pkg" \
-              "ROM3-j613-Installer-0.1.0.app.zip" \
+              "rom3-installer-output/ROM3-j613-Installer-0.1.1.pkg" \
+              "ROM3-j613-Installer-0.1.1.app.zip" \
               > SHA256SUMS
           )
 
@@ -72,7 +72,7 @@ jobs:
           name: rom3-j613-installer-preview
           path: |
             ${{ runner.temp }}/rom3-installer-output/*.pkg
-            ${{ runner.temp }}/ROM3-j613-Installer-0.1.0.app.zip
+            ${{ runner.temp }}/ROM3-j613-Installer-0.1.1.app.zip
             ${{ runner.temp }}/installer-build.log
             ${{ runner.temp }}/SHA256SUMS
           retention-days: 14

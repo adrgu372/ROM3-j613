@@ -39,6 +39,7 @@ git -C "$upstream" checkout --detach "$commit"
 installer_patches=(
     "$root/patches/aurora-installer-macos26-cdhash.patch"
     "$root/patches/aurora-installer-rom3-recovery-name.patch"
+    "$root/patches/aurora-installer-rom3-ui.patch"
 )
 for installer_patch in "${installer_patches[@]}"; do
     git -C "$upstream" apply --check "$installer_patch"
@@ -123,14 +124,15 @@ cp "$catalog_dir/catalog.json.sig" "$release_inputs/catalog.json.sig"
 
 cd "$source_root"
 AURORA_DEVELOPER_BUILD=1 \
+AURORA_ROM3_J613=1 \
 AURORA_APP_SIGNING_IDENTITY="-" \
-AURORA_APP_VERSION="0.1.0" \
+AURORA_APP_VERSION="0.1.1" \
 bash Packaging/build-app.sh "$release_inputs" "$output/app"
 
 if [[ -x Packaging/build-developer-pkg.sh ]]; then
     bash Packaging/build-developer-pkg.sh \
         "$output/app/ROM3-j613 Installer.app" \
-        "$output/ROM3-j613-Installer-0.1.0.pkg"
+        "$output/ROM3-j613-Installer-0.1.1.pkg"
 fi
 
 cat <<EOF
