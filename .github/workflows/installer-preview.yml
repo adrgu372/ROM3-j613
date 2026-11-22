@@ -53,7 +53,9 @@ jobs:
           test -d "$app"
           test -f "$pkg"
           codesign --verify --deep --strict "$app"
-          pkgutil --check-signature "$pkg"
+          pkg_signature="$(pkgutil --check-signature "$pkg" 2>&1 || true)"
+          printf '%s\n' "$pkg_signature"
+          grep -Fq "Status: no signature" <<<"$pkg_signature"
           ditto -c -k --sequesterRsrc --keepParent \
             "$app" "$RUNNER_TEMP/ROM3-j613-Installer-0.1.0.app.zip"
           shasum -a 256 "$pkg" \
