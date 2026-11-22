@@ -1,0 +1,72 @@
+name: rom3-j613-installer-preview
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  installer:
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+      ROM3_INSTALLER_SOURCE: ${{ github.workspace }}/upstream
+      ROM3_INSTALLER_OUTPUT: ${{ runner.temp }}/rom3-installer-output
+
+    steps:
+      - name: Check out ROM3 metadata
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+
+      - name: Install Bash 5
+        run: |
+          if [[ ! -x /opt/homebrew/bin/bash ]]; then
+            brew install bash
+          fi
+          /opt/homebrew/bin/bash --version
+
+      - name: Record macOS toolchain
+        run: |
+          sw_vers
+          uname -m
+          xcodebuild -version
+          xcrun swift --version
+
+      - name: Build technical-preview installer
+        run: |
+          set -euo pipefail
+          /opt/homebrew/bin/bash scripts/build-rom3-installer-macos.sh \
+            2>&1 | tee "$RUNNER_TEMP/installer-build.log"
+
+      - name: Verify ad-hoc app and package
+        run: |
+          set -euo pipefail
+          app="$ROM3_INSTALLER_OUTPUT/app/ROM3-j613 Installer.app"
+          pkg="$ROM3_INSTALLER_OUTPUT/ROM3-j613-Installer-0.1.0.pkg"
+          test -d "$app"
+          test -f "$pkg"
+          codesign --verify --deep --strict "$app"
+          pkgutil --check-signature "$pkg"
+          ditto -c -k --sequesterRsrc --keepParent \
+            "$app" "$RUNNER_TEMP/ROM3-j613-Installer-0.1.0.app.zip"
+          shasum -a 256 "$pkg" \
+            "$RUNNER_TEMP/ROM3-j613-Installer-0.1.0.app.zip" \
+            > "$RUNNER_TEMP/SHA256SUMS"
+
+      - name: Upload installer preview
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: rom3-j613-installer-preview
+          path: |
+            ${{ runner.temp }}/rom3-installer-output/*.pkg
+            ${{ runner.temp }}/ROM3-j613-Installer-0.1.0.app.zip
+            ${{ runner.temp }}/installer-build.log
+            ${{ runner.temp }}/SHA256SUMS
+          retention-days: 14
