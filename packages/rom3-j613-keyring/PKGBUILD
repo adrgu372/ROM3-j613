@@ -1,0 +1,31 @@
+pkgname=rom3-j613-keyring
+pkgver=1
+pkgrel=1
+pkgdesc='ROM3-j613 package signing keyring'
+arch=('any')
+url='https://github.com/adrgu372/ROM3-j613'
+license=('custom')
+depends=('pacman')
+source=(
+  rom3-j613-packages.pub
+  rom3-j613.gpg
+  rom3-j613-trusted
+)
+sha256sums=(
+  '26dfa1beaccc70c0a16f9596e2d0cc39d2982e5a9ff862714e479447301d8e2a'
+  'dd133df56430429e7d5243b764a62f074a4ef9cead77cc0d5333f4707c25515d'
+  '84f5056a9ceec9ecdbb4ca78d0003b84ed1ed80e03d2ca420861c30fe0254ed6'
+)
+options=('!strip')
+
+package() {
+  install -Dm644 rom3-j613-packages.pub \
+    "$pkgdir/usr/share/pacman/keyrings/rom3-j613.asc"
+  install -Dm644 rom3-j613.gpg \
+    "$pkgdir/usr/share/pacman/keyrings/rom3-j613.gpg"
+  install -Dm644 rom3-j613-trusted \
+    "$pkgdir/usr/share/pacman/keyrings/rom3-j613-trusted"
+  install -Dm644 /dev/null \
+    "$pkgdir/usr/share/pacman/keyrings/rom3-j613-revoked"
+}
+

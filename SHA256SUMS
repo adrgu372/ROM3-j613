@@ -46,7 +46,18 @@ d98b6c47a3177b48c894e6ebfd769c1a46fc14262ec0fea4af271dd021b85cf3  ./packages/rom
 06e03355f3c913d87df5d6b7c3ea8fc2e2622b022ccbf8f0b03fd60661537d2f  ./packages/rom3-j613-guard/rom3-j613-update
 2fbba5542375bc1c26891a09d9aee50748e6fb35ec126ae06981cc3feb694c5c  ./packages/rom3-j613-guard/verified-stack.json
 8ccee1f555714b47c1457bfb1863bc926172f01fcc05dae1263af48868c53f2e  ./packages/rom3-j613-guard/verify-live-system.sh
+aa57eaf541c839cda645af5348261ae66b5c63e72a04fb64f8c3a0792c374507  ./packages/rom3-j613-keyring/PKGBUILD
 6fdb8bb1bd5bf733360b01dd9bd5d10a419db67268fa061b536a64ccc198833d  ./packages/rom3-j613-keyring/PKGBUILD.template
+bc4d8d47cf83e42c4757b93a3bb6acf56f216eaab5f5b4cc5b49a5e63e96f6ca  ./packages/rom3-j613-keyring/pkg/rom3-j613-keyring/.BUILDINFO
+0d1a663808573bfe6a38a4a4e03eecd326586f69d0164ad3c97d98020a4ce763  ./packages/rom3-j613-keyring/pkg/rom3-j613-keyring/.MTREE
+409b43b3ae475d21fd2e52787eaf52301c5bfa1d2fbed10c4bbf769aa71774cd  ./packages/rom3-j613-keyring/pkg/rom3-j613-keyring/.PKGINFO
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  ./packages/rom3-j613-keyring/pkg/rom3-j613-keyring/usr/share/pacman/keyrings/rom3-j613-revoked
+84f5056a9ceec9ecdbb4ca78d0003b84ed1ed80e03d2ca420861c30fe0254ed6  ./packages/rom3-j613-keyring/pkg/rom3-j613-keyring/usr/share/pacman/keyrings/rom3-j613-trusted
+26dfa1beaccc70c0a16f9596e2d0cc39d2982e5a9ff862714e479447301d8e2a  ./packages/rom3-j613-keyring/pkg/rom3-j613-keyring/usr/share/pacman/keyrings/rom3-j613.asc
+dd133df56430429e7d5243b764a62f074a4ef9cead77cc0d5333f4707c25515d  ./packages/rom3-j613-keyring/pkg/rom3-j613-keyring/usr/share/pacman/keyrings/rom3-j613.gpg
+26dfa1beaccc70c0a16f9596e2d0cc39d2982e5a9ff862714e479447301d8e2a  ./packages/rom3-j613-keyring/rom3-j613-packages.pub
+84f5056a9ceec9ecdbb4ca78d0003b84ed1ed80e03d2ca420861c30fe0254ed6  ./packages/rom3-j613-keyring/rom3-j613-trusted
+dd133df56430429e7d5243b764a62f074a4ef9cead77cc0d5333f4707c25515d  ./packages/rom3-j613-keyring/rom3-j613.gpg
 54dcf806f0bf6f4552aa9c7d40d249dad62dc79b8866448324bfda55a206bd8d  ./packages/rom3-j613-meta/PKGBUILD
 f53df744c5234b300ec8d3ed07df1192b8bd2c8a567bd854a5bd68b6d001fa8e  ./packages/rom3-j613-meta/pkg/rom3-j613-meta/.BUILDINFO
 54ff457062290960cca9278375fc033d3a6010ff80569c4b8f196bf833a71646  ./packages/rom3-j613-meta/pkg/rom3-j613-meta/.MTREE
@@ -65,6 +76,7 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  ./packages/rom
 83eab613f0e758653e8fc45de01480dff582ce67e65d83e546292e366c2bbaf0  ./repo/README.md
 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b  ./repo/aarch64/.gitkeep
 0bf0623a81f37da3f6734917520052411b0ce8aa20cea176ab2712ed2f9df007  ./repo/keys/README.md
+26dfa1beaccc70c0a16f9596e2d0cc39d2982e5a9ff862714e479447301d8e2a  ./repo/keys/rom3-j613-packages.pub
 022f46fcbf87030f444101dbb931f6ae9cb9eb65f5e8bc90279207df667b2f9a  ./scripts/build-recipes.sh
 1006d32652cf9ef231033294e0fbb4d4e848335a133cdb59062a3cb4aa3f4ea2  ./scripts/check-stack.py
 260fe0ab2525f332d04d0bbb700025b83bf2dd1f7e2e3c9a28f02aca731ff3af  ./scripts/create-signing-key.sh
@@ -81,6 +93,6 @@ d98b6c47a3177b48c894e6ebfd769c1a46fc14262ec0fea4af271dd021b85cf3  ./scripts/rom3
 c3cdcaf663baf90d39a5ac781690040c7938eecae68f96a0c6431f12e7eb2137  ./scripts/validate-installer-plan.py
 e95f5fa83babfc33e46b7a21c017d96872144293a3056ff2b9fdcff6c11ceb01  ./scripts/validate-stack.py
 8ccee1f555714b47c1457bfb1863bc926172f01fcc05dae1263af48868c53f2e  ./scripts/verify-live-system.sh
-d13cb7d3f3b6fa5f6b43e0f9585d7a8398ccbda51dfc2c2471c47ebfe99881df  ./stack/package-builds.json
+ee619c917db35ee45257ed559ecc7769dfb836673739bf8918f8aa77993e790f  ./stack/package-builds.json
 317dbfbf507e36692611525df5d172650fd965e8011799423ce1c0654de6889e  ./stack/quarantine.packages
 2fbba5542375bc1c26891a09d9aee50748e6fb35ec126ae06981cc3feb694c5c  ./stack/verified-stack.json
