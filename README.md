@@ -118,6 +118,13 @@ the pinned upstream revision. It produces an ad-hoc technical-preview build;
 Developer ID signing, notarization and clean-install qualification remain
 separate release gates.
 
+A CI-built technical preview is available as a prerelease:
+
+https://github.com/adrgu372/ROM3-j613/releases/tag/installer-preview-0.1.0
+
+It targets only `apple,j613`. The package is intentionally unsigned and the
+app is ad-hoc signed; do not treat it as a production installer.
+
 See [ROADMAP.md](ROADMAP.md).
 
 ## Safety

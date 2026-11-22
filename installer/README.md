@@ -56,3 +56,11 @@ notarized and is not a production download. A public installer build still
 requires an Apple Developer ID identity, notarization and a clean-install
 qualification on this board.
 
+The CI-built technical-preview artifact is published here:
+
+https://github.com/adrgu372/ROM3-j613/releases/tag/installer-preview-0.1.0
+
+It is restricted to `apple,j613`. The `.pkg` is deliberately unsigned and the
+application is ad-hoc signed. It has not completed a clean install, cold boot
+or Recovery exercise, so it remains a prerelease test build.
+
