@@ -36,8 +36,9 @@ jobs:
       - name: Apply ROM3 overlay patch
         run: |
           set -euo pipefail
-          git -C upstream apply --check rom3/patches/0001-build-image-add-rom3-overlay.patch
-          git -C upstream apply rom3/patches/0001-build-image-add-rom3-overlay.patch
+          patch_file="$GITHUB_WORKSPACE/rom3/patches/0001-build-image-add-rom3-overlay.patch"
+          git -C "$GITHUB_WORKSPACE/upstream" apply --check "$patch_file"
+          git -C "$GITHUB_WORKSPACE/upstream" apply "$patch_file"
 
       - name: Build KDE image
         env:
@@ -63,7 +64,7 @@ jobs:
           subject-path: upstream/out/*-filesystems.tar.zst
 
       - name: Upload candidate image
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         if: always()
         with:
           name: rom3-j613-arch-kde-candidate
