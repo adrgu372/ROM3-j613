@@ -3,7 +3,11 @@
   "distribution": "ROM3-j613",
   "profile": "arch-kde",
   "base_image_layout": "alarm-btrfs-v1",
-  "package_snapshot": null,
+  "package_snapshot": "stable-20261122.5",
+  "image_release": "https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261122.5",
+  "payload_manifest_asset": "arch-kde-payload.json",
+  "source_commit": "5c64c2c0d47387b5d84fa760019dca67ca98d45b",
+  "filesystem_sha256": "0f01a50a55c3e48bd4fecfe45883b7f4e28e90328b88bf6a90a847e2a7951f68",
   "device_trees": [
     "t8122-j613",
     "t8122-j613-25g83"

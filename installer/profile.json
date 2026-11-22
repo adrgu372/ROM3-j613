@@ -8,7 +8,7 @@
     "apple,j613"
   ],
   "catalog_status": "not-built",
-  "payload_status": "not-built",
-  "signing_status": "production-key-required"
+  "payload_status": "published",
+  "signing_status": "signed-project-key"
 }
 

@@ -1,5 +1,6 @@
 artifacts/
 cache/
+image-candidates/
 rollback/
 pkg/
 src/

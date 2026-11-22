@@ -101,7 +101,13 @@ Its J613 kernel samples speaker V/I sense on the corrected MCA clock edge and
 ships the matching `speakersafetyd` probe-rate fix. Five PipeWire restarts,
 44.1 kHz and 48 kHz playback, GPU acceleration and the J613 panel were verified
 on the reference laptop.
-There is no ROM3 installer payload yet.
+
+The verified installer payload is public:
+
+https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261122.5
+
+It contains the filesystem archive split into GitHub-sized parts, Sigstore
+provenance, signed checksums and a reassembly script.
 
 See [ROADMAP.md](ROADMAP.md).
 

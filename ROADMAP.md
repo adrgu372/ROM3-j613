@@ -33,8 +33,8 @@
 - [x] Read and enforce `verified-stack.json`.
 - [x] Refuse unqualified changes to quarantined packages.
 - [ ] Create a Btrfs snapshot and ESP backup before sensitive changes.
-- [ ] Generate Stage 2 as a separate candidate.
-- [ ] Require cold-boot verification after publishing.
+- [x] Generate Stage 2 as a separate candidate.
+- [x] Require cold-boot verification after publishing.
 
 The initial signed feed has since been published and attached to the live J613
 system; these boxes will be checked as their repeatability evidence is added.
@@ -43,16 +43,16 @@ system; these boxes will be checked as their repeatability evidence is added.
 
 - [x] Define the J613-only installer profile and payload plan.
 - [x] Add the upstream image build patch and native build wrapper.
-- [ ] Build an Arch ARM KDE image from the verified ROM3 stack.
+- [x] Build an Arch ARM KDE image from the verified ROM3 stack.
 - [ ] Add a signed catalog restricted to `apple,j613`.
-- [ ] Reuse the existing Aurora Installer `arch-kde` profile.
+- [x] Reuse the existing Aurora Installer `arch-kde` profile.
 - [ ] Replace only the payload and trust metadata initially.
 - [ ] Test clean install, first boot, cold boot and recovery.
 
 ## Phase 4: release
 
-- [ ] Publish installer download.
-- [ ] Publish signed package repository.
+- [x] Publish installer payload download.
+- [x] Publish signed package repository.
 - [ ] Document rollback and recovery.
 - [ ] Add reproducible build instructions.
 - [ ] Consider additional M3 boards only after hardware testing.

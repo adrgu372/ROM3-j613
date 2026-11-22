@@ -26,3 +26,11 @@ is not a valid ROM3 delivery.
 `profile.json` and `payload-plan.json` are the ROM3-owned source of truth until
 the final signed catalog is generated.
 
+The verified image payload is published at:
+
+https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261122.5
+
+The release splits the filesystem archive below GitHub's per-asset size limit.
+Its signed `SHA256SUMS` and `reassemble-image-payload.sh` reconstruct the exact
+archive covered by the Sigstore provenance attestation.
+
