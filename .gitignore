@@ -1,5 +1,6 @@
 artifacts/
 cache/
+rollback/
 pkg/
 src/
 repo/aarch64/*.pkg.tar.*

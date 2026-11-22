@@ -70,15 +70,15 @@
     },
     {
       "package": "linux-aurora",
-      "version": "7.3.0.aurora1-42",
-      "file": "linux-aurora-7.3.0.aurora1-42-aarch64.pkg.tar.xz",
-      "sha256": "acb305447530857c1b23f2c59b019d5099e16ff12263ea754d3f51fde2b6c2e4"
+      "version": "7.3.0.aurora1-43",
+      "file": "linux-aurora-7.3.0.aurora1-43-aarch64.pkg.tar.xz",
+      "sha256": "c70d8d676ced31537ba37dccc7e2336e2a16003242f98014ad1ea849c94e66b4"
     },
     {
       "package": "linux-aurora-headers",
-      "version": "7.3.0.aurora1-42",
-      "file": "linux-aurora-headers-7.3.0.aurora1-42-aarch64.pkg.tar.xz",
-      "sha256": "6bffc76815fd6eb1018c735c7923a47f00753b89b007f3faa8ba32fa33e681ed"
+      "version": "7.3.0.aurora1-43",
+      "file": "linux-aurora-headers-7.3.0.aurora1-43-aarch64.pkg.tar.xz",
+      "sha256": "496e99e01e94f8c9f705abeda1a8fc89e0059138291390216d7d4fd026e83595"
     },
     {
       "package": "lsp-plugins-lv2",
@@ -118,9 +118,9 @@
     },
     {
       "package": "rom3-j613-guard",
-      "version": "1-4",
-      "file": "rom3-j613-guard-1-4-any.pkg.tar.xz",
-      "sha256": "7adc06904e5bdc20da0e19888f33029a53dc62e4c0ce9335bedbc9f99694aa80"
+      "version": "1-5",
+      "file": "rom3-j613-guard-1-5-any.pkg.tar.xz",
+      "sha256": "027f663b4c9616902fc50ae0119b09750372aeacb199be544df8de9b7ccde8cd"
     },
     {
       "package": "rom3-j613-keyring",
@@ -130,9 +130,9 @@
     },
     {
       "package": "rom3-j613-meta",
-      "version": "1-4",
-      "file": "rom3-j613-meta-1-4-any.pkg.tar.xz",
-      "sha256": "225916679b6d7ebb049f64917d5fcda58c434a9bbed1816f0b2fb302a6eea2c2"
+      "version": "1-5",
+      "file": "rom3-j613-meta-1-5-any.pkg.tar.xz",
+      "sha256": "064939cdf19ab12a96366496ab1fe5fa14d27e81b30eb40e4f4e00b47cd022b8"
     },
     {
       "package": "rom3-j613-release",
@@ -154,9 +154,9 @@
     },
     {
       "package": "speakersafetyd",
-      "version": "2.0.1-1",
-      "file": "speakersafetyd-2.0.1-1-aarch64.pkg.tar.xz",
-      "sha256": "e42da42d442072ec182f3740747dbae9bdd34468bd8645a0294322d11a98e3cb"
+      "version": "2.0.1-1.2",
+      "file": "speakersafetyd-2.0.1-1.2-aarch64.pkg.tar.xz",
+      "sha256": "5b6b3065266d106fb9db13709b504959e3cf974893d9a38a83341538811f5c2f"
     },
     {
       "package": "speakersafetyd-aurora-profiles",
