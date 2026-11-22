@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "distribution": "ROM3-j613",
+  "upstream_distribution_profile": "arch-kde",
+  "image_layout": "alarm-btrfs-v1",
+  "desktop": "kde",
+  "device_identifiers": [
+    "apple,j613"
+  ],
+  "catalog_status": "not-built",
+  "payload_status": "not-built",
+  "signing_status": "production-key-required"
+}
+

@@ -31,6 +31,12 @@
       "version": "1-1",
       "file": "rom3-j613-guard-1-1-any.pkg.tar.xz",
       "sha256": "11c584847f327e33c4668dabe3855cfe16df17c5e34e2caca10163ec16c8761a"
+    },
+    {
+      "package": "rom3-j613-release",
+      "version": "1-1",
+      "file": "rom3-j613-release-1-1-any.pkg.tar.xz",
+      "sha256": "27d62f07bc53d1cb602bb93982c07873a69160a234ac41379c4214f4ba752c56"
     }
   ]
 }

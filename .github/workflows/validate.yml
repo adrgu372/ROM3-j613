@@ -15,6 +15,8 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
       - name: Validate stack metadata
         run: python3 scripts/validate-stack.py
+      - name: Validate installer plan
+        run: python3 scripts/validate-installer-plan.py
       - name: Validate shell scripts
         run: bash -n scripts/*.sh
       - name: Validate PKGBUILDs

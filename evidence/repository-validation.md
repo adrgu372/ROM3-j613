@@ -14,6 +14,7 @@ linux-aurora-headers 7.3.0.aurora1-42
 aura 1.0.0b14.1-3
 rom3-j613-meta 1-1
 rom3-j613-guard 1-1
+rom3-j613-release 1-1
 ```
 
 ## Checks passed
@@ -30,4 +31,22 @@ rom3-j613-guard 1-1
 
 The production signing key has not been created or published. The test snapshot
 must not be served as a ROM3 stable repository.
+
+## Keyring package validation
+
+A second ephemeral key was used to generate the `rom3-j613-keyring` package.
+The package built and contained:
+
+```text
+/usr/share/pacman/keyrings/rom3-j613.asc
+/usr/share/pacman/keyrings/rom3-j613.gpg
+/usr/share/pacman/keyrings/rom3-j613-trusted
+/usr/share/pacman/keyrings/rom3-j613-revoked
+```
+
+The test exposed and fixed `makepkg` treating an ASCII-armored `.asc` source as
+a detached signature. Public key sources now use the `.pub` extension while
+the installed keyring remains ASCII-armored.
+
+The keyring test key was destroyed after validation.
 

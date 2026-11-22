@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "distribution": "ROM3-j613",
+  "profile": "arch-kde",
+  "base_image_layout": "alarm-btrfs-v1",
+  "package_snapshot": null,
+  "device_trees": [
+    "t8122-j613",
+    "t8122-j613-25g83"
+  ],
+  "boot_files": [
+    "m1n1/boot.bin"
+  ],
+  "required_packages": [
+    "rom3-j613-release",
+    "rom3-j613-meta",
+    "rom3-j613-guard",
+    "rom3-j613-keyring"
+  ],
+  "required_checks": [
+    "internal_display",
+    "gpu_render_node",
+    "opengl_m3_g15g",
+    "speakersafetyd_active",
+    "cold_boot"
+  ]
+}
+

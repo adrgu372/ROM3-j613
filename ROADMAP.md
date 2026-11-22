@@ -15,6 +15,11 @@
 - [x] Build initial local test packages.
 - [x] Exercise `repo-add`, package signatures and database signatures with an
   ephemeral non-production key.
+- [x] Add the pacman client configuration and `rom3-j613-release` package.
+- [x] Add keyring packaging, public-key import and GitHub release publishing
+  tooling.
+- [x] Validate package signing, database signing and keyring generation with
+  ephemeral keys.
 - [ ] Create the ROM3 signing key outside the Git tree.
 - [ ] Build the initial `rom3-j613` pacman repository.
 - [ ] Sign packages and repository databases.
@@ -32,6 +37,7 @@
 
 ## Phase 3: installer payload
 
+- [x] Define the J613-only installer profile and payload plan.
 - [ ] Build an Arch ARM KDE image from the verified ROM3 stack.
 - [ ] Add a signed catalog restricted to `apple,j613`.
 - [ ] Reuse the existing Aurora Installer `arch-kde` profile.

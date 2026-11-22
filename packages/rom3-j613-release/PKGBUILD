@@ -1,0 +1,26 @@
+pkgname=rom3-j613-release
+pkgver=1
+pkgrel=1
+pkgdesc='ROM3-j613 pacman repository configuration and release identity'
+arch=('any')
+url='https://github.com/adrgu372/ROM3-j613'
+license=('custom')
+source=('rom3-j613.conf' 'rom3-j613-mirrorlist')
+sha256sums=(
+  '89dc56a4ce6e9f02cab3a493c6c1eb6b2a0ee37457a2465614dbe21c330aa15d'
+  '11648426f700c860800d6d3f12766637811d1f443de25e095de2acbb00b922c5'
+)
+options=('!strip')
+
+package() {
+  # Runtime-only dependencies: the local release package is built before the
+  # guard and meta packages are installed.
+  depends=('pacman' 'rom3-j613-guard' 'rom3-j613-meta' 'rom3-j613-keyring')
+  install -Dm644 rom3-j613.conf \
+    "$pkgdir/etc/pacman.d/rom3-j613.conf"
+  install -Dm644 rom3-j613-mirrorlist \
+    "$pkgdir/etc/pacman.d/rom3-j613-mirrorlist"
+  install -Dm644 /dev/null \
+    "$pkgdir/usr/share/rom3-j613/release-package"
+}
+

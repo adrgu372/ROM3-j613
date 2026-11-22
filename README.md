@@ -80,6 +80,7 @@ ROM3 Installer catalog and payload
 | `stack/quarantine.packages` | Packages that may not drift without qualification |
 | `packages/` | ROM3 package recipes and variants |
 | `pacman/` | Client repository configuration example |
+| `configs/` | Pacman client, mirrorlist and local service configuration |
 | `repo/` | Local binary repository workspace; generated files are not committed |
 | `docs/` | Architecture, update policy, support matrix and installer plan |
 | `scripts/` | Live verification, stack checking and repository tooling |
