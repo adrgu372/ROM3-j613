@@ -8,6 +8,10 @@
   "payload_manifest_asset": "arch-kde-payload.json",
   "source_commit": "5c64c2c0d47387b5d84fa760019dca67ca98d45b",
   "filesystem_sha256": "0f01a50a55c3e48bd4fecfe45883b7f4e28e90328b88bf6a90a847e2a7951f68",
+  "catalog_status": "published-testing",
+  "catalog_url": "https://github.com/adrgu372/ROM3-j613/releases/download/image-20261122.5/catalog.signed.json",
+  "catalog_trust_root_fingerprint": "sha256:2b7e847f34019f26eb9fc0dbd675611446357078f3057434be9491ba97c4404c",
+  "catalog_sequence": 1795356392,
   "device_trees": [
     "t8122-j613",
     "t8122-j613-25g83"

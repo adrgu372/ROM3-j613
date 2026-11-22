@@ -44,7 +44,7 @@ system; these boxes will be checked as their repeatability evidence is added.
 - [x] Define the J613-only installer profile and payload plan.
 - [x] Add the upstream image build patch and native build wrapper.
 - [x] Build an Arch ARM KDE image from the verified ROM3 stack.
-- [ ] Add a signed catalog restricted to `apple,j613`.
+- [x] Add a signed catalog restricted to `apple,j613`.
 - [x] Reuse the existing Aurora Installer `arch-kde` profile.
 - [ ] Replace only the payload and trust metadata initially.
 - [ ] Test clean install, first boot, cold boot and recovery.

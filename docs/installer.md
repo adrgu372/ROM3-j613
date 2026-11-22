@@ -47,3 +47,9 @@ five parts. The release includes signed checksums and
 `reassemble-image-payload.sh`; installer integration must verify the reassembled
 archive's SHA-256 before exposing it to the installer.
 
+The release also carries a ROM3-specific schema-5 catalog. It is signed by the
+ROM3 Ed25519 catalog key and enables only `apple,j613`; the upstream Aurora
+catalog policy and trust root are intentionally not reused. The catalog remains
+on the `testing` channel until a clean install, first boot and recovery cycle
+pass on a disposable installation.
+

@@ -17,6 +17,11 @@ jobs:
         run: python3 scripts/validate-stack.py
       - name: Validate installer plan
         run: python3 scripts/validate-installer-plan.py
+      - name: Validate Python tools
+        run: |
+          python3 -m py_compile scripts/*.py
+          test "$(sha256sum installer/keys/catalog-signing.ed25519.pub | cut -d' ' -f1)" = \
+            2b7e847f34019f26eb9fc0dbd675611446357078f3057434be9491ba97c4404c
       - name: Validate shell scripts
         run: bash -n scripts/*.sh
       - name: Validate image patch

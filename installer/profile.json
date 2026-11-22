@@ -7,7 +7,7 @@
   "device_identifiers": [
     "apple,j613"
   ],
-  "catalog_status": "not-built",
+  "catalog_status": "published-testing",
   "payload_status": "published",
   "signing_status": "signed-project-key"
 }

@@ -109,6 +109,10 @@ https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261122.5
 It contains the filesystem archive split into GitHub-sized parts, Sigstore
 provenance, signed checksums and a reassembly script.
 
+The release also publishes the J613-only schema-5 catalog on the `testing`
+channel. The upstream Aurora installer does not trust this catalog; a ROM3
+installer build must bundle the ROM3 catalog root.
+
 See [ROADMAP.md](ROADMAP.md).
 
 ## Safety

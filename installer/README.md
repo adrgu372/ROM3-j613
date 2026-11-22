@@ -34,3 +34,8 @@ The release splits the filesystem archive below GitHub's per-asset size limit.
 Its signed `SHA256SUMS` and `reassemble-image-payload.sh` reconstruct the exact
 archive covered by the Sigstore provenance attestation.
 
+The same release contains the ROM3 schema-5 testing catalog. It is signed by the
+ROM3 Ed25519 catalog key and admits only `apple,j613`. It cannot be used with an
+installer binary that trusts the upstream Aurora catalog root; a ROM3 installer
+build must bundle `installer/keys/catalog-signing.ed25519.pub`.
+
