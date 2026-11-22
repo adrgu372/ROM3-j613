@@ -1,4 +1,4 @@
-ee6f8865b8b472641e71a8da5f2d7039cc424ab1c2814c6cbb0e0795c8fcded3  ./.github/workflows/image.yml
+c13d6f76025517d439fdd143b7c2fcc424bea2f882464c2ea00733bb2ce148d7  ./.github/workflows/image.yml
 b576796e4604334e812fb0f9db8fb1c17861a6de19e025c27bec82e10893754a  ./.github/workflows/validate.yml
 7801433f18f7a22f9fadc7e1d0ce2357e63fa077bfeb31c0b72f344960f10914  ./.gitignore
 27e3e29f879ea7ff84742b6e92ab4f7478cc90fcdb8f2c7c75a8373065458212  ./NOTICE.md
@@ -304,7 +304,7 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  ./packages/rom
 11648426f700c860800d6d3f12766637811d1f443de25e095de2acbb00b922c5  ./packages/rom3-j613-release/rom3-j613-mirrorlist
 89dc56a4ce6e9f02cab3a493c6c1eb6b2a0ee37457a2465614dbe21c330aa15d  ./packages/rom3-j613-release/rom3-j613.conf
 5f38946bc48af467158b3aec160956776961fadaefb0fbfb6d3340b48915bc7b  ./pacman/rom3-j613.conf
-c610d3205a0c5c377e9181852c6119eca9e7ce89843a453d98ad43bff814e6c7  ./patches/0001-build-image-add-rom3-overlay.patch
+eaf997d95d4ccaae787a76cb9e7c1c53b26a860ebc6246eaa7748f1535677347  ./patches/0001-build-image-add-rom3-overlay.patch
 0b4bee0a68ace7514d3e6ed84cbbd6096050b166483145c2b1f6135f3a7fdd6d  ./repo/README.md
 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b  ./repo/aarch64/.gitkeep
 0bf0623a81f37da3f6734917520052411b0ce8aa20cea176ab2712ed2f9df007  ./repo/keys/README.md
