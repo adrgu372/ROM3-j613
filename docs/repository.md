@@ -42,6 +42,13 @@ Never mutate an existing snapshot in place. A new tested stack gets a new tag.
 The `stable` channel should point to one complete signed snapshot and promotion
 must be atomic.
 
-Binary delivery host is intentionally not selected yet. Git tracks metadata,
-recipes and tooling only.
+The bootstrap transport is GitHub Releases:
+
+```text
+https://github.com/adrgu372/ROM3-j613/releases/latest/download
+```
+
+Each release carries the signed repository databases and every package in that
+snapshot. Git tracks metadata, recipes and tooling only. The mirrorlist can
+later move to object storage without changing package identities.
 

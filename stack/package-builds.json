@@ -3,47 +3,178 @@
   "distribution": "ROM3-j613",
   "artifacts": [
     {
-      "package": "linux-aurora",
-      "version": "7.3.0.aurora1-42",
-      "file": "linux-aurora-7.3.0.aurora1-42-aarch64.pkg.tar.xz",
-      "sha256": "acb305447530857c1b23f2c59b019d5099e16ff12263ea754d3f51fde2b6c2e4"
+      "package": ": alsa-ucm-conf-aurora",
+      "version": ": 10.aurora2-5",
+      "file": "alsa-ucm-conf-aurora-10.aurora2-5-any.pkg.tar.xz",
+      "sha256": "1b44e6e3e68e4fc91fc2a6366f9d2012d5c3aa93db8df22ee0df7cc2ad86363a"
     },
     {
-      "package": "linux-aurora-headers",
-      "version": "7.3.0.aurora1-42",
-      "file": "linux-aurora-headers-7.3.0.aurora1-42-aarch64.pkg.tar.xz",
-      "sha256": "6bffc76815fd6eb1018c735c7923a47f00753b89b007f3faa8ba32fa33e681ed"
+      "package": ": alsa-utils-aurora",
+      "version": ": 1.2.16-1",
+      "file": "alsa-utils-aurora-1.2.16-1-aarch64.pkg.tar.xz",
+      "sha256": "cb45a689f8709aefc2e2e8ff8d46308db1f3762baf1b8301f5a82996a2fb17e9"
     },
     {
-      "package": "aura",
-      "version": "1.0.0b14.1-3",
+      "package": ": asahi-scripts",
+      "version": ": 20261023-10",
+      "file": "asahi-scripts-20261023-10-any.pkg.tar.xz",
+      "sha256": "010d89983d7e0a0b144d4615576ea75bd6a28d76b4d1a9f8491c3c4a4f68fcb3"
+    },
+    {
+      "package": ": aura",
+      "version": ": 1.0.0b14.1-3",
       "file": "aura-1.0.0b14.1-3-aarch64.pkg.tar.xz",
       "sha256": "9909b341809652edd33b8fbe1d3af5602a488617d4832ebdfb90abd27ec8f164"
     },
     {
-      "package": "rom3-j613-meta",
-      "version": "1-1",
-      "file": "rom3-j613-meta-1-1-any.pkg.tar.xz",
-      "sha256": "dc015b2f2535d7dfd474c61a1d995cf2484b1f051192d888d124a2a9acc17ba7"
+      "package": ": aurora-audio",
+      "version": ": 4.1.aurora2-12",
+      "file": "aurora-audio-4.1.aurora2-12-any.pkg.tar.xz",
+      "sha256": "482805f9c6fa9e3b0033e354e460dd53906a1202c702cd47f5436190d4ff4ed4"
     },
     {
-      "package": "rom3-j613-guard",
-      "version": "1-1",
-      "file": "rom3-j613-guard-1-1-any.pkg.tar.xz",
-      "sha256": "11c584847f327e33c4668dabe3855cfe16df17c5e34e2caca10163ec16c8761a"
+      "package": ": aurora-userpages",
+      "version": ": 7.3.0.aurora1-42",
+      "file": "aurora-userpages-7.3.0.aurora1-42-aarch64.pkg.tar.xz",
+      "sha256": "57f27a482725d35e58efa8023d57a9984fb28794c85db323d3fcc4d82f70905a"
     },
     {
-      "package": "rom3-j613-release",
-      "version": "1-1",
+      "package": ": bankstown",
+      "version": ": 1.1.0-1",
+      "file": "bankstown-1.1.0-1-aarch64.pkg.tar.xz",
+      "sha256": "35486360bc6863240b17031dd22dea3db73acffbedbefde0af4afc0f0cc7fe4b"
+    },
+    {
+      "package": ": kwin",
+      "version": ": 6.8.2-2",
+      "file": "kwin-6.8.2-2-aarch64.pkg.tar.xz",
+      "sha256": "74876e5adbdc7d2c6dc718013abeba44c018d0d6b629959bd2a33b49dd093d12"
+    },
+    {
+      "package": ": libpipewire",
+      "version": ": 1:1.6.10-1.2",
+      "file": "libpipewire-1_1.6.10-1.2-aarch64.pkg.tar.xz",
+      "sha256": "e0118ffd6bd0392a2e4b134e7e0f170f39c2da2fe72352d6c246cf043fc5bd59"
+    },
+    {
+      "package": ": libwireplumber",
+      "version": ": 0.5.18-1",
+      "file": "libwireplumber-0.5.18-1-aarch64.pkg.tar.xz",
+      "sha256": "9fc7aedc4079fadbef1fd7079076b781bee45431d9e534b7c45b82c39ad17d9c"
+    },
+    {
+      "package": ": linux-aurora",
+      "version": ": 7.3.0.aurora1-42",
+      "file": "linux-aurora-7.3.0.aurora1-42-aarch64.pkg.tar.xz",
+      "sha256": "acb305447530857c1b23f2c59b019d5099e16ff12263ea754d3f51fde2b6c2e4"
+    },
+    {
+      "package": ": linux-aurora-headers",
+      "version": ": 7.3.0.aurora1-42",
+      "file": "linux-aurora-headers-7.3.0.aurora1-42-aarch64.pkg.tar.xz",
+      "sha256": "6bffc76815fd6eb1018c735c7923a47f00753b89b007f3faa8ba32fa33e681ed"
+    },
+    {
+      "package": ": lsp-plugins-lv2",
+      "version": ": 1.2.37-1",
+      "file": "lsp-plugins-lv2-1.2.37-1-aarch64.pkg.tar.xz",
+      "sha256": "b2efbd447b668f6bbc40ceeb3d9a9b3bcd026394e47389264310b1384a887e42"
+    },
+    {
+      "package": ": mesa-aurora",
+      "version": ": 1:26.3.0_devel.202611150611.d4ad4a4dce6-1",
+      "file": "mesa-aurora-1_26.3.0_devel.202611150611.d4ad4a4dce6-1-aarch64.pkg.tar.xz",
+      "sha256": "e057bd3d1e0fdefb43384b0612f0a4c0b6509c3d776df508eda2905247431442"
+    },
+    {
+      "package": ": pipewire",
+      "version": ": 1:1.6.10-1.2",
+      "file": "pipewire-1_1.6.10-1.2-aarch64.pkg.tar.xz",
+      "sha256": "1a3cb182693d2a4663eb9fcd00e0a7a3b527863496a8fb4d6bb32fad0c83ca39"
+    },
+    {
+      "package": ": pipewire-alsa",
+      "version": ": 1:1.6.10-1.2",
+      "file": "pipewire-alsa-1_1.6.10-1.2-aarch64.pkg.tar.xz",
+      "sha256": "9fa484ca0832e936fbed4f85a723ebe8b87ed7134293725d149b7495cda7fc00"
+    },
+    {
+      "package": ": pipewire-audio",
+      "version": ": 1:1.6.10-1.2",
+      "file": "pipewire-audio-1_1.6.10-1.2-aarch64.pkg.tar.xz",
+      "sha256": "ae948ef03782d59f6006cb0707758df437fa315d6a0d83c1f12021a99a022f40"
+    },
+    {
+      "package": ": pipewire-pulse",
+      "version": ": 1:1.6.10-1.2",
+      "file": "pipewire-pulse-1_1.6.10-1.2-aarch64.pkg.tar.xz",
+      "sha256": "1a7d104d478342a8c9dee7f86b7f6a1c1b1a974b178b08fcf1f57e91d01c3d26"
+    },
+    {
+      "package": ": rom3-j613-guard",
+      "version": ": 1-2",
+      "file": "rom3-j613-guard-1-2-any.pkg.tar.xz",
+      "sha256": "f2e3325796b7ebc12f1dfec02fd2b013bb343a21140346e6f034fafe82cf3396"
+    },
+    {
+      "package": ": rom3-j613-keyring",
+      "version": ": 1-1",
+      "file": "rom3-j613-keyring-1-1-any.pkg.tar.xz",
+      "sha256": "cf60a123075dad87c348867a9b8f2403d3146bea456cf93d36cea834b8958c3a"
+    },
+    {
+      "package": ": rom3-j613-meta",
+      "version": ": 1-2",
+      "file": "rom3-j613-meta-1-2-any.pkg.tar.xz",
+      "sha256": "cacdd7bc7ba37da3daa5939976a1a3ff29eb2b2d59e694bdef29cbe2d1e0b60a"
+    },
+    {
+      "package": ": rom3-j613-release",
+      "version": ": 1-1",
       "file": "rom3-j613-release-1-1-any.pkg.tar.xz",
       "sha256": "27d62f07bc53d1cb602bb93982c07873a69160a234ac41379c4214f4ba752c56"
     },
     {
-      "package": "rom3-j613-keyring",
-      "version": "1-1",
-      "file": "rom3-j613-keyring-1-1-any.pkg.tar.xz",
-      "sha256": "cf60a123075dad87c348867a9b8f2403d3146bea456cf93d36cea834b8958c3a"
+      "package": ": speakerguardd",
+      "version": ": 0.1.12-4",
+      "file": "speakerguardd-0.1.12-4-aarch64.pkg.tar.xz",
+      "sha256": "b99c35e7381f29924d74e9c3b77224468b1cd9e429f8b9f12cc90970ea715974"
+    },
+    {
+      "package": ": speakersafetyd",
+      "version": ": 2.0.1-1",
+      "file": "speakersafetyd-2.0.1-1-aarch64.pkg.tar.xz",
+      "sha256": "e42da42d442072ec182f3740747dbae9bdd34468bd8645a0294322d11a98e3cb"
+    },
+    {
+      "package": ": speakersafetyd-aurora-profiles",
+      "version": ": 1-1",
+      "file": "speakersafetyd-aurora-profiles-1-1-any.pkg.tar.xz",
+      "sha256": "75965845eb22ebb123c075c68e9c58d5431e02700a1da84f98dc6629aeabf9fd"
+    },
+    {
+      "package": ": triforce-lv2",
+      "version": ": 0.3.2-1",
+      "file": "triforce-lv2-0.3.2-1-aarch64.pkg.tar.xz",
+      "sha256": "d35ff8e3a9d4eee650b20d2933ef095d89f752002a95c0aefdd3f5a49e26d683"
+    },
+    {
+      "package": ": uboot-aurora",
+      "version": ": 2026.07.aurora11-1",
+      "file": "uboot-aurora-2026.07.aurora11-1-aarch64.pkg.tar.xz",
+      "sha256": "26cf66e0a89bc43e10212e45500a63f1c674253df626ba62c8d621a442c3cb49"
+    },
+    {
+      "package": ": vulkan-aurora",
+      "version": ": 1:26.3.0_devel.202611150611.d4ad4a4dce6-1",
+      "file": "vulkan-aurora-1_26.3.0_devel.202611150611.d4ad4a4dce6-1-aarch64.pkg.tar.xz",
+      "sha256": "cc1e9af6ff394ee5254fc1c7b8bcd1270d610d059542969d2502b4e2ff8ccc56"
+    },
+    {
+      "package": ": wireplumber",
+      "version": ": 0.5.18-1",
+      "file": "wireplumber-0.5.18-1-aarch64.pkg.tar.xz",
+      "sha256": "2410813c8b3eba26598b90b260171ac884af59f8dc1441112eee80f1873b628b"
     }
   ]
 }
-

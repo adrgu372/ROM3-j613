@@ -41,10 +41,15 @@ Imported recipes currently cover:
 
 - `linux-aurora`
 - `aura`
+- `aurora-audio` pinned to the last verified legacy-stack release
 - `rom3-j613-meta`
 - `rom3-j613-guard`
 - `rom3-j613-release`
 - `rom3-j613-keyring` template, populated after the production key exists
 
 Generated binaries are excluded from Git.
+
+The signed binary snapshot mirrors every exact package required by the
+meta-package, including packages normally sourced from Arch Linux ARM. This is
+what makes the installer payload reproducible.
 

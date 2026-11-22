@@ -25,6 +25,7 @@
 - [x] Sign packages and repository databases.
 - [x] Publish immutable snapshots.
 - [x] Test install and reinstall from the signed feed.
+- [x] Bundle every direct sensitive dependency in the signed snapshot.
 
 ## Phase 2: fail-closed update guard
 

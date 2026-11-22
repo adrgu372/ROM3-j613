@@ -53,9 +53,10 @@ The keyring test key was destroyed after validation.
 ## Production snapshot
 
 ```text
-Tag: stable-20261122.1
+Tag: stable-20261122.2
 Fingerprint: FA80FF234BCDF36211649321EB9845C8BAA89A4A
 UID: ROM3-j613 package signing <packages@rom3-j613.invalid>
+Repository database SHA-256: c05a8cd4a6b9a7e950d12474344d0da152d2bed2d699cf4a7603f1dc4a5dce50
 ```
 
 The release serves the package database, signature, files database and all
@@ -64,4 +65,9 @@ package artifacts through:
 ```text
 https://github.com/adrgu372/ROM3-j613/releases/latest/download
 ```
+
+The second snapshot bundles all 25 direct sensitive dependencies of
+`rom3-j613-meta`, including KWin, PipeWire, WirePlumber and the complete audio
+protection stack. A fresh image therefore does not have to take those packages
+from a moving `core` or `extra` repository.
 

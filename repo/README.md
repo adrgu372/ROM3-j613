@@ -20,3 +20,11 @@ repo/
 Private signing keys must never be committed here. Normal releases must use an
 offline or protected signer and publish immutable snapshots.
 
+Published snapshot:
+
+```text
+stable-20261122.2
+```
+
+It contains the complete direct dependency set for `rom3-j613-meta`.
+
