@@ -1,7 +1,7 @@
 e6e3b4b8c7f4ede7971ce830bd052b48e621ccf4067db534c80f8fa3872d5bda  ./.github/workflows/validate.yml
 7801433f18f7a22f9fadc7e1d0ce2357e63fa077bfeb31c0b72f344960f10914  ./.gitignore
 27e3e29f879ea7ff84742b6e92ab4f7478cc90fcdb8f2c7c75a8373065458212  ./NOTICE.md
-e7a689bbdd1548e196ddc7d64acced44f4762514c1105dbb223dea33fe219e63  ./README.md
+5ff9bdc7367fd700f7efdfa989889a35a5468aa0390d1f6417670db07a8aa21f  ./README.md
 20114bd3f2317df4e90dca0f3c81758e58b3b3cd493fb397c80af33b79f1ac7f  ./ROADMAP.md
 3bcc33fd1bfba5632a6f83abc64f5fb3a1516cb58ab5bddbd221a68368abc44f  ./SECURITY.md
 a5c386857d7702c5bcb9a9c4eadfb3cf2e281fd256856031736cb0dd2db2b20d  ./assets/README.md
@@ -9,11 +9,12 @@ ff211fb2f3b77926d0b15a28e25b6ac1af4422dc2d69280c481579c2deb41dea  ./assets/rom3-
 11648426f700c860800d6d3f12766637811d1f443de25e095de2acbb00b922c5  ./configs/rom3-j613-mirrorlist
 89dc56a4ce6e9f02cab3a493c6c1eb6b2a0ee37457a2465614dbe21c330aa15d  ./configs/rom3-j613.conf
 b06ddef33a15afa68034b7f098cd309bdba7a206082a50245e15f475c6132dd4  ./docs/architecture.md
+a13a2d1c800e71998730a5bf59b849f3528d22abaeeb63ca74ffbcd3b6da6550  ./docs/bootstrap.md
 45198759f426f58cde524f07f0870324cc261cd43125655b782570e46602beb7  ./docs/installer.md
 af21b65d2f074647d4f6e52b4007cc848ad1dc26e8b51b9a213237838597386b  ./docs/repository.md
 7114d998987a052e97ab19cb4f8fe59f5758f297e691d498589c8f02d2f3aeb5  ./docs/support-matrix.md
 d5748f225c3c95a89879a2c8318d5d20867826a80a6f5558a2efbec3e0b4aa61  ./docs/update-model.md
-3f362c7333405abf400cc80e1c7003ec5471ea7ec6506564f2310feaae4ffc0c  ./evidence/repository-validation.md
+5bd4e7ef1de9e1656813e65d47a11740dbdc5a75351a5dfe7d6412a2e32a38c6  ./evidence/repository-validation.md
 38d2893b6107a7e0e1659d6cabe1ddd5ddc5da17db0e04cdc20c9f149fbdf1f1  ./installer/README.md
 0678f6b8cc646269051cc27230932d7f362883f7ab374666157dda08df0ff81d  ./installer/payload-plan.json
 6bfd392ba79997e8e6b66df6ec461f3eb836a16c2983ffcabd4c240672c8efa0  ./installer/profile.json
@@ -77,6 +78,7 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  ./packages/rom
 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b  ./repo/aarch64/.gitkeep
 0bf0623a81f37da3f6734917520052411b0ce8aa20cea176ab2712ed2f9df007  ./repo/keys/README.md
 26dfa1beaccc70c0a16f9596e2d0cc39d2982e5a9ff862714e479447301d8e2a  ./repo/keys/rom3-j613-packages.pub
+6cc1be79186c6718fc17f42fe3d730e3d46d3484182f43692689d93dcb5f75bc  ./scripts/bootstrap-client.sh
 022f46fcbf87030f444101dbb931f6ae9cb9eb65f5e8bc90279207df667b2f9a  ./scripts/build-recipes.sh
 1006d32652cf9ef231033294e0fbb4d4e848335a133cdb59062a3cb4aa3f4ea2  ./scripts/check-stack.py
 260fe0ab2525f332d04d0bbb700025b83bf2dd1f7e2e3c9a28f02aca731ff3af  ./scripts/create-signing-key.sh

@@ -1,0 +1,38 @@
+# Existing-system bootstrap
+
+ROM3 can be attached to a working `J613` installation without replacing the
+kernel or performing a full update.
+
+Run as root:
+
+```bash
+cd /home/adi/ROM3-j613
+./scripts/bootstrap-client.sh
+```
+
+The script:
+
+1. downloads the pinned public key;
+2. verifies its fingerprint;
+3. imports and locally signs it with `pacman-key`;
+4. installs the `[rom3-j613]` pacman configuration;
+5. backs up and updates `/etc/pacman.conf` once;
+6. refreshes package metadata;
+7. installs `rom3-j613-release`, which pulls the exact meta and guard packages;
+8. verifies the installed package set.
+
+It deliberately does not run `pacman -Syu`.
+
+Expected signing fingerprint:
+
+```text
+FA80FF234BCDF36211649321EB9845C8BAA89A4A
+ROM3-j613 package signing <packages@rom3-j613.invalid>
+```
+
+After bootstrap, inspect pending changes with:
+
+```bash
+rom3-j613-update --check
+```
+

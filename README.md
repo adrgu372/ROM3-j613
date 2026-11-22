@@ -106,3 +106,6 @@ See [ROADMAP.md](ROADMAP.md).
 - Do not treat build success as hardware qualification.
 - Do not add another Mac model based only on a shared SoC name.
 
+For a working `J613` installation, [docs/bootstrap.md](docs/bootstrap.md)
+attaches the signed ROM3 feed without upgrading the system.
+
