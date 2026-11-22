@@ -1,0 +1,30 @@
+diff --git a/macOS/Packaging/build-app.sh b/macOS/Packaging/build-app.sh
+index 8436458..d07fca2 100755
+--- a/macOS/Packaging/build-app.sh
++++ b/macOS/Packaging/build-app.sh
+@@ -325,11 +325,12 @@ done
+ install -m 0444 "$package_directory/Design/Assets/MacBookPowerButton.png" "$resources/MacBookPowerButton.png"
+ install -m 0444 "$package_directory/Design/Assets/MacDesktopPowerButton.png" "$resources/MacDesktopPowerButton.png"
+ mkdir -p "$resources/RecoveryTemplate"
+-/usr/bin/ditto "$recovery_template" "$resources/RecoveryTemplate/Aurora Installer.app"
+-strip_installed_swift "$resources/RecoveryTemplate/Aurora Installer.app/Contents/MacOS/OmarchyRecovery"
++recovery_destination="$resources/RecoveryTemplate/$INSTALLER_APP_NAME.app"
++/usr/bin/ditto "$recovery_template" "$recovery_destination"
++strip_installed_swift "$recovery_destination/Contents/MacOS/OmarchyRecovery"
+ codesign --force --sign "$signing_identity" "${timestamp_arguments[@]}" \
+-  --options runtime "$resources/RecoveryTemplate/Aurora Installer.app"
+-[[ $("$resources/RecoveryTemplate/Aurora Installer.app/Contents/MacOS/OmarchyRecovery" --build-mode) == recovery ]] \
++  --options runtime "$recovery_destination"
++[[ $("$recovery_destination/Contents/MacOS/OmarchyRecovery" --build-mode) == recovery ]] \
+   || fail "stripped Recovery template no longer reports Recovery mode"
+ if [[ $sealed_catalog_available == "true" ]]; then
+   install -m 0444 "$sealed_catalog" "$resources/Release/catalog.json"
+@@ -410,7 +411,7 @@ codesign --verify --strict -R="$restore_image_requirement" "$restore_image_path"
+ # the helper reads them, so they stay as they are.
+ plutil -replace EnvironmentVariables.OMARCHY_RESTORE_IMAGE_REQUIREMENT \
+   -string "$restore_image_requirement" "$contents/Library/LaunchDaemons/$daemon_plist_name"
+-recovery_hash=$(codesign --display --verbose=4 "$resources/RecoveryTemplate/$INSTALLER_APP_NAME.app" 2>&1 | sed -n 's/^CDHash=//p')
++recovery_hash=$(codesign --display --verbose=4 "$recovery_destination" 2>&1 | sed -n 's/^CDHash=//p')
+ [[ $recovery_hash =~ ^([0-9a-f]{40}|[0-9a-f]{64})$ ]] || fail "cannot identify the signed Recovery template"
+ plutil -replace EnvironmentVariables.OMARCHY_RECOVERY_TEMPLATE_REQUIREMENT \
+   -string "cdhash H\"$recovery_hash\"" "$contents/Library/LaunchDaemons/$daemon_plist_name"

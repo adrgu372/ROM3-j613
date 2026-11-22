@@ -36,9 +36,14 @@ fi
 git -C "$upstream" fetch origin "$commit"
 git -C "$upstream" checkout --detach "$commit"
 [[ $(git -C "$upstream" rev-parse HEAD) == "$commit" ]]
-installer_patch=$root/patches/aurora-installer-macos26-cdhash.patch
-git -C "$upstream" apply --check "$installer_patch"
-git -C "$upstream" apply "$installer_patch"
+installer_patches=(
+    "$root/patches/aurora-installer-macos26-cdhash.patch"
+    "$root/patches/aurora-installer-rom3-recovery-name.patch"
+)
+for installer_patch in "${installer_patches[@]}"; do
+    git -C "$upstream" apply --check "$installer_patch"
+    git -C "$upstream" apply "$installer_patch"
+done
 source_root=$upstream/macOS
 [[ -d $source_root/Packaging && -d $source_root/Release && -d $source_root/scripts ]] || {
     echo "pinned installer source has an unexpected layout: $source_root" >&2
