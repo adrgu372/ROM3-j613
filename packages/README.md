@@ -1,18 +1,31 @@
 # ROM3 package variants
 
-The final names are intentionally distinct from the official Aurora packages:
+The initial stable channel keeps the upstream names:
+
+```text
+linux-aurora
+linux-aurora-headers
+aura
+```
+
+They are locked to exact versions by:
+
+```text
+rom3-j613-meta
+rom3-j613-guard
+```
+
+Keeping the original names for the first release avoids an unnecessary
+`pkgbase`, initramfs preset and boot-entry migration. A later release may
+introduce replacement variants such as:
 
 ```text
 linux-rom3-j613
-linux-rom3-j613-headers
 aura-rom3-j613
 kwin-rom3-j613
-rom3-j613-meta
-rom3-j613-keyring
-rom3-j613-release
 ```
 
-Replacement variants should declare both compatibility and conflict:
+Those variants must declare both compatibility and conflict:
 
 ```ini
 provides=('linux-aurora=7.3.0.aurora1-42')
@@ -20,10 +33,16 @@ conflicts=('linux-aurora')
 replaces=('linux-aurora')
 ```
 
-This prevents an official repository update from silently replacing a tested
-ROM3 package.
+The current `rom3-j613-meta` package requires exact versions of every
+quarantined package. A transaction that would move one of them to an
+unqualified version cannot satisfy the meta-package dependency.
 
-No package recipes are published in this initial scaffold. They will be
-imported from the verified source repository only after the signed repository
-workflow is in place.
+Imported recipes currently cover:
+
+- `linux-aurora`
+- `aura`
+- `rom3-j613-meta`
+- `rom3-j613-guard`
+
+Generated binaries are excluded from Git.
 

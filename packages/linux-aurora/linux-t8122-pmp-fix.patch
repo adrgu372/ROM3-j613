@@ -1,0 +1,210 @@
+From 24e790b1255d65be1e8d655a09fc0ddeccbeec30 Mon Sep 17 00:00:00 2001
+From: Scott Jones <scottajones@gmail.com>
+Date: Fri, 23 Oct 2026 00:24:18 -0400
+Subject: [PATCH 06/13] pmdomain: apple: pmp-report: keep the T8122 14.x GPU
+ readiness for the M3 runtime
+
+The 7.2 rebase replaced the T8122 14.x branch of
+apple_pmp_report_wait_supplier_ready() with a T6030-only one, so on an M3
+MacBook Air every GPU power vote returns -ENODEV even with the PMP
+running. With the new hidden APPLE_T8122_GPU_PMP_LINK, which
+DRM_ASAHI_M3_T8122 selects (as DRM_ASAHI_G15 selects
+APPLE_T6030_GPU_PMP_LINK), wait for the unique T8122 report's display
+request (DISP, reg 7) to be ready and acknowledged before AGX, as on the
+7.1.12 kernel the runtime was qualified with.
+
+The PMP graph and supplier host tests copy the dispatch, so they copy the
+T8122 wait too, built off there; their mutations still target the T6030
+path.
+
+Generated-by: LLM
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Signed-off-by: Scott Jones <scottajones@gmail.com>
+---
+ drivers/gpu/drm/asahi/Kconfig           |  1 +
+ drivers/pmdomain/apple/pmp-report.c     | 43 ++++++++++++++++++++++++-
+ drivers/soc/apple/Kconfig               |  9 ++++++
+ tools/asahi/t6030-pmp-graph-tests.c     |  1 +
+ tools/asahi/t6030-pmp-graph-tests.py    | 12 +++++--
+ tools/asahi/t6030-pmp-supplier-tests.py | 12 +++++++
+ 6 files changed, 74 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/gpu/drm/asahi/Kconfig b/drivers/gpu/drm/asahi/Kconfig
+index d383802ee8825..03939a732fc24 100644
+--- a/drivers/gpu/drm/asahi/Kconfig
++++ b/drivers/gpu/drm/asahi/Kconfig
+@@ -84,6 +84,7 @@ config DRM_ASAHI_M3_T8122
+ 	depends on DRM_ASAHI
+ 	# The runtime adopts the firmware's UAT through the G15 backend's handoff helpers.
+ 	depends on DRM_ASAHI_G15
++	select APPLE_T8122_GPU_PMP_LINK
+ 	select CRYPTO_LIB_SHA256
+ 	default n
+ 	help
+diff --git a/drivers/pmdomain/apple/pmp-report.c b/drivers/pmdomain/apple/pmp-report.c
+index 42bff817bfa78..b375a83b9e0a2 100644
+--- a/drivers/pmdomain/apple/pmp-report.c
++++ b/drivers/pmdomain/apple/pmp-report.c
+@@ -687,6 +687,44 @@ static int apple_pmp_report_wait_t6030_14(struct device *supplier, unsigned int
+ 	return ret;
+ }
+ 
++/*
++ * The T8122 (M3 MacBook Air) GPU on its 14.8.3 firmware, for the M3 runtime
++ * (APPLE_T8122_GPU_PMP_LINK): the unique T8122 report linked to this PMP, and
++ * its display request (DISP, reg 7) READY and acknowledged before AGX, as on
++ * the 7.1.12 kernel that runtime was qualified with.
++ */
++static int apple_pmp_report_wait_t8122_14(struct device *supplier, unsigned int timeout_ms)
++{
++	struct device_node *np, *report = NULL, *pmp, *entry;
++	int ret;
++
++	if (!IS_ENABLED(CONFIG_APPLE_T8122_GPU_PMP_LINK) ||
++	    !of_machine_is_compatible("apple,t8122") ||
++	    !of_device_is_compatible(supplier->of_node, "apple,t8122-pmp-v2"))
++		return -ENODEV;
++	for_each_compatible_node(np, NULL, "apple,t8122-pmp-v2-report") {
++		if (report) {
++			of_node_put(np);
++			of_node_put(report);
++			return -ENODEV;
++		}
++		report = of_node_get(np);
++	}
++	if (!report || !of_device_is_available(report) ||
++	    of_property_count_u32_elems(report, "apple,pmp") != 1) {
++		of_node_put(report);
++		return -ENODEV;
++	}
++	pmp = of_parse_phandle(report, "apple,pmp", 0);
++	entry = apple_pmp_report_t6030_entry(report);
++	ret = pmp == supplier->of_node && entry ?
++		apple_pmp_report_wait_ready(entry, msecs_to_jiffies(timeout_ms)) : -ENODEV;
++	of_node_put(entry);
++	of_node_put(pmp);
++	of_node_put(report);
++	return ret;
++}
++
+ /* The native 25G83 PMP starts through its supplier topology, after requests
+  * are seeded. Its report is pinned against removal while readiness is read.
+  */
+@@ -701,8 +739,11 @@ int apple_pmp_report_wait_supplier_ready(struct device *supplier, unsigned int t
+ 	int ret;
+ 
+ 	/* A declared report always takes the existing native25 path below. */
+-	if (!np && !of_property_present(supplier->of_node, "apple,pmp-report"))
++	if (!np && !of_property_present(supplier->of_node, "apple,pmp-report")) {
++		if (of_machine_is_compatible("apple,t8122"))
++			return apple_pmp_report_wait_t8122_14(supplier, timeout_ms);
+ 		return apple_pmp_report_wait_t6030_14(supplier, timeout_ms);
++	}
+ 	if (!np || !of_device_is_compatible(np, t8132 ?
+ 		"apple,t8132-pmp-v2-report" : "apple,j613-25g83-pmp-report")) {
+ 		of_node_put(np);
+diff --git a/drivers/soc/apple/Kconfig b/drivers/soc/apple/Kconfig
+index c8b50840a7dda..3f6db5ef17ad8 100644
+--- a/drivers/soc/apple/Kconfig
++++ b/drivers/soc/apple/Kconfig
+@@ -368,6 +368,15 @@ config APPLE_DISPLAY_GATE
+ 	  Say 'y' if you want the native display on M3 Pro, M3 Max, M3 and
+ 	  M4 Pro Macs.
+ 
++config APPLE_T8122_GPU_PMP_LINK
++	bool
++	depends on APPLE_PMP_REPORT
++	default n
++	help
++	  Let T8122 (M3 MacBook Air) GPU power commands wait for the display
++	  request the PMP report acknowledges on the 14.8.3 firmware, as the
++	  M3 runtime of DRM_ASAHI_M3_T8122 requires.
++
+ config APPLE_T6030_GPU_PMP_LINK
+ 	bool
+ 	depends on APPLE_DISPLAY_GATE
+diff --git a/tools/asahi/t6030-pmp-graph-tests.c b/tools/asahi/t6030-pmp-graph-tests.c
+index e89d982d2d0a6..89a6ac0efc8e7 100644
+--- a/tools/asahi/t6030-pmp-graph-tests.c
++++ b/tools/asahi/t6030-pmp-graph-tests.c
+@@ -20,6 +20,7 @@ typedef uint8_t u8;
+ #define BIT(n) (1U << (n))
+ #define IS_ENABLED(x) (x)
+ #define CONFIG_APPLE_T6030_GPU_PMP_LINK 1
++#define CONFIG_APPLE_T8122_GPU_PMP_LINK 0
+ #define PMP_REPORT_READY 1
+ #define GFP_KERNEL 0
+ #define GENPD_FLAG_ACTIVE_WAKEUP 1
+diff --git a/tools/asahi/t6030-pmp-graph-tests.py b/tools/asahi/t6030-pmp-graph-tests.py
+index 4c85001acf1a8..c8a58b302e727 100644
+--- a/tools/asahi/t6030-pmp-graph-tests.py
++++ b/tools/asahi/t6030-pmp-graph-tests.py
+@@ -60,6 +60,12 @@ def main():
+                         'static int apple_pmp_report_entry_resume_noirq(']
+     offsets = re.search(r'static const struct apple_pmp_report_offsets apple_pmp_offsets_t6030 = \{.*?\n\};', source, re.S)[0]
+     functions = '\n'.join(extract.function(source, n) for n in names)
++    # The T8122 14.x wait (CONFIG_APPLE_T8122_GPU_PMP_LINK=0 here) precedes the dispatch; it is
++    # added after the mutations are placed, so they target the T6030 path only.
++    t8122 = extract.function(source, 'static int apple_pmp_report_wait_t8122_14(') + '\n'
++    dispatch = 'int apple_pmp_report_wait_supplier_ready('
++    def with_t8122(text):
++        return text.replace(dispatch, t8122 + dispatch, 1)
+     validation = re.sub(r'^#include .*\n', '', (ROOT / 'drivers/pmdomain/apple/pmp-report-validation.h').read_text(), flags=re.M)
+     dram_type = re.search(r'struct apple_pmp_dram \{.*?\n\};',
+                           (ROOT / 'drivers/pmdomain/apple/pmp-dram.h').read_text(), re.S)[0]
+@@ -78,7 +84,7 @@ def main():
+             '\n' + dram_attrs + '\n' + functions)
+     # The actual overlay must still describe a halted supplier and disabled DMA/mailbox.
+     assert overlay.count('status = \"disabled\";') >= 3
+-    (args.output / 'production.h').write_text(code)
++    (args.output / 'production.h').write_text(with_t8122(code))
+     (args.output / 'overlay.h').write_text('static const struct overlay_entry overlay_entries[] = {\n' + entry_data + '\n};\n')
+     compiler = shlex.split(os.environ.get('CC', 'clang'))
+     command = compiler + ['-std=gnu11', '-g', '-O1', '-Wall', '-Wextra', '-Werror',
+@@ -133,13 +139,13 @@ def main():
+             ]
+         for name, old, new in controls:
+             assert code.count(old) == 1, (name, code.count(old))
+-            (args.output / 'production.h').write_text(code.replace(old, new))
++            (args.output / 'production.h').write_text(with_t8122(code.replace(old, new)))
+             built = subprocess.run(command, capture_output=True, text=True)
+             # A mutant must compile; compilation failure is not regression evidence.
+             ran = subprocess.run([str(args.output / 'graph')], capture_output=True, text=True) if not built.returncode else None
+             (args.output / (name + '.log')).write_text(built.stdout + built.stderr + (ran.stdout + ran.stderr if ran else ''))
+             mutations.append({'name': name, 'build_rc': built.returncode, 'run_rc': ran.returncode if ran else None})
+-        (args.output / 'production.h').write_text(code)
++        (args.output / 'production.h').write_text(with_t8122(code))
+         assert all(m['build_rc'] == 0 and m['run_rc'] != 0 for m in mutations), mutations
+     (args.output / 'receipt.json').write_text(json.dumps({'source_ref': args.ref, 'source_sha256': hashlib.sha256(code.encode()).hexdigest(),
+          'overlay_sha256': hashlib.sha256(overlay.encode()).hexdigest(), 'overlay_entries': entries,
+diff --git a/tools/asahi/t6030-pmp-supplier-tests.py b/tools/asahi/t6030-pmp-supplier-tests.py
+index 269006b36aa4f..725e37e24f6cf 100755
+--- a/tools/asahi/t6030-pmp-supplier-tests.py
++++ b/tools/asahi/t6030-pmp-supplier-tests.py
+@@ -56,6 +56,7 @@ def run(out, name, code, compiler, configs=(0, 1)):
+         command = compiler + ["-std=gnu11", "-g", "-O1", "-Wall", "-Wextra", "-Werror",
+                               "-fsanitize=address,undefined", "-fno-omit-frame-pointer",
+                               f"-DCONFIG_APPLE_T6030_GPU_PMP_LINK={config}",
++                              "-DCONFIG_APPLE_T8122_GPU_PMP_LINK=0",
+                               "-I", str(dest),
+                               str(ROOT / "tools/asahi/t6030-pmp-supplier-tests.c"),
+                               "-o", str(binary)]
+@@ -148,6 +149,17 @@ def main():
+             assert code.count(old) == 1, (name, code.count(old))
+             variants.append((name, code.replace(old, new)))
+         variants.append(("control-after", code))
++    # The T8122 14.x wait is built with CONFIG_APPLE_T8122_GPU_PMP_LINK=0 here; it is added to
++    # every variant after the T6030 mutations are placed, so they target the T6030 path only.
++    dispatch = "int apple_pmp_report_wait_supplier_ready("
++    t8122 = function(report, "static int apple_pmp_report_wait_t8122_14(") + "\n"
++    def with_t8122(source):
++        if dispatch not in source:
++            return source
++        return source.replace(dispatch, t8122 + dispatch, 1)
++    variants = [(name, with_t8122(source)) for name, source in variants]
++    if baseline_code and "apple_pmp_report_wait_t8122_14(" in baseline_code:
++        baseline_code = with_t8122(baseline_code)
+     results = [run(args.output, name, source, compiler) for name, source in variants]
+     if baseline_code:
+         results.append(run(args.output, "control-prior-config-off", baseline_code, compiler, (0,)))
+

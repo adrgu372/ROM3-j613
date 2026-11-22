@@ -1,0 +1,82 @@
+#!/bin/bash
+set -euo pipefail
+
+quarantine=/usr/share/rom3-j613/quarantine.packages
+mode=${1:---check}
+
+if (( EUID != 0 )); then
+    echo "rom3-j613-update must run as root" >&2
+    exit 1
+fi
+
+case $mode in
+    --check|--apply) ;;
+    *)
+        echo "usage: rom3-j613-update [--check|--apply]" >&2
+        exit 2
+        ;;
+esac
+
+[[ -r $quarantine ]] || {
+    echo "missing quarantine list: $quarantine" >&2
+    exit 1
+}
+
+pacman -Sy --noconfirm
+
+pending=$(mktemp)
+blocked=$(mktemp)
+quarantine_sorted=$(mktemp)
+trap 'rm -f "$pending" "$blocked" "$quarantine_sorted"' EXIT
+
+pacman -Qu 2>/dev/null | awk '{print $1}' | sort -u > "$pending"
+sort -u "$quarantine" > "$quarantine_sorted"
+comm -12 "$pending" "$quarantine_sorted" > "$blocked"
+
+if [[ -s $blocked ]]; then
+    echo "ROM3-j613: unqualified updates blocked:" >&2
+    sed 's/^/  - /' "$blocked" >&2
+    echo >&2
+    echo "Publish a newly tested stack before changing these packages." >&2
+    exit 1
+fi
+
+if [[ ! -s $pending ]]; then
+    echo "ROM3-j613: no pending package updates."
+    exit 0
+fi
+
+echo "Proposed non-quarantined updates:"
+while IFS= read -r package; do
+    pacman -Qu "$package" || true
+done < "$pending"
+
+if [[ $mode == --check ]]; then
+    echo
+    echo "ROM3-j613: no quarantined package would change."
+    exit 0
+fi
+
+stamp=$(date +%Y%m%d-%H%M%S)
+backup=/var/backups/rom3-j613/$stamp
+install -d -m700 "$backup"
+
+[[ ! -e /boot/efi/m1n1/boot.bin ]] ||
+    cp -a /boot/efi/m1n1/boot.bin "$backup/boot.bin"
+[[ ! -e /etc/m1n1.conf ]] ||
+    cp -a /etc/m1n1.conf "$backup/m1n1.conf"
+[[ ! -e /etc/default/update-m1n1 ]] ||
+    cp -a /etc/default/update-m1n1 "$backup/update-m1n1"
+
+pacman -Q > "$backup/packages.before"
+sha256sum "$backup"/boot.bin > "$backup/boot.bin.sha256" 2>/dev/null || true
+
+echo "Backup: $backup"
+echo "Starting full upgrade outside ROM3's quarantined packages..."
+pacman -Syu
+
+echo
+echo "Update complete. Run:"
+echo "  rom3-j613-check"
+echo "  /usr/share/rom3-j613/verify-live-system.sh"
+

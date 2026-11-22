@@ -1,5 +1,7 @@
 artifacts/
 cache/
+pkg/
+src/
 repo/aarch64/*.pkg.tar.*
 repo/aarch64/*.sig
 repo/aarch64/*.db*

@@ -88,8 +88,12 @@ ROM3 Installer catalog and payload
 ## Current milestone
 
 The project starts with the already verified `J613` stack and a fail-closed
-update policy. There is no public ROM3 package feed yet and no ROM3 installer
-payload yet.
+update policy. The tested kernel and Aura recipes, exact-version meta-package,
+update guard and initial local test packages now exist.
+
+There is no public ROM3 package feed yet, because the signing key and immutable
+published snapshot have not been created. There is no ROM3 installer payload
+yet.
 
 See [ROADMAP.md](ROADMAP.md).
 

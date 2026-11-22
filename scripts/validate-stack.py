@@ -10,6 +10,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parent.parent
 STACK = ROOT / "stack" / "verified-stack.json"
+BUILDS = ROOT / "stack" / "package-builds.json"
 QUARANTINE = ROOT / "stack" / "quarantine.packages"
 
 REQUIRED_KEYS = {
@@ -63,6 +64,22 @@ def main() -> int:
     for name, version in packages.items():
         if not name or not version:
             fail("empty package name or version")
+
+    builds = json.loads(BUILDS.read_text())
+    if builds.get("schema_version") != 1:
+        fail("unsupported package-build schema")
+    if builds.get("distribution") != "ROM3-j613":
+        fail("unexpected package-build distribution")
+    seen = set()
+    for artifact in builds.get("artifacts", []):
+        name = artifact.get("package")
+        if not name or name in seen:
+            fail("duplicate or empty built package")
+        seen.add(name)
+        if not re.fullmatch(r"[0-9a-f]{64}", artifact.get("sha256", "")):
+            fail(f"invalid artifact digest for {name}")
+        if not artifact.get("file", "").endswith(".pkg.tar.xz"):
+            fail(f"unexpected artifact extension for {name}")
 
     print("ROM3-j613 stack metadata is valid.")
     return 0

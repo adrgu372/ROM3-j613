@@ -1,0 +1,351 @@
+From 436058c5ce3f339c7f36746b3e1b2a8d339471a0 Mon Sep 17 00:00:00 2001
+From: Scott Jones <scottajones@gmail.com>
+Date: Fri, 20 Nov 2026 00:31:14 -0500
+Subject: [PATCH] kboot_audio: pass amp-tx-zd-config on only where the card's
+ idle masks agree
+
+On the 13" M3 Air (J613) the speakers stay silent and speakersafetyd
+stops with "Left Tweeter: Negative power, bad ivsense data?".
+
+The cause is the amp-tx-zd-config row aura passes on. The SN012776
+driver takes the row as the amp's SDOUT slots to drive zeros on when idle
+(its first four bytes, slot 0 in bit 0), in place of the sound card's
+idle mask for that amp. On the J613 each woofer's row is the complement
+of the card mask its speakers worked with on 7.2:
+ - left woofer: row f0 f0 f0 ff, mask 0x0f0f;
+ - right woofer: row 0f 0f 0f ff, mask 0xf0f0.
+With the rows, SDOUT_HIZ_1..4 read back f0 f0 f0 ff and 0f 0f 0f ff, and
+speakersafetyd reports bad IV sense and stops.
+
+Decide by the data instead of by the SoC. For each amp, look up the
+card's idle mask: dai-tdm-slot-tx-idle-mask-<n>, in idle mode "zero", of
+each dai-link that lists the amp as its n-th codec, which is the mask
+macaudio applies. Where the card has one and the row's slots contradict
+it on the bytes up to the mask's highest slot, the row is not passed on,
+the log says why, and the card's mask stays in charge. The amp is then
+set up as before aura passed the rows on. The row also stays back when
+two dai-links give the amp different masks. Where the card has no mask
+for the amp, or its codec list is not one phandle per amp, the row goes
+on as before.
+
+Why compare, rather than drop the row whenever the card has a mask: on
+the Pros whose masks span three bytes, the rows (f0 f0 f0 ff as on the
+J414c) also zero slots 24-31, and dropping them there would change those
+Macs. Their
+trees describe their masks as the ADT rows; where that holds, nothing
+changes. Where a row contradicts a mask, that amp goes back to its
+card's mask.
+
+tests/run-kboot-audio.sh gains these scenarios:
+ - card masks that agree, including on a T8122 tree;
+ - a contradicting mask, on a T8122 tree and on another;
+ - two dai-links that disagree;
+ - a mask without the zero idle mode;
+ - a codec list with a non-phandle entry;
+ - short rows beside a mask;
+ - the J613's real woofer rows and masks.
+All 36 scenarios pass. Restoring the T8122 check, dropping the check,
+comparing whole words, ignoring the idle mode, or dropping either of the
+consistency rules each fails a scenario.
+
+On the J613 with a 7.3 kernel and the row dropped (the earlier T8122
+version): SDOUT_HIZ as on 7.2, speakersafetyd running, speakers audible.
+This version has not run on hardware.
+
+Assisted-by: Claude:claude-opus-5-5
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ src/kboot_audio.c        | 115 ++++++++++++++++++++++++++++++++++++++-
+ tests/kboot_audio_adt.py |  81 +++++++++++++++++++++++++--
+ tests/run-kboot-audio.sh |  15 +++++
+ 3 files changed, 204 insertions(+), 7 deletions(-)
+
+diff --git a/src/kboot_audio.c b/src/kboot_audio.c
+index 1e802cfbc..7ab820a99 100644
+--- a/src/kboot_audio.c
++++ b/src/kboot_audio.c
+@@ -18,6 +18,16 @@
+  *   speaker-config        -> apple,speaker-config        (4 bytes: operating level and slots)
+  *   amp-tx-zd-config      -> apple,amp-tx-zd-config      (8 bytes: sense output idle slots)
+  *
++ * An amp-tx-zd-config row is the amp's SDOUT slots to drive zeros on when idle (the first four
++ * bytes, slot 0 in bit 0), and the kernel's amp driver uses it in place of the sound card's idle
++ * mask for that amp: dai-tdm-slot-tx-idle-mask-<n>, with dai-tdm-idle-mode-<n> "zero", on the
++ * dai-link that lists the amp n-th. On most Macs the row and the mask are the same slots. Where
++ * the card has a mask for the amp and the row disagrees with it on the slots the mask spans, the
++ * row is not passed on and the card's mask stays in charge, as before the rows were passed on.
++ * The 13" M3 Air (J613) is such a Mac: its rows are the complement of the masks its speakers
++ * work with, and with the rows speakersafetyd reports bad IV sense (no speaker protection,
++ * silent speakers).
++ *
+  * A property the group does not have (or one without a row for every amp) is
+  * removed from its amps, so the kernel never sees a value that did not come from this Mac. Amps
+  * are matched to the DT's ti,sn012776 nodes by I2C address, which must name exactly one node. A
+@@ -108,6 +118,95 @@ static int dt_amp_by_addr(const void *dt, u32 addr)
+     return found;
+ }
+ 
++/*
++ * The sound card's TDM idle mask for the DT amp @amp: dai-tdm-slot-tx-idle-mask-<n>, in idle
++ * mode "zero", of each dai-link whose codec list names the amp as its n-th codec. 1 with *mask set when the card has
++ * one, 0 when it has none or its codec list is not one phandle per amp, -1 when two dai-links
++ * give the amp different masks.
++ */
++static int dt_card_idle_mask(const void *dt, int amp, u32 *mask)
++{
++    u32 phandle = fdt_get_phandle(dt, amp);
++    int found = 0;
++
++    if (!phandle)
++        return 0;
++    for (int codec = fdt_next_node(dt, -1, NULL); codec >= 0;
++         codec = fdt_next_node(dt, codec, NULL)) {
++        const char *name = fdt_get_name(dt, codec, NULL);
++        int len, n;
++        const fdt32_t *dais;
++
++        if (!name || strcmp(name, "codec"))
++            continue;
++        dais = fdt_getprop(dt, codec, "sound-dai", &len);
++        if (!dais || len <= 0 || len % (int)sizeof(*dais))
++            continue;
++        n = len / sizeof(*dais);
++        /* The index is the codec's place in the list only if every entry is a bare phandle */
++        bool bare = true;
++        for (int k = 0; k < n && bare; k++) {
++            int dai = fdt_node_offset_by_phandle(dt, fdt32_to_cpu(dais[k]));
++            const fdt32_t *cells = dai < 0 ? NULL : fdt_getprop(dt, dai, "#sound-dai-cells", &len);
++            bare = cells && len == sizeof(*cells) && !fdt32_to_cpu(*cells);
++        }
++        if (!bare)
++            continue;
++        for (int k = 0; k < n; k++) {
++            char prop[40];
++            const fdt32_t *m;
++
++            if (fdt32_to_cpu(dais[k]) != phandle)
++                continue;
++            const char *mode;
++            int link = fdt_parent_offset(dt, codec);
++
++            /* The mask takes effect only in the "zero" idle mode */
++            snprintf(prop, sizeof(prop), "dai-tdm-idle-mode-%d", k);
++            mode = fdt_getprop(dt, link, prop, &len);
++            if (!mode || len != sizeof("zero") || memcmp(mode, "zero", sizeof("zero")))
++                continue;
++            snprintf(prop, sizeof(prop), "dai-tdm-slot-tx-idle-mask-%d", k);
++            m = fdt_getprop(dt, link, prop, &len);
++            if (!m || len != sizeof(*m))
++                continue;
++            if (found && *mask != fdt32_to_cpu(*m))
++                return -1;
++            *mask = fdt32_to_cpu(*m);
++            found = 1;
++        }
++    }
++    return found;
++}
++
++/*
++ * Whether the amp-tx-zd-config @row for the DT amp at @addr may go to the kernel: not when the
++ * sound card has an idle mask for the amp that the row's slot mask contradicts on the bytes (eight
++ * slots each) up to the mask's highest set slot.
++ */
++static bool tx_zd_row_ok(const void *dt, const char *name, u32 addr, const u8 *row)
++{
++    u32 zd = row[0] | row[1] << 8 | row[2] << 16 | (u32)row[3] << 24, mask = 0, span;
++    int node = dt_amp_by_addr(dt, addr);
++    int ret = node < 0 ? 0 : dt_card_idle_mask(dt, node, &mask);
++
++    if (ret < 0) {
++        printf("kboot: audio: %s: amp at 0x%x has two different card idle masks: "
++               "amp-tx-zd-config not passed on\n",
++               name, addr);
++        return false;
++    }
++    if (!ret)
++        return true;
++    span = mask >> 24 ? 0xffffffff : mask >> 16 ? 0xffffff : mask >> 8 ? 0xffff : 0xff;
++    if (!((zd ^ mask) & span))
++        return true;
++    printf("kboot: audio: %s: amp at 0x%x: amp-tx-zd-config slots 0x%08x contradict the card's "
++           "idle mask 0x%x: not passed on, the card's mask applies\n",
++           name, addr, zd, mask);
++    return false;
++}
++
+ /* Set @name on the DT amp at @addr to @val (remove it when @val is NULL) */
+ static int dt_amp_setprop(void *dt, u32 addr, const char *name, const void *val, u32 len)
+ {
+@@ -185,6 +284,16 @@ static int setup_amp_group(void *dt, const void *adt, int arm_io, int group)
+         }
+     }
+ 
++    /* The amp-tx-zd-config rows the card's idle masks allow, decided before any row is written */
++    bool zd_ok[MAX_GROUP_AMPS];
++    {
++        u32 len = 0;
++        const u8 *zd = adt_getprop(adt, group, "amp-tx-zd-config", &len);
++
++        for (int i = 0; i < n; i++)
++            zd_ok[i] = !zd || len < (u32)n * 8 || tx_zd_row_ok(dt, name, addrs[i], zd + i * 8);
++    }
++
+     /* One row per amp, in the group's order */
+     for (size_t p = 0; p < ARRAY_SIZE(amp_row_props); p++) {
+         u32 len = 0;
+@@ -196,9 +305,11 @@ static int setup_amp_group(void *dt, const void *adt, int arm_io, int group)
+                    amp_row_props[p].adt, len, n);
+             rows = NULL;
+         }
++        bool zd = !strcmp(amp_row_props[p].adt, "amp-tx-zd-config");
+         for (int i = 0; i < n; i++) {
+-            if (dt_amp_setprop(dt, addrs[i], amp_row_props[p].dt, rows ? rows + i * row : NULL,
+-                               row))
++            const u8 *val = rows && (!zd || zd_ok[i]) ? rows + i * row : NULL;
++
++            if (dt_amp_setprop(dt, addrs[i], amp_row_props[p].dt, val, row))
+                 return -1;
+         }
+     }
+diff --git a/tests/kboot_audio_adt.py b/tests/kboot_audio_adt.py
+index 7b010b338..48d374649 100644
+--- a/tests/kboot_audio_adt.py
++++ b/tests/kboot_audio_adt.py
+@@ -86,10 +86,25 @@ def adt(buses, extra=None):
+                 [Node("arm-io", arm_io, [gpio_controller()] + (extra or []) + buses)])
+ 
+ 
+-def dts(amps, stale=None, chosen=""):
+-    """A device tree with one ti,sn012776 node per (bus, addr); stale: {(bus, addr): props}"""
++def dts(amps, stale=None, chosen="", compatible=None, card=None):
++    """A device tree with one ti,sn012776 node per (bus, addr); stale: {(bus, addr): props}
++
++    card: (codec addrs in the dai-link's order, {codec index: TDM idle mask}) for a sound card
++    whose speaker dai-link lists those amps, as macaudio's trees do."""
+     out = ["/dts-v1/;", "/ {", "\t#address-cells = <2>;", "\t#size-cells = <2>;",
+            "\tchosen { %s};" % chosen]
++    if compatible:
++        out.insert(2, "\tcompatible = %s;" % ", ".join('"%s"' % c for c in compatible))
++    if card:
++        order, masks = card
++        out += ["\tsound {", "\t\tdai-link@0 {", "\t\t\treg = <0>;"]
++        for i, m in sorted(masks.items()):
++            out += ['\t\t\tdai-tdm-idle-mode-%d = "zero";' % i,
++                    "\t\t\tdai-tdm-slot-tx-idle-mask-%d = <0x%x>;" % (i, m)]
++        bus = {a: b for b, a in reversed(amps)}
++        out += ["\t\t\tcodec { sound-dai = %s; };" %
++                ", ".join("<&amp_%x_%x>" % (bus[a], a) for a in order),
++                "\t\t};", "\t};"]
+     buses = sorted({b for b, _ in amps})
+     for b in buses:
+         out += ["\ti2c@%x {" % (0x100000 * (b + 1)), "\t\treg = <0x0 0x%x 0x0 0x4000>;" %
+@@ -97,8 +112,9 @@ def dts(amps, stale=None, chosen=""):
+         for bb, a in amps:
+             if bb != b:
+                 continue
+-            out += ["\t\tcodec@%x {" % a, '\t\t\tcompatible = "ti,sn012776", "ti,tas2764";',
+-                    "\t\t\treg = <0x%x>;" % a]
++            out += ["\t\tamp_%x_%x: codec@%x {" % (b, a, a),
++                    '\t\t\tcompatible = "ti,sn012776", "ti,tas2764";',
++                    "\t\t\treg = <0x%x>;" % a, "\t\t\t#sound-dai-cells = <0>;"]
+             for k, v in (stale or {}).get((b, a), {}).items():
+                 out.append("\t\t\t%s = [%s];" % (k, " ".join("%02x" % x for x in v)))
+             out.append("\t\t};")
+@@ -173,6 +189,60 @@ def scenario(name):
+              Node("i2c1", {}, [amp("audio-speaker-a", 0x41, 0x11)])]
+     if name == "group":
+         return adt(group), dts(three, {(1, 0x41): STALE})
++    # The made-up rows Z0, Z1, Z2 of amps 0x40, 0x41, 0x42 as slot masks
++    z0, z1, z2 = (int.from_bytes(ZD[8 * i:8 * i + 4], "little") for i in range(3))
++    if name == "card-masks-agree":
++        # As on the 14"/16" Pros: the card's masks are the rows (amp 0x41's on its first two
++        # bytes only, all its mask spans); amp 0x42 has no mask
++        return adt(group), dts(three, card=([0x40, 0x41, 0x42], {0: z0, 1: z1 & 0xffff}))
++    if name == "card-mask-contradicts":
++        # Amp 0x41's row disagrees with the card's mask: the card's mask applies to it alone
++        return adt(group), dts(three, {(1, 0x41): STALE},
++                               card=([0x40, 0x41, 0x42], {0: z0, 1: z1 ^ 0x100}))
++    if name == "card-mask-contradicts-t8122":
++        # The same on an M3 tree: decided by the masks, not by the SoC
++        return adt(group), dts(three, card=([0x40, 0x41, 0x42], {0: z0, 1: z1 ^ 0x100}),
++                               compatible=["apple,j613", "apple,t8122", "apple,arm-platform"])
++    if name == "card-masks-agree-t8122":
++        return adt(group), dts(three, card=([0x40, 0x41, 0x42], {0: z0, 1: z1}),
++                               compatible=["apple,j613", "apple,t8122", "apple,arm-platform"])
++    if name == "card-masks-two-links-disagree":
++        # A second dai-link gives amp 0x40 another mask (one its row agrees with, on the two bytes
++        # it spans): the card does not say one thing, so no row for it
++        tree = dts(three, card=([0x40, 0x41, 0x42], {0: z0}))
++        extra = ("\tsound2 {\n\t\tdai-link@0 {\n\t\t\treg = <0>;\n"
++                 "\t\t\tdai-tdm-idle-mode-1 = \"zero\";\n\t\t\tdai-tdm-slot-tx-idle-mask-1 = <0x%x>;\n"
++                 "\t\t\tcodec { sound-dai = <&amp_1_41>, <&amp_0_40>; };\n\t\t};\n\t};\n" % (z0 & 0xffff))
++        return adt(group), tree.replace("\tsound {", extra + "\tsound {", 1)
++    if name == "card-mask-not-zero-mode":
++        # A mask without the "zero" idle mode is one macaudio does not apply: rows go on
++        tree = dts(three, card=([0x40, 0x41, 0x42], {0: z0, 1: z1 ^ 0x100}))
++        return adt(group), tree.replace('dai-tdm-idle-mode-1 = "zero";', 'dai-tdm-idle-mode-1 = "pulldown";')
++    if name == "card-mask-short-rows":
++        # Too short a speaker-config and amp-tx-zd-config, beside a card mask: neither goes on
++        g = dict(GROUP3)
++        g["speaker-config"] = ROWS[:8]
++        g["amp-tx-zd-config"] = ZD[:12]
++        short = [Node("i2c0", {}, [amp("audio-speaker", 0x40, 0x10, g),
++                                    amp("audio-speaker-b", 0x42, 0x12)]),
++                 Node("i2c1", {}, [amp("audio-speaker-a", 0x41, 0x11)])]
++        return adt(short), dts(three, card=([0x40, 0x41, 0x42], {0: z0, 1: z1 ^ 0x100}))
++    if name == "card-codecs-not-bare":
++        # A codec list whose entries are not one phandle each: its masks cannot be matched to
++        # amps, so every row is passed on as without a card
++        tree = dts(three, card=([0x40, 0x41, 0x42], {0: z0, 1: z1 ^ 0x100}))
++        at = tree.index("amp_0_42: codec@42")
++        cells = tree.index("#sound-dai-cells = <0>;", at)
++        return adt(group), tree[:cells] + "#sound-dai-cells = <1>;" + tree[cells + 23:]
++    if name == "j613":
++        # The 13" M3 Air's woofer rows and card masks (left woofer 0x40 is codec 0, right woofer
++        # 0x42 codec 2): each row is the complement of its mask, so neither goes to the kernel
++        g = dict(GROUP3)
++        g["amp-tx-zd-config"] = bytes.fromhex("f0f0f0ff00000000" "0000000000000000" "0f0f0fff00000000")
++        j613 = [Node("i2c0", {}, [amp("audio-speaker", 0x40, 0x10, g),
++                                   amp("audio-speaker-b", 0x42, 0x12)]),
++                Node("i2c1", {}, [amp("audio-speaker-a", 0x41, 0x11)])]
++        return adt(j613), dts(three, card=([0x40, 0x41, 0x42, ], {0: 0x0f0f, 2: 0xf0f0}))
+     if name == "no-dcblocker":
+         g = dict(GROUP3)
+         del g["amp-dcblocker-config"]
+@@ -220,7 +290,8 @@ def scenario(name):
+     raise SystemExit("unknown scenario %s" % name)
+ 
+ 
+-SCENARIOS = ["group", "no-dcblocker", "six-amps", "short-speaker-config", "single-amp", "amp-missing-in-dt", "amp-not-unique-in-dt",
++SCENARIOS = ["group", "card-masks-agree", "card-mask-contradicts", "card-mask-contradicts-t8122",
++             "card-masks-agree-t8122", "card-masks-two-links-disagree", "card-codecs-not-bare", "card-mask-not-zero-mode", "card-mask-short-rows", "j613", "no-dcblocker", "six-amps", "short-speaker-config", "single-amp", "amp-missing-in-dt", "amp-not-unique-in-dt",
+              "dangling-phandle", "no-amps"] + list(SPEAKER_ID_SCENARIOS)
+ 
+ 
+diff --git a/tests/run-kboot-audio.sh b/tests/run-kboot-audio.sh
+index 379c8a27b..ebdf3acaa 100644
+--- a/tests/run-kboot-audio.sh
++++ b/tests/run-kboot-audio.sh
+@@ -80,6 +80,21 @@ expect() { # expect <scenario>: the amp lines that scenario must give (tree orde
+         amp 40 $BOP $DCB $R0 $Z0
+         amp 42 $BOP $DCB $R2 $Z2
+         amp 41 $BOP $DCB $R1 $Z1 ;;
++    card-masks-agree|card-masks-agree-t8122|card-codecs-not-bare|card-mask-not-zero-mode)
++        expect group ;;
++    card-mask-short-rows) expect short-speaker-config ;;
++    card-mask-contradicts|card-mask-contradicts-t8122) # amp 0x41's row lost, its stale copy too
++        amp 40 $BOP $DCB $R0 $Z0
++        amp 42 $BOP $DCB $R2 $Z2
++        amp 41 $BOP $DCB $R1 - ;;
++    card-masks-two-links-disagree)
++        amp 40 $BOP $DCB $R0 -
++        amp 42 $BOP $DCB $R2 $Z2
++        amp 41 $BOP $DCB $R1 $Z1 ;;
++    j613) # the woofers' rows lost, amp 0x41's (all zero) kept
++        amp 40 $BOP $DCB $R0 -
++        amp 42 $BOP $DCB $R2 -
++        amp 41 $BOP $DCB $R1 0000000000000000 ;;
+     no-dcblocker) # as on the 14"/16" M1 Pro/Max, whose ADT has no DC blocker setting
+         amp 40 $BOP - $R0 $Z0
+         amp 42 $BOP - $R2 $Z2

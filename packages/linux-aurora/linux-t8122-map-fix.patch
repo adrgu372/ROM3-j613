@@ -1,0 +1,81 @@
+From 15c5d4d09bd0596ce5cd6dd642460653a758bdc5 Mon Sep 17 00:00:00 2001
+From: Scott Jones <scottajones@gmail.com>
+Date: Tue, 10 Nov 2026 19:39:45 -0500
+Subject: [PATCH 12/13] drm/asahi: m3: map the adopted handoff regions as the
+ 7.2 runtime did
+
+On 7.3 the M3 MacBook Air runtime adopts the firmware's UAT through
+Uat::new_adopted_with_user_upper(), which always asks for a
+write-combined mapping of the handoff and TTBAT regions. On these Macs
+the boot loader leaves both regions in the kernel's memory map as
+reserved RAM, and memremap() refuses a write-combined mapping of RAM:
+
+  memremap attempted on ram 0x00000103fff70000 size: 0x4000
+  aurora 292400000.gpu: probe with driver aurora failed with error -12
+
+On 7.2 the same helper chose the mapping per region: write-back for
+reserved RAM, write-combined for a carveout. Uat::new_adopted() still
+does that on 7.3.
+
+Add Uat::new_adopted_ram_with_user_upper(), which makes the same
+per-region choice and keeps the caller's choice of user upper half, and
+use it for the M3 runtime. The M4 caller keeps the write-combined
+constructor; no other backend calls either.
+
+Seen on a J613 with a 7.3 kernel on the m1n1 1.6.1.aurora23 handoff.
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
+Signed-off-by: Scott Jones <scottajones@gmail.com>
+---
+ drivers/gpu/drm/asahi/m3/m3_runtime.rs |  2 +-
+ drivers/gpu/drm/asahi/mmu.rs           | 16 +++++++++++++++-
+ 2 files changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/asahi/m3/m3_runtime.rs b/drivers/gpu/drm/asahi/m3/m3_runtime.rs
+index 762c8bc26e75b..e521089c9ec46 100644
+--- a/drivers/gpu/drm/asahi/m3/m3_runtime.rs
++++ b/drivers/gpu/drm/asahi/m3/m3_runtime.rs
+@@ -1411,7 +1411,7 @@ fn adopt_uat(drm: &driver::AsahiDrmDevice, soc: &'static crate::m3::m3_soc::Soc,
+     let range = |r: crate::m3::agx_resources::Region| r.base..r.base + r.size;
+     let geometry = mmu::UatGeometry { ias: cfg.uat_ias.into(), oas: cfg.uat_oas };
+     let regions = mmu::AdoptedRegions { handoff: range(handoff), ttbs: range(ttbs), kernel_root: tables.base };
+-    let uat = mmu::Uat::new_adopted_with_user_upper(drm, geometry, &regions,
++    let uat = mmu::Uat::new_adopted_ram_with_user_upper(drm, geometry, &regions,
+         profile == super::m3_profile::Profile::Legacy)?;
+     let mut window = crate::g15::uat::Window::from_regions(handoff.base, ttbs.base, tables.base, shared_l2.base)?;
+     window.bootstrap(drm.as_ref().as_ref(), &uat)?;
+diff --git a/drivers/gpu/drm/asahi/mmu.rs b/drivers/gpu/drm/asahi/mmu.rs
+index 4337024993025..dcb46d6080ad4 100644
+--- a/drivers/gpu/drm/asahi/mmu.rs
++++ b/drivers/gpu/drm/asahi/mmu.rs
+@@ -3571,7 +3571,7 @@ impl Uat {
+     /// Creates the same owned-RAM adopted UAT, choosing whether application contexts also
+     /// name the firmware upper root. M4 qualifies only context 0 for firmware-upper access;
+     /// its application TTBAT upper words stay zero. G15 preserves its existing shared upper.
+-    #[cfg(any(CONFIG_DRM_ASAHI_G16, CONFIG_DRM_ASAHI_M3_T8122))]
++    #[cfg(CONFIG_DRM_ASAHI_G16)]
+     pub(crate) fn new_adopted_with_user_upper(
+         dev: &driver::AsahiDrmDevice,
+         geometry: UatGeometry,
+@@ -3581,6 +3581,20 @@ impl Uat {
+         Self::new_adopted_inner(dev, geometry, regions, map_kernel_to_user, false)
+     }
+ 
++    /// As [`Self::new_adopted_with_user_upper`], for regions that may be reserved System RAM:
++    /// each is mapped write-back when it is RAM and write-combined when it is a carveout, as
++    /// [`Self::new_adopted`] does. The M3 boot loaders leave the handoff and TTBAT regions in
++    /// the kernel's memory map as reserved RAM, which a write-combined mapping is refused for.
++    #[cfg(CONFIG_DRM_ASAHI_M3_T8122)]
++    pub(crate) fn new_adopted_ram_with_user_upper(
++        dev: &driver::AsahiDrmDevice,
++        geometry: UatGeometry,
++        regions: &AdoptedRegions,
++        map_kernel_to_user: bool,
++    ) -> Result<Self> {
++        Self::new_adopted_inner(dev, geometry, regions, map_kernel_to_user, true)
++    }
++
+     #[cfg(any(CONFIG_DRM_ASAHI_G15, CONFIG_DRM_ASAHI_G16))]
+     fn new_adopted_inner(
+         dev: &driver::AsahiDrmDevice,
+

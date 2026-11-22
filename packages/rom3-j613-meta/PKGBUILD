@@ -1,0 +1,29 @@
+pkgname=rom3-j613-meta
+pkgver=1
+pkgrel=1
+pkgdesc='Exact tested package set for ROM3-j613'
+arch=('any')
+url='https://github.com/adrgu372/ROM3-j613'
+license=('custom')
+depends=(
+  'linux-aurora=7.3.0.aurora1-42'
+  'linux-aurora-headers=7.3.0.aurora1-42'
+  'aura=1.0.0b14.1-3'
+  'uboot-aurora=2026.07.aurora11-1'
+  'asahi-scripts=20261023-10'
+  'mesa-aurora=1:26.3.0_devel.202611150611.d4ad4a4dce6-1'
+  'vulkan-aurora=1:26.3.0_devel.202611150611.d4ad4a4dce6-1'
+  'aurora-audio=4.1.aurora2-12'
+  'speakersafetyd=2.0.1-1'
+  'speakersafetyd-aurora-profiles=1-1'
+  'pipewire=1:1.6.10-1.2'
+  'wireplumber=0.5.18-1'
+  'kwin=6.8.2-2'
+  'aurora-userpages=7.3.0.aurora1-42'
+)
+options=('!strip')
+
+package() {
+  install -Dm644 /dev/null "$pkgdir/usr/share/rom3-j613/meta-package"
+}
+

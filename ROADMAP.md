@@ -10,7 +10,9 @@
 
 ## Phase 1: signed package repository
 
-- [ ] Introduce `linux-rom3-j613` and `aura-rom3-j613` package variants.
+- [x] Import the tested kernel and Aura recipes.
+- [x] Add exact-version meta and update-guard packages.
+- [x] Build initial local test packages.
 - [ ] Create the ROM3 signing key outside the Git tree.
 - [ ] Build the initial `rom3-j613` pacman repository.
 - [ ] Sign packages and repository databases.

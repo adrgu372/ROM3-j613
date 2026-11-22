@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+"""Verify that the installed packages match the ROM3-j613 tested stack."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+import subprocess
+import sys
+
+STACK = Path("/usr/share/rom3-j613/verified-stack.json")
+
+
+def installed() -> dict[str, str]:
+    output = subprocess.check_output(["pacman", "-Q"], text=True)
+    return dict(line.split(maxsplit=1) for line in output.splitlines())
+
+
+def main() -> int:
+    expected = json.loads(STACK.read_text())["packages"]
+    current = installed()
+    failures = 0
+
+    for name, version in expected.items():
+        actual = current.get(name)
+        if actual == version:
+            print(f"ok       {name} {version}")
+        else:
+            failures += 1
+            print(f"MISMATCH {name}: expected {version}, found {actual or 'missing'}")
+
+    if failures:
+        print(f"\nROM3 check failed: {failures} mismatches", file=sys.stderr)
+        return 1
+
+    print("\nInstalled package set matches ROM3-j613.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+

@@ -17,4 +17,9 @@ jobs:
         run: python3 scripts/validate-stack.py
       - name: Validate shell scripts
         run: bash -n scripts/*.sh
+      - name: Validate PKGBUILDs
+        run: |
+          for package in packages/*/PKGBUILD; do
+            bash -n "$package"
+          done
 
