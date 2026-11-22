@@ -58,9 +58,13 @@ jobs:
           grep -Fq "Status: no signature" <<<"$pkg_signature"
           ditto -c -k --sequesterRsrc --keepParent \
             "$app" "$RUNNER_TEMP/ROM3-j613-Installer-0.1.0.app.zip"
-          shasum -a 256 "$pkg" \
-            "$RUNNER_TEMP/ROM3-j613-Installer-0.1.0.app.zip" \
-            > "$RUNNER_TEMP/SHA256SUMS"
+          (
+            cd "$RUNNER_TEMP"
+            shasum -a 256 \
+              "rom3-installer-output/ROM3-j613-Installer-0.1.0.pkg" \
+              "ROM3-j613-Installer-0.1.0.app.zip" \
+              > SHA256SUMS
+          )
 
       - name: Upload installer preview
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
