@@ -22,7 +22,7 @@ Build only the J613 KDE image, preinstall and pin the exact tested ROM3 package 
  tag=${2:?immutable signed Aurora testing snapshot required}
  # The update channel the installed system follows afterwards.
  channel=${3:-testing}
-@@ -76,6 +81,50 @@
+@@ -76,6 +81,45 @@
  chroot "$mountroot" pacman-key --lsign-key 12CE6799A94A3F1B5DDFFE88F576553597FB8FEB
  chroot "$mountroot" pacman-key --add /tmp/aurora-alarm.asc
  chroot "$mountroot" pacman-key --lsign-key "$(cat "$root/keys/fingerprint.txt")"
@@ -33,17 +33,6 @@ Build only the J613 KDE image, preinstall and pin the exact tested ROM3 package 
 +PY
 +chroot "$mountroot" pacman-key --add /tmp/rom3-j613-packages.pub
 +chroot "$mountroot" pacman-key --lsign-key "$rom3_fingerprint"
-+install -Dm644 /dev/stdin "$mountroot/etc/pacman.d/rom3-j613-mirrorlist" <<EOF
-+Server = $rom3_feed
-+EOF
-+install -Dm644 /dev/stdin "$mountroot/etc/pacman.d/rom3-j613.conf" <<'EOF'
-+[rom3-j613]
-+SigLevel = Required DatabaseOptional
-+Include = /etc/pacman.d/rom3-j613-mirrorlist
-+EOF
-+if ! grep -q '^Include = /etc/pacman.d/rom3-j613.conf$' "$mountroot/etc/pacman.conf"; then
-+  printf '\nInclude = /etc/pacman.d/rom3-j613.conf\n' >> "$mountroot/etc/pacman.conf"
-+fi
 +python3 - "$rom3_manifest_url" "$rom3_feed" "$mountroot/var/cache/pacman/pkg" "$mountroot/tmp/rom3-ignore.txt" <<'PY'
 +import json
 +import pathlib
@@ -70,6 +59,12 @@ Build only the J613 KDE image, preinstall and pin the exact tested ROM3 package 
 +  pinned+=("/${pkg#"$mountroot"/}")
 +done
 +chroot "$mountroot" pacman -U -dd --noconfirm "${pinned[@]}"
++# rom3-j613-release owns the repository files. Add the include only after its
++# transaction so pacman does not reject pre-created overlay files.
++if ! grep -q '^Include = /etc/pacman.d/rom3-j613.conf$' "$mountroot/etc/pacman.conf"; then
++  printf '\nInclude = /etc/pacman.d/rom3-j613.conf\n' >> "$mountroot/etc/pacman.conf"
++fi
++sed -i "s|^Server = .*|Server = $rom3_feed|" "$mountroot/etc/pacman.d/rom3-j613-mirrorlist"
  python3 - "$root/scripts" "$mountroot/etc/pacman.conf" "$tag" "$edge_tag" <<'PY'
  from pathlib import Path
  import sys
