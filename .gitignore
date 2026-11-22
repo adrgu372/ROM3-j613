@@ -1,0 +1,14 @@
+artifacts/
+cache/
+repo/aarch64/*.pkg.tar.*
+repo/aarch64/*.sig
+repo/aarch64/*.db*
+repo/aarch64/*.files*
+*.img
+*.raw
+*.bin
+*.macho
+*.log
+__pycache__/
+*.pyc
+
