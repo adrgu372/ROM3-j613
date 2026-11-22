@@ -11,8 +11,8 @@ Build only the J613 KDE image, preinstall and pin the exact tested ROM3 package 
  root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
  source "$root/scripts/testlib.sh"
  # An image serves every Mac, whichever one builds it.
-+rom3_feed=${ROM3_FEED:-https://github.com/adrgu372/ROM3-j613/releases/download/stable-20261122.2}
-+rom3_manifest_url=${ROM3_MANIFEST_URL:-https://raw.githubusercontent.com/adrgu372/ROM3-j613/cb7e890/stack/package-builds.json}
++rom3_feed=${ROM3_FEED:-https://github.com/adrgu372/ROM3-j613/releases/download/stable-20261122.3}
++rom3_manifest_url=${ROM3_MANIFEST_URL:-$rom3_feed/rom3-package-builds.json}
 +rom3_key_url=${ROM3_KEY_URL:-https://raw.githubusercontent.com/adrgu372/ROM3-j613/main/repo/keys/rom3-j613-packages.pub}
 +rom3_fingerprint=${ROM3_FINGERPRINT:-FA80FF234BCDF36211649321EB9845C8BAA89A4A}
  export AURORA_DEVICE_TREE_COMPATIBLE=/nonexistent
@@ -69,7 +69,7 @@ Build only the J613 KDE image, preinstall and pin the exact tested ROM3 package 
 +  [[ $pkg == *.sig ]] && continue
 +  pinned+=("/${pkg#"$mountroot"/}")
 +done
-+chroot "$mountroot" pacman -U --nodeps --noconfirm "${pinned[@]}"
++chroot "$mountroot" pacman -U -dd --noconfirm "${pinned[@]}"
  python3 - "$root/scripts" "$mountroot/etc/pacman.conf" "$tag" "$edge_tag" <<'PY'
  from pathlib import Path
  import sys

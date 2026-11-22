@@ -27,6 +27,7 @@ destination="$root/repo/snapshots/$tag/aarch64"
 }
 
 mkdir -p "$destination"
+cp "$root/stack/package-builds.json" "$destination/rom3-package-builds.json"
 
 shopt -s nullglob
 packages=("$source_dir"/*.pkg.tar.*)

@@ -42,8 +42,7 @@ jobs:
 
       - name: Build KDE image
         env:
-          ROM3_FEED: https://github.com/adrgu372/ROM3-j613/releases/download/stable-20261122.2
-          ROM3_MANIFEST_URL: https://raw.githubusercontent.com/adrgu372/ROM3-j613/cb7e890/stack/package-builds.json
+          ROM3_FEED: https://github.com/adrgu372/ROM3-j613/releases/download/stable-20261122.3
           ROM3_KEY_URL: https://raw.githubusercontent.com/adrgu372/ROM3-j613/main/repo/keys/rom3-j613-packages.pub
           ROM3_FINGERPRINT: FA80FF234BCDF36211649321EB9845C8BAA89A4A
         run: |
@@ -51,7 +50,7 @@ jobs:
           docker run --rm --privileged --ipc=host \
             -v /dev:/dev -v /run/udev:/run/udev:ro \
             -v "$GITHUB_WORKSPACE:/src" -w /src/upstream \
-            -e ROM3_FEED -e ROM3_MANIFEST_URL -e ROM3_KEY_URL -e ROM3_FINGERPRINT \
+            -e ROM3_FEED -e ROM3_KEY_URL -e ROM3_FINGERPRINT \
             registry.fedoraproject.org/fedora:44 \
             bash -euo pipefail -c '
               dnf install -y python3 gnupg2 tar gzip util-linux coreutils \

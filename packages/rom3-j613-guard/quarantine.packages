@@ -5,6 +5,7 @@ uboot-aurora
 asahi-scripts
 mesa-aurora
 vulkan-aurora
+avd-fw
 aurora-audio
 alsa-ucm-conf-aurora
 alsa-utils-aurora
