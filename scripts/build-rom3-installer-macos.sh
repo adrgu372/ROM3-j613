@@ -36,18 +36,23 @@ fi
 git -C "$upstream" fetch origin "$commit"
 git -C "$upstream" checkout --detach "$commit"
 [[ $(git -C "$upstream" rev-parse HEAD) == "$commit" ]]
+source_root=$upstream/macOS
+[[ -d $source_root/Packaging && -d $source_root/Release && -d $source_root/scripts ]] || {
+    echo "pinned installer source has an unexpected layout: $source_root" >&2
+    exit 1
+}
 
-python3 - "$upstream" "$root/installer/release.json" "$public_key" <<'PY'
+python3 - "$source_root" "$root/installer/release.json" "$public_key" <<'PY'
 import json
 import pathlib
 import re
 import sys
 
-upstream = pathlib.Path(sys.argv[1])
+source_root = pathlib.Path(sys.argv[1])
 release_descriptor = pathlib.Path(sys.argv[2]).read_bytes()
 public_key = pathlib.Path(sys.argv[3]).read_bytes()
 
-identity_path = upstream / "Packaging/identity.conf"
+identity_path = source_root / "Packaging/identity.conf"
 identity = identity_path.read_text()
 values = {
     "INSTALLER_APP_NAME": "ROM3-j613 Installer",
@@ -72,10 +77,10 @@ for name, value in values.items():
         raise SystemExit(f"could not replace {name} in identity.conf")
 identity_path.write_text(identity)
 
-(upstream / "Release/release.json").write_bytes(release_descriptor)
-(upstream / "Release/trust-root.ed25519.pub").write_bytes(public_key)
+(source_root / "Release/release.json").write_bytes(release_descriptor)
+(source_root / "Release/trust-root.ed25519.pub").write_bytes(public_key)
 
-models_path = upstream / "scripts/supported-models.json"
+models_path = source_root / "scripts/supported-models.json"
 models = {
     "schema_version": 1,
     "supported": ["apple,j613"],
@@ -96,19 +101,19 @@ inputs = {
     "installation_profile": "arch-kde",
     "device_identifiers": ["apple,j613"],
 }
-(upstream / "scripts/release-inputs.template.json").write_text(
+(source_root / "scripts/release-inputs.template.json").write_text(
     json.dumps(inputs, indent=2) + "\n"
 )
 PY
 
 release_inputs="$output/release-inputs"
 mkdir -p "$release_inputs" "$output"
-cp "$upstream/Release/release.json" "$release_inputs/release.json"
-cp "$upstream/Release/trust-root.ed25519.pub" "$release_inputs/trust-root.ed25519.pub"
+cp "$source_root/Release/release.json" "$release_inputs/release.json"
+cp "$source_root/Release/trust-root.ed25519.pub" "$release_inputs/trust-root.ed25519.pub"
 cp "$catalog_dir/catalog.json" "$release_inputs/catalog.json"
 cp "$catalog_dir/catalog.json.sig" "$release_inputs/catalog.json.sig"
 
-cd "$upstream"
+cd "$source_root"
 AURORA_DEVELOPER_BUILD=1 \
 AURORA_APP_SIGNING_IDENTITY="-" \
 AURORA_APP_VERSION="0.1.0" \
