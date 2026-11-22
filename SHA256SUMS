@@ -1,8 +1,8 @@
 84bb6b57abd5c636ea0bf5cf7a63e5fdcc070a8cfd4419fc7ddaa8e65f2d3da0  /home/adi/ROM3-j613/.github/workflows/validate.yml
-c640cafe733529058fccaf693bc6979c4a2de6d9ce34189347a409ed3c9a023b  /home/adi/ROM3-j613/.gitignore
+7801433f18f7a22f9fadc7e1d0ce2357e63fa077bfeb31c0b72f344960f10914  /home/adi/ROM3-j613/.gitignore
 27e3e29f879ea7ff84742b6e92ab4f7478cc90fcdb8f2c7c75a8373065458212  /home/adi/ROM3-j613/NOTICE.md
 b9bf5f68cc80e6aee52ee2bea53e76856ea28cee6656bd5edc0cc23d23c67baa  /home/adi/ROM3-j613/README.md
-1882d4ac0d3b226a8c73ad2b70860ff3523f589e1241208db8d8719bf8069eec  /home/adi/ROM3-j613/ROADMAP.md
+22a9832fd91c4c5a172a75869839c130d1abe093afb312445eb2018159844d27  /home/adi/ROM3-j613/ROADMAP.md
 3bcc33fd1bfba5632a6f83abc64f5fb3a1516cb58ab5bddbd221a68368abc44f  /home/adi/ROM3-j613/SECURITY.md
 a5c386857d7702c5bcb9a9c4eadfb3cf2e281fd256856031736cb0dd2db2b20d  /home/adi/ROM3-j613/assets/README.md
 ff211fb2f3b77926d0b15a28e25b6ac1af4422dc2d69280c481579c2deb41dea  /home/adi/ROM3-j613/assets/rom3-j613.jpg
@@ -10,7 +10,8 @@ b06ddef33a15afa68034b7f098cd309bdba7a206082a50245e15f475c6132dd4  /home/adi/ROM3
 45198759f426f58cde524f07f0870324cc261cd43125655b782570e46602beb7  /home/adi/ROM3-j613/docs/installer.md
 af21b65d2f074647d4f6e52b4007cc848ad1dc26e8b51b9a213237838597386b  /home/adi/ROM3-j613/docs/repository.md
 7114d998987a052e97ab19cb4f8fe59f5758f297e691d498589c8f02d2f3aeb5  /home/adi/ROM3-j613/docs/support-matrix.md
-a7765da343fe405a67efde2c015f9567d91f6e61a33412a98cb48a183218490b  /home/adi/ROM3-j613/docs/update-model.md
+d5748f225c3c95a89879a2c8318d5d20867826a80a6f5558a2efbec3e0b4aa61  /home/adi/ROM3-j613/docs/update-model.md
+3a5afff9b086ecb44762cbb2ec4190e11a8a46cc70f8617d2ac98ca4a07e024c  /home/adi/ROM3-j613/evidence/repository-validation.md
 0f69d61d533639e35091546f1dfd80ec06fa87c87940729d173609b967b39688  /home/adi/ROM3-j613/packages/README.md
 8ad0d3972672c4ed59bddc938f3cb291384c475befe238c4363c07eeea4a91b2  /home/adi/ROM3-j613/packages/aura/0001-kboot-audio-t8122-zd-config.patch
 1f02f29bc3e5c9910cb6182669585f804ece47a30dd18f523b6107da11dd8efc  /home/adi/ROM3-j613/packages/aura/PKGBUILD
@@ -26,10 +27,10 @@ b5b84bc6acc012602fb4bedb4c21843bf8cc77a6ced979b752568749922cf5b4  /home/adi/ROM3
 5243ba504b4e5824ef7395878c62beb4300ac205818c1614cc99082c77c617dc  /home/adi/ROM3-j613/packages/linux-aurora/linux-t8122-pmp-fix.patch
 76cef34049e1e22be3abc0c9a457c381f8cdcf7ac419322c928555d269f0be08  /home/adi/ROM3-j613/packages/linux-aurora/rust-toolchain.toml
 534214d07ad388822b3d7ca2b63efce988c1424131329775479ebbd7552715b0  /home/adi/ROM3-j613/packages/linux-aurora/validate-config.py
-7c04133cba7a6a1216b3f1397102b097920438297f131b793a81f88eacdc327d  /home/adi/ROM3-j613/packages/rom3-j613-guard/PKGBUILD
+9fd1694d9dd29b97025e48637caf5e6fdf8579747e1a6ec3f89296d993da2918  /home/adi/ROM3-j613/packages/rom3-j613-guard/PKGBUILD
 317dbfbf507e36692611525df5d172650fd965e8011799423ce1c0654de6889e  /home/adi/ROM3-j613/packages/rom3-j613-guard/quarantine.packages
 d98b6c47a3177b48c894e6ebfd769c1a46fc14262ec0fea4af271dd021b85cf3  /home/adi/ROM3-j613/packages/rom3-j613-guard/rom3-j613-check
-c82a9309439280f0147a346d4c21c33d6d27b19c9a3065d51ab5b3aab11639e4  /home/adi/ROM3-j613/packages/rom3-j613-guard/rom3-j613-update
+06e03355f3c913d87df5d6b7c3ea8fc2e2622b022ccbf8f0b03fd60661537d2f  /home/adi/ROM3-j613/packages/rom3-j613-guard/rom3-j613-update
 2fbba5542375bc1c26891a09d9aee50748e6fb35ec126ae06981cc3feb694c5c  /home/adi/ROM3-j613/packages/rom3-j613-guard/verified-stack.json
 8ccee1f555714b47c1457bfb1863bc926172f01fcc05dae1263af48868c53f2e  /home/adi/ROM3-j613/packages/rom3-j613-guard/verify-live-system.sh
 54dcf806f0bf6f4552aa9c7d40d249dad62dc79b8866448324bfda55a206bd8d  /home/adi/ROM3-j613/packages/rom3-j613-meta/PKGBUILD
@@ -44,9 +45,9 @@ b571c994a0eb6b30e74b6311dbe057797b41c8a4df8276f61d7d9044bb3eae4a  /home/adi/ROM3
 143e0f8259ba6cc869e0471c2cb5412666bc4e4cc7d54f192e3ef56d1939a6d7  /home/adi/ROM3-j613/scripts/prepare-guard-package.sh
 d69c3358fc6ae629fb3292840141857195894fc741bdf783f3ddb3b6d99e5b4a  /home/adi/ROM3-j613/scripts/publish-snapshot.sh
 d98b6c47a3177b48c894e6ebfd769c1a46fc14262ec0fea4af271dd021b85cf3  /home/adi/ROM3-j613/scripts/rom3-j613-check
-c82a9309439280f0147a346d4c21c33d6d27b19c9a3065d51ab5b3aab11639e4  /home/adi/ROM3-j613/scripts/rom3-j613-update
+06e03355f3c913d87df5d6b7c3ea8fc2e2622b022ccbf8f0b03fd60661537d2f  /home/adi/ROM3-j613/scripts/rom3-j613-update
 e95f5fa83babfc33e46b7a21c017d96872144293a3056ff2b9fdcff6c11ceb01  /home/adi/ROM3-j613/scripts/validate-stack.py
 8ccee1f555714b47c1457bfb1863bc926172f01fcc05dae1263af48868c53f2e  /home/adi/ROM3-j613/scripts/verify-live-system.sh
-8f34e5efaa84ebadf6c90dc6b80a14b684da86fffe5ab55cae5780218aece4e0  /home/adi/ROM3-j613/stack/package-builds.json
+64853d3d7dee01a80f1c590b3dbd371eaff495933fb897f311afec8edca41ace  /home/adi/ROM3-j613/stack/package-builds.json
 317dbfbf507e36692611525df5d172650fd965e8011799423ce1c0654de6889e  /home/adi/ROM3-j613/stack/quarantine.packages
 2fbba5542375bc1c26891a09d9aee50748e6fb35ec126ae06981cc3feb694c5c  /home/adi/ROM3-j613/stack/verified-stack.json

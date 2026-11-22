@@ -5,7 +5,7 @@ pkgdesc='Fail-closed update guard and live checks for ROM3-j613'
 arch=('any')
 url='https://github.com/adrgu372/ROM3-j613'
 license=('custom')
-depends=('python' 'pacman')
+depends=('python' 'pacman' 'btrfs-progs' 'util-linux')
 source=(
   rom3-j613-check
   rom3-j613-update
@@ -15,7 +15,7 @@ source=(
 )
 sha256sums=(
   'd98b6c47a3177b48c894e6ebfd769c1a46fc14262ec0fea4af271dd021b85cf3'
-  'c82a9309439280f0147a346d4c21c33d6d27b19c9a3065d51ab5b3aab11639e4'
+  '06e03355f3c913d87df5d6b7c3ea8fc2e2622b022ccbf8f0b03fd60661537d2f'
   '8ccee1f555714b47c1457bfb1863bc926172f01fcc05dae1263af48868c53f2e'
   '2fbba5542375bc1c26891a09d9aee50748e6fb35ec126ae06981cc3feb694c5c'
   '317dbfbf507e36692611525df5d172650fd965e8011799423ce1c0654de6889e'

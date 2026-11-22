@@ -29,7 +29,7 @@ blocked=$(mktemp)
 quarantine_sorted=$(mktemp)
 trap 'rm -f "$pending" "$blocked" "$quarantine_sorted"' EXIT
 
-pacman -Qu 2>/dev/null | awk '{print $1}' | sort -u > "$pending"
+pacman -Qu 2>/dev/null | awk '{print $1}' | sort -u > "$pending" || true
 sort -u "$quarantine" > "$quarantine_sorted"
 comm -12 "$pending" "$quarantine_sorted" > "$blocked"
 
@@ -61,6 +61,16 @@ stamp=$(date +%Y%m%d-%H%M%S)
 backup=/var/backups/rom3-j613/$stamp
 install -d -m700 "$backup"
 
+snapshot_root=${ROM3_SNAPSHOT_ROOT:-/var/lib/rom3-j613/snapshots}
+root_fstype=$(findmnt -nro FSTYPE --target /)
+if [[ $root_fstype != btrfs ]]; then
+    echo "ROM3 requires a Btrfs root for pre-update snapshots." >&2
+    exit 1
+fi
+
+install -d -m755 "$snapshot_root"
+btrfs subvolume snapshot -r / "$snapshot_root/$stamp"
+
 [[ ! -e /boot/efi/m1n1/boot.bin ]] ||
     cp -a /boot/efi/m1n1/boot.bin "$backup/boot.bin"
 [[ ! -e /etc/m1n1.conf ]] ||
@@ -72,6 +82,7 @@ pacman -Q > "$backup/packages.before"
 sha256sum "$backup"/boot.bin > "$backup/boot.bin.sha256" 2>/dev/null || true
 
 echo "Backup: $backup"
+echo "Btrfs snapshot: $snapshot_root/$stamp"
 echo "Starting full upgrade outside ROM3's quarantined packages..."
 pacman -Syu
 

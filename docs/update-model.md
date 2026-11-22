@@ -22,7 +22,8 @@ rom3-j613-update
   -> compute proposed transaction
   -> compare quarantine with verified-stack.json
   -> stop if an unqualified sensitive package would move
-  -> snapshot Btrfs and back up boot.bin
+  -> take a read-only Btrfs snapshot
+  -> back up boot.bin and m1n1 configuration
   -> install the qualified package set
   -> generate Stage 2 candidate
   -> require cold-boot validation
@@ -39,4 +40,6 @@ The initial design has:
 - `testing`: candidate snapshots not yet cold-boot qualified.
 
 Only `stable` should be configured for normal users.
+
+The root filesystem must be Btrfs. A failed snapshot aborts the update.
 

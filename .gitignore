@@ -6,6 +6,7 @@ repo/aarch64/*.pkg.tar.*
 repo/aarch64/*.sig
 repo/aarch64/*.db*
 repo/aarch64/*.files*
+repo/snapshots/
 *.img
 *.raw
 *.bin

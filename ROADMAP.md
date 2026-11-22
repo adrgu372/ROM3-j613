@@ -13,6 +13,8 @@
 - [x] Import the tested kernel and Aura recipes.
 - [x] Add exact-version meta and update-guard packages.
 - [x] Build initial local test packages.
+- [x] Exercise `repo-add`, package signatures and database signatures with an
+  ephemeral non-production key.
 - [ ] Create the ROM3 signing key outside the Git tree.
 - [ ] Build the initial `rom3-j613` pacman repository.
 - [ ] Sign packages and repository databases.
