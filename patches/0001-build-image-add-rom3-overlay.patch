@@ -22,7 +22,7 @@ Build only the J613 KDE image, preinstall and pin the exact tested ROM3 package 
  tag=${2:?immutable signed Aurora testing snapshot required}
  # The update channel the installed system follows afterwards.
  channel=${3:-testing}
-@@ -76,6 +81,58 @@
+@@ -76,6 +81,59 @@
  chroot "$mountroot" pacman-key --lsign-key 12CE6799A94A3F1B5DDFFE88F576553597FB8FEB
  chroot "$mountroot" pacman-key --add /tmp/aurora-alarm.asc
  chroot "$mountroot" pacman-key --lsign-key "$(cat "$root/keys/fingerprint.txt")"
@@ -64,6 +64,7 @@ Build only the J613 KDE image, preinstall and pin the exact tested ROM3 package 
 +pathlib.Path(ignore_file).write_text("IgnorePkg = " + " ".join(names) + "\n")
 +pathlib.Path(names_file).write_text("\n".join(names) + "\n")
 +PY
++chroot "$mountroot" pacman -S --noconfirm --needed openssl openssl-3
 +pinned=()
 +for pkg in "$mountroot"/var/cache/pacman/pkg/*.pkg.tar.*; do
 +  [[ $pkg == *.sig ]] && continue
@@ -81,7 +82,7 @@ Build only the J613 KDE image, preinstall and pin the exact tested ROM3 package 
  python3 - "$root/scripts" "$mountroot/etc/pacman.conf" "$tag" "$edge_tag" <<'PY'
  from pathlib import Path
  import sys
-@@ -92,7 +149,18 @@
+@@ -92,7 +150,18 @@
  # where a Mac has four or more, schedutil kept); Aurora's `steam` starts every
  # game under it.
  case $profile in
@@ -101,7 +102,7 @@ Build only the J613 KDE image, preinstall and pin the exact tested ROM3 package 
 +done
 +packages=("${filtered[@]}")
  # GitHub release downloads sometimes stall; finished packages stay cached.
-@@ -101,6 +169,9 @@
+@@ -101,6 +170,9 @@
    (( attempt++ < 3 ))
    sleep 30
  done
@@ -111,7 +112,7 @@ Build only the J613 KDE image, preinstall and pin the exact tested ROM3 package 
  # A fresh Arch root generates no locale, so sessions ran in the C locale and
  # gnome-terminal refused to start. Generate a UTF-8 default; first-boot
  # setup may change the language afterwards.
-@@ -248,6 +316,7 @@
+@@ -248,6 +317,7 @@
  sys.path.insert(0, sys.argv[1])
  import edgelib
  p=Path(sys.argv[2])
