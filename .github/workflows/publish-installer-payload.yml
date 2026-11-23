@@ -35,6 +35,14 @@ jobs:
           run-id: ${{ inputs.source_run }}
           github-token: ${{ github.token }}
 
+      - name: Normalize artifact paths
+        run: |
+          set -euo pipefail
+          test -d payload/output
+          mv payload/installer-payload.log payload/output/
+          mv payload/output/* payload/
+          rmdir payload/output
+
       - name: Verify payload inventory
         run: |
           set -euo pipefail
