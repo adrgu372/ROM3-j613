@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-door=${1:-rom3-j613-installer-payload-20261122.6}
-base=${ROM3_PAYLOAD_BASE:-https://github.com/adrgu372/ROM3-j613/releases/download/image-20261122.6}
+door=${1:-rom3-j613-installer-payload-20261123.2}
+base=${ROM3_PAYLOAD_BASE:-https://github.com/adrgu372/ROM3-j613/releases/download/image-20261123.2}
 mkdir -p "$door"
 
 download() {
@@ -26,7 +26,7 @@ done
 (
     cd "$door"
     sha256sum -c SHA256SUMS
-    cat "${parts[@]}" > arch-kde-20261122.6.zip
+    cat "${parts[@]}" > arch-kde-20261123.2.zip
     sha256sum "$(python3 -c \
         'import json; print(json.load(open("payload.json"))["payload_asset"])')"
 )

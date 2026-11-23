@@ -3,7 +3,7 @@
   "distribution": "ROM3-j613",
   "channel": "testing",
   "installation_profile": "arch-kde",
-  "payload_name": "arch-kde-20261122.6.zip",
+  "payload_name": "arch-kde-20261123.2.zip",
   "metadata_name": "installer-data-arch-kde.json",
   "evidence_revision": "rom3-native-payload-45125699925",
   "asahi_installer_tag": "v0.9.2",

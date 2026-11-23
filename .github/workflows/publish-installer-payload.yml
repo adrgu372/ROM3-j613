@@ -6,7 +6,7 @@ on:
       source_run:
         description: Actions run containing rom3-j613-native-installer-payload
         required: true
-        default: "45037917742"
+        default: ""
 
 permissions:
   contents: write
@@ -49,7 +49,7 @@ jobs:
           test -s payload/installer-data-arch-kde.json
           test -s payload/delivery.json
           test -s payload/SHA256SUMS
-          test "$(find payload -maxdepth 1 -name 'arch-kde-20261122.6.zip.part.*' | wc -l)" -ge 2
+          test "$(find payload -maxdepth 1 -name 'arch-kde-20261123.2.zip.part.*' | wc -l)" -ge 2
           (
             cd payload
             sha256sum -c SHA256SUMS
@@ -66,7 +66,7 @@ jobs:
 
           payload = Path("payload")
           delivery = json.loads((payload / "delivery.json").read_text())
-          parts = sorted(payload.glob("arch-kde-20261122.6.zip.part.*"))
+          parts = sorted(payload.glob("arch-kde-20261123.2.zip.part.*"))
 
           def digest(path):
               with path.open("rb") as stream:
@@ -75,13 +75,13 @@ jobs:
           document = {
               "schema_version": 1,
               "distribution": "ROM3-j613",
-              "image_release": "image-20261122.5",
-              "installer_payload_release": "image-20261122.6",
-              "release_id": "20261122.6",
+              "image_release": "image-20261123.1",
+              "installer_payload_release": "image-20261123.2",
+              "release_id": "20261123.2",
               "installation_profile": "arch-kde",
               "device_identifiers": ["apple,j613"],
               "metadata_asset": "installer-data-arch-kde.json",
-              "payload_asset": "arch-kde-20261122.6.zip",
+              "payload_asset": "arch-kde-20261123.2.zip",
               "payload_parts": [
                   {
                       "name": part.name,
@@ -107,12 +107,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh release view image-20261122.6 --repo adrgu372/ROM3-j613 >/dev/null 2>&1 && {
-            echo "release image-20261122.6 already exists" >&2
+          gh release view image-20261123.2 --repo adrgu372/ROM3-j613 >/dev/null 2>&1 && {
+            echo "release image-20261123.2 already exists" >&2
             exit 1
           }
-          gh release create image-20261122.6 \
-            payload/arch-kde-20261122.6.zip.part.* \
+          gh release create image-20261123.2 \
+            payload/arch-kde-20261123.2.zip.part.* \
             payload/installer-data-arch-kde.json \
             payload/delivery.json \
             payload/payload.json \
@@ -121,6 +121,6 @@ jobs:
             payload/installer-payload.log \
             --repo adrgu372/ROM3-j613 \
             --target "$GITHUB_SHA" \
-            --title "ROM3-j613 installer payload 20261122.6" \
-            --notes-file installer/releases/image-20261122.6.md \
+            --title "ROM3-j613 installer payload 20261123.2" \
+            --notes-file installer/releases/image-20261123.2.md \
             --prerelease

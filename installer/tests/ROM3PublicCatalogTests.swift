@@ -6,7 +6,7 @@
   final class ROM3PublicCatalogTests: XCTestCase {
     private let release = URL(
       string:
-        "https://github.com/adrgu372/ROM3-j613/releases/download/image-20261122.6"
+        "https://github.com/adrgu372/ROM3-j613/releases/download/image-20261123.2"
     )!
 
     func testPublicCatalogAdmitsJ613AndArtifactURLs() async throws {
@@ -63,7 +63,7 @@
       XCTAssertEqual(delivery.payload.parts.count, 6)
       XCTAssertEqual(
         delivery.payload.sourceURL.lastPathComponent,
-        "arch-kde-20261122.6.zip"
+        "arch-kde-20261123.2.zip"
       )
       XCTAssertEqual(
         delivery.metadata.sourceURL.lastPathComponent,
