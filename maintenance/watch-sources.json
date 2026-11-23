@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "id": "linux",
+      "repository": "aurora-silicon/linux",
+      "branch": "integration/aurora",
+      "pin_file": "packages/linux-aurora/PKGBUILD",
+      "pin_regex": "(?m)^_commit=([0-9a-f]{40})$",
+      "role": "kernel",
+      "critical_paths": [
+        "arch/arm64/boot/dts/apple/t8122",
+        "drivers/media/platform/apple/",
+        "drivers/gpu/drm/apple/",
+        "drivers/gpu/drm/asahi/",
+        "drivers/mux/apple-",
+        "drivers/soc/apple/",
+        "drivers/pmdomain/apple/",
+        "drivers/firmware/apple/",
+        "sound/soc/apple/",
+        "include/linux/soc/apple/"
+      ]
+    },
+    {
+      "id": "aura",
+      "repository": "aurora-silicon/aura",
+      "branch": "main",
+      "pin_file": "packages/aura/PKGBUILD",
+      "pin_regex": "(?m)^_commit=([0-9a-f]{40})$",
+      "role": "aura",
+      "critical_paths": [
+        "src/"
+      ]
+    },
+    {
+      "id": "asahi-audio",
+      "repository": "aurora-silicon/asahi-audio",
+      "branch": "main",
+      "pin_file": "packages/aurora-audio/PKGBUILD",
+      "pin_regex": "(?m)^_commit=([0-9a-f]{40})$",
+      "role": "audio",
+      "critical_paths": [
+        ""
+      ]
+    },
+    {
+      "id": "alarm-aurora",
+      "repository": "aurora-silicon/alarm-aurora",
+      "branch": "main",
+      "pin_file": "scripts/build-rom3-image.sh",
+      "pin_regex": "(?m)^commit=([0-9a-f]{40})$",
+      "role": "image",
+      "critical_paths": [
+        "scripts/build-image",
+        "scripts/",
+        "packages/"
+      ]
+    },
+    {
+      "id": "aurora-installer",
+      "repository": "aurora-silicon/aurora-installer",
+      "branch": "main",
+      "pin_file": "scripts/build-rom3-installer-macos.sh",
+      "pin_regex": "(?m)^commit=([0-9a-f]{40})$",
+      "role": "installer",
+      "critical_paths": [
+        "macOS/",
+        "scripts/"
+      ]
+    }
+  ]
+}

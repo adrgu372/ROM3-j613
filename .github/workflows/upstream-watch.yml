@@ -1,0 +1,86 @@
+name: rom3-j613-upstream-watch
+
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: rom3-j613-upstream-watch
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out ROM3 metadata
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+
+      - name: Load previous watch state
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh issue list \
+            --repo "$GITHUB_REPOSITORY" \
+            --state all \
+            --search '"ROM3-j613 daily upstream watch" in:title' \
+            --limit 1 \
+            --json number,body > "$RUNNER_TEMP/previous.json"
+          python3 - "$RUNNER_TEMP/previous.json" "$RUNNER_TEMP/previous.md" \
+            "$RUNNER_TEMP/issue-number" <<'PY'
+          import json
+          import sys
+
+          issues = json.load(open(sys.argv[1], encoding="utf-8"))
+          previous = open(sys.argv[2], "w", encoding="utf-8")
+          number = open(sys.argv[3], "w", encoding="utf-8")
+          if issues:
+              number.write(str(issues[0]["number"]))
+              previous.write(issues[0].get("body") or "")
+          PY
+
+      - name: Check upstream repositories
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/check-upstream-updates.py \
+            --previous-report "$RUNNER_TEMP/previous.md" \
+            --state-out "$RUNNER_TEMP/state.json" \
+            --report "$RUNNER_TEMP/report.md"
+          cat "$RUNNER_TEMP/report.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish or update the daily issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh label create upstream-watch \
+            --repo "$GITHUB_REPOSITORY" \
+            --color 1D76DB \
+            --description "Daily upstream and rebuild watch" \
+            --force
+          issue_number=$(<"$RUNNER_TEMP/issue-number")
+          if [[ -n $issue_number ]]; then
+            gh issue edit "$issue_number" \
+              --repo "$GITHUB_REPOSITORY" \
+              --body-file "$RUNNER_TEMP/report.md"
+          else
+            gh issue create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "ROM3-j613 daily upstream watch" \
+              --label upstream-watch \
+              --body-file "$RUNNER_TEMP/report.md"
+          fi

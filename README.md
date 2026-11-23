@@ -167,6 +167,11 @@ sudo /usr/share/rom3-j613/verify-live-system.sh
 Running `pacman -Syu` directly is not the supported update path for the
 protected ROM3 stack. See [docs/update-model.md](docs/update-model.md).
 
+Upstream kernel, Aura, audio, image-builder and installer changes are checked
+daily by a GitHub Actions workflow. It updates one issue with a
+`BUILD CANDIDATE`, `REVIEW` or `WAIT` recommendation without compiling
+anything automatically. See [docs/upstream-watch.md](docs/upstream-watch.md).
+
 Replacement kernels or other sensitive packages can be delivered through a
 signed override feed hosted in any GitHub repository. See
 [docs/override-feed.md](docs/override-feed.md); signature checks and

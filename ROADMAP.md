@@ -35,6 +35,7 @@
 - [x] Create a Btrfs snapshot and ESP backup before sensitive changes.
 - [x] Generate Stage 2 as a separate candidate.
 - [x] Require cold-boot verification after publishing.
+- [x] Monitor upstream kernel and matched stack changes daily.
 
 The initial signed feed has since been published and attached to the live J613
 system; these boxes will be checked as their repeatability evidence is added.
