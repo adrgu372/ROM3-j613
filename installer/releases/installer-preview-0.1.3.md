@@ -36,6 +36,41 @@ Validated on MacBook Air M3 `Mac15,12` (`apple,j613`) with macOS 26.7.2:
 - the native Recovery handoff was blessed and reached `awaiting_recovery`;
 - Recovery completed setup and the installed ROM3-j613 system booted.
 
+## Manual repository-key import
+
+After the first boot, the ROM3-j613 package-signing key must be imported and
+locally trusted manually before using the ROM3 package repository:
+
+```bash
+sudo pacman-key --populate rom3-j613
+sudo pacman-key --lsign-key FA80FF234BCDF36211649321EB9845C8BAA89A4A
+```
+
+If `--populate` cannot find the packaged keyring, import the installed public
+key explicitly and repeat the local-sign step:
+
+```bash
+sudo pacman-key --add /usr/share/pacman/keyrings/rom3-j613.asc
+sudo pacman-key --lsign-key FA80FF234BCDF36211649321EB9845C8BAA89A4A
+```
+
+Verify the fingerprint before continuing:
+
+```bash
+sudo pacman-key --finger FA80FF234BCDF36211649321EB9845C8BAA89A4A
+sudo pacman -Sy
+```
+
+Expected key:
+
+```text
+FA80FF234BCDF36211649321EB9845C8BAA89A4A
+ROM3-j613 package signing <packages@rom3-j613.invalid>
+```
+
+Do not use `--skippgpcheck` or install packages when the signature or
+fingerprint does not verify.
+
 ## Not yet production-qualified
 
 - Apple Developer ID signing and notarization
