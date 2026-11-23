@@ -6,8 +6,8 @@ commit=a0b34140669f69e3a777c70480e60244a470d50f
 upstream=${ROM3_INSTALLER_SOURCE:-$HOME/aurora-installer-rom3}
 output=${ROM3_INSTALLER_OUTPUT:-$HOME/ROM3-j613-installer-output}
 public_key=$root/installer/keys/catalog-signing.ed25519.pub
-catalog_dir=${ROM3_CATALOG_DIR:-$root/cache/catalog-image-20261122.5}
-catalog_base=https://github.com/adrgu372/ROM3-j613/releases/download/image-20261122.5
+catalog_dir=${ROM3_CATALOG_DIR:-$root/cache/catalog-image-20261122.6}
+catalog_base=https://github.com/adrgu372/ROM3-j613/releases/download/image-20261122.6
 
 [[ $(uname -s) == Darwin ]] || {
     echo "this build must run on macOS with Xcode and Swift 6.2+" >&2
@@ -100,9 +100,9 @@ models = {
 models_path.write_text(json.dumps(models, indent=2) + "\n")
 
 inputs = {
-    "payload_name": "arch-kde-filesystems.tar.zst",
-    "metadata_name": "arch-kde-image.json",
-    "evidence_revision": "rom3-image-45026998485",
+    "payload_name": "arch-kde-20261122.6.zip",
+    "metadata_name": "installer-data-arch-kde.json",
+    "evidence_revision": "rom3-native-payload-45125699925",
     "asahi_installer_tag": "v0.9.2",
     "asahi_installer_revision": "a0b34140669f69e3a777c70480e60244a470d50f",
     "asahi_installer_data_revision": "5c64c2c0d47387b5d84fa760019dca67ca98d45b",

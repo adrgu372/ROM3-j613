@@ -111,6 +111,7 @@ def main() -> int:
     parser.add_argument("--base-url", required=True)
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--signing-key", type=Path)
+    parser.add_argument("--manifest", type=Path)
     parser.add_argument("--now")
     args = parser.parse_args()
 
@@ -118,31 +119,102 @@ def main() -> int:
         raise SystemExit("--base-url must be an HTTPS URL without a trailing slash")
     inputs = load_inputs(args.inputs)
     assets = args.assets_dir
-    payload = regular_file(assets / inputs["payload_name"])
     metadata = regular_file(assets / inputs["metadata_name"])
-    parts = payload_parts(payload)
+    metadata_digest = digest(metadata)
+    metadata_size = metadata.stat().st_size
 
-    part_records = []
-    whole = hashlib.sha256()
-    declared = 0
-    for part in parts:
-        part_digest = hashlib.sha256()
-        size = 0
-        with part.open("rb") as stream:
-            while block := stream.read(READ_BLOCK):
-                whole.update(block)
-                part_digest.update(block)
-                size += len(block)
-        if size == 0:
-            raise SystemExit(f"empty payload part: {part.name}")
-        declared += size
-        record = artifact(part, args.base_url)
-        record["sha256"] = f"sha256:{part_digest.hexdigest()}"
-        part_records.append(record)
+    if args.manifest:
+        manifest = json.loads(regular_file(args.manifest).read_text())
+        if not isinstance(manifest, dict) or manifest.get("schema_version") != 1:
+            raise SystemExit("payload manifest schema_version must be 1")
+        if manifest.get("distribution") != inputs["distribution"]:
+            raise SystemExit("payload manifest distribution differs from catalog inputs")
+        if manifest.get("installation_profile") != inputs["installation_profile"]:
+            raise SystemExit("payload manifest profile differs from catalog inputs")
+        if manifest.get("payload_asset") != inputs["payload_name"]:
+            raise SystemExit("payload manifest payload name differs from catalog inputs")
+        if manifest.get("metadata_asset") != inputs["metadata_name"]:
+            raise SystemExit("payload manifest metadata name differs from catalog inputs")
+        if manifest.get("device_identifiers") != inputs["device_identifiers"]:
+            raise SystemExit("payload manifest device list differs from catalog inputs")
 
-    payload_digest = digest(payload)
-    if declared != payload.stat().st_size or whole.hexdigest() != payload_digest:
-        raise SystemExit("payload parts do not reconstruct the complete payload")
+        artifacts = manifest.get("delivery", {}).get("artifacts", {})
+        payload_record = artifacts.get(inputs["payload_name"])
+        metadata_record = artifacts.get(inputs["metadata_name"])
+        if not isinstance(payload_record, dict) or not isinstance(metadata_record, dict):
+            raise SystemExit("payload manifest lacks delivery artifact records")
+        if (
+            metadata_record.get("bytes") != metadata_size
+            or metadata_record.get("sha256") != metadata_digest
+        ):
+            raise SystemExit("metadata differs from the payload delivery manifest")
+
+        payload_digest = payload_record.get("sha256")
+        payload_size = payload_record.get("bytes")
+        if (
+            not isinstance(payload_digest, str)
+            or not re.fullmatch(r"[0-9a-f]{64}", payload_digest)
+            or not isinstance(payload_size, int)
+            or payload_size <= 0
+        ):
+            raise SystemExit("payload delivery record is invalid")
+
+        manifest_parts = manifest.get("payload_parts")
+        if not isinstance(manifest_parts, list) or not 2 <= len(manifest_parts) <= 16:
+            raise SystemExit("payload manifest needs 2..16 parts")
+        part_records = []
+        declared = 0
+        for index, part in enumerate(manifest_parts):
+            if not isinstance(part, dict):
+                raise SystemExit("payload manifest part is not an object")
+            name = part.get("name")
+            size = part.get("bytes")
+            sha256 = part.get("sha256")
+            expected = f"{inputs['payload_name']}.part.{index:02d}"
+            if (
+                name != expected
+                or not isinstance(size, int)
+                or size <= 0
+                or not isinstance(sha256, str)
+                or not re.fullmatch(r"[0-9a-f]{64}", sha256)
+            ):
+                raise SystemExit(f"invalid payload manifest part: {expected}")
+            declared += size
+            part_records.append(
+                {
+                    "sourceURL": f"{args.base_url}/{name}",
+                    "fileName": name,
+                    "sizeBytes": size,
+                    "sha256": f"sha256:{sha256}",
+                }
+            )
+        if declared != payload_size:
+            raise SystemExit("payload manifest parts do not sum to the payload size")
+    else:
+        payload = regular_file(assets / inputs["payload_name"])
+        parts = payload_parts(payload)
+        part_records = []
+        whole = hashlib.sha256()
+        declared = 0
+        for part in parts:
+            part_digest = hashlib.sha256()
+            size = 0
+            with part.open("rb") as stream:
+                while block := stream.read(READ_BLOCK):
+                    whole.update(block)
+                    part_digest.update(block)
+                    size += len(block)
+            if size == 0:
+                raise SystemExit(f"empty payload part: {part.name}")
+            declared += size
+            record = artifact(part, args.base_url)
+            record["sha256"] = f"sha256:{part_digest.hexdigest()}"
+            part_records.append(record)
+
+        payload_digest = digest(payload)
+        payload_size = payload.stat().st_size
+        if declared != payload_size or whole.hexdigest() != payload_digest:
+            raise SystemExit("payload parts do not reconstruct the complete payload")
 
     if args.now:
         issued = datetime.datetime.strptime(args.now, "%Y-%m-%dT%H:%M:%SZ").replace(
@@ -151,8 +223,12 @@ def main() -> int:
     else:
         issued = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
 
-    payload_artifact = artifact(payload, args.base_url)
-    payload_artifact["parts"] = part_records
+    payload_artifact = {
+        "sourceURL": f"{args.base_url}/{inputs['payload_name']}",
+        "fileName": inputs["payload_name"],
+        "sizeBytes": payload_size,
+        "parts": part_records,
+    }
     model = {
         "deviceIdentifier": "apple,j613",
         "status": "enabled",
@@ -161,10 +237,14 @@ def main() -> int:
         "asahiInstallerRevision": inputs["asahi_installer_revision"],
         "asahiInstallerDataRevision": inputs["asahi_installer_data_revision"],
         "downstreamRevision": inputs["downstream_revision"],
-        "metadataDigest": f"sha256:{digest(metadata)}",
+        "metadataDigest": f"sha256:{metadata_digest}",
         "payloadDigest": f"sha256:{payload_digest}",
         "evidenceRevision": inputs["evidence_revision"],
-        "metadataArtifact": artifact(metadata, args.base_url),
+        "metadataArtifact": {
+            "sourceURL": f"{args.base_url}/{inputs['metadata_name']}",
+            "fileName": inputs["metadata_name"],
+            "sizeBytes": metadata_size,
+        },
         "payloadArtifact": payload_artifact,
     }
     catalog = {
@@ -234,7 +314,7 @@ def main() -> int:
     print(f"catalog_sha256={hashlib.sha256(catalog_bytes).hexdigest()}")
     print(f"sequence={catalog['sequence']}")
     print(f"payload_digest=sha256:{payload_digest}")
-    print(f"payload_parts={len(parts)}")
+    print(f"payload_parts={len(part_records)}")
     return 0
 
 
