@@ -5,7 +5,7 @@
   "installation_profile": "arch-kde",
   "payload_name": "arch-kde-20261123.2.zip",
   "metadata_name": "installer-data-arch-kde.json",
-  "evidence_revision": "rom3-native-payload-45125699925",
+  "evidence_revision": "rom3-native-payload-45175999882",
   "asahi_installer_tag": "v0.9.2",
   "asahi_installer_revision": "a0b34140669f69e3a777c70480e60244a470d50f",
   "asahi_installer_data_revision": "5c64c2c0d47387b5d84fa760019dca67ca98d45b",
