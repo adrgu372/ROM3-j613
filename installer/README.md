@@ -28,7 +28,7 @@ the final signed catalog is generated.
 
 The verified source filesystem image is published at:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261122.5
+https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261123.1
 
 The release splits the filesystem archive below GitHub's per-asset size limit.
 Its signed `SHA256SUMS` and `reassemble-image-payload.sh` reconstruct the exact
@@ -36,7 +36,7 @@ archive covered by the Sigstore provenance attestation.
 
 The native installer payload and current catalog are published at:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261122.6
+https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261123.2
 
 That release contains the native ZIP in six parts and `os_list` metadata. Its
 schema-5 testing catalog is signed by the ROM3 Ed25519 key and admits only
@@ -63,7 +63,7 @@ qualification on this board.
 
 The CI-built technical-preview artifact is published here:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/installer-preview-0.1.3
+https://github.com/adrgu372/ROM3-j613/releases/tag/installer-preview-0.1.4
 
 It is restricted to `apple,j613`. The `.pkg` is deliberately unsigned and the
 application is ad-hoc signed. It has not completed a clean install, cold boot

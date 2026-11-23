@@ -37,10 +37,10 @@ wait until a clean install from the standard `arch-kde` path is qualified.
 
 ## Published payload
 
-The first verified `arch-kde` payload is published at
-`image-20261122.5`. It was built from `stable-20261122.5`, includes the
-J613 MCA speaker-sense and `speakersafetyd` probe-rate fixes, and has Sigstore
-provenance for the filesystem archive.
+The verified `arch-kde` payload is published at `image-20261123.1`. It was
+built from `stable-20261122.9`, includes automatic ROM3 keyring restoration and
+the signed override-feed guard, and has Sigstore provenance for the filesystem
+archive.
 
 GitHub's per-file release limit requires the 4.92 GiB archive to be split into
 five parts. The release includes signed checksums and

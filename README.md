@@ -105,14 +105,14 @@ ROM3 signing key after Aurora creates the machine's pacman master key.
 
 The source filesystem image is public:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261122.5
+https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261123.1
 
 It contains the filesystem archive split into GitHub-sized parts, Sigstore
 provenance, signed checksums and a reassembly script.
 
 The native installer payload assembled from that image is public:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261122.6
+https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261123.2
 
 It contains the native installer ZIP in six parts, `os_list` metadata, the
 J613-only schema-5 catalog on the `testing` channel, signed checksums and a
@@ -126,7 +126,7 @@ separate release gates.
 
 A CI-built technical preview is available as a prerelease:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/installer-preview-0.1.3
+https://github.com/adrgu372/ROM3-j613/releases/tag/installer-preview-0.1.4
 
 It targets only `apple,j613`. The package is intentionally unsigned and the
 app is ad-hoc signed; do not treat it as a production installer.
