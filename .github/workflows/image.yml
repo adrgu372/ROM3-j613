@@ -2,6 +2,15 @@ name: rom3-j613-image
 
 on:
   workflow_dispatch:
+    inputs:
+      override_feed:
+        description: Optional signed ROM3 override feed URL
+        required: false
+        type: string
+      override_manifest_url:
+        description: Optional override manifest URL
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -36,13 +45,19 @@ jobs:
       - name: Apply ROM3 overlay patch
         run: |
           set -euo pipefail
-          patch_file="$GITHUB_WORKSPACE/rom3/patches/0001-build-image-add-rom3-overlay.patch"
-          git -C "$GITHUB_WORKSPACE/upstream" apply --check "$patch_file"
-          git -C "$GITHUB_WORKSPACE/upstream" apply "$patch_file"
+          for patch_file in \
+            "$GITHUB_WORKSPACE/rom3/patches/0001-build-image-add-rom3-overlay.patch" \
+            "$GITHUB_WORKSPACE/rom3/patches/0002-build-image-signed-override-feed.patch"; do
+            git -C "$GITHUB_WORKSPACE/upstream" apply --check "$patch_file"
+            git -C "$GITHUB_WORKSPACE/upstream" apply "$patch_file"
+          done
 
       - name: Build KDE image
         env:
-          ROM3_FEED: https://github.com/adrgu372/ROM3-j613/releases/download/stable-20261122.7
+          ROM3_FEED: https://github.com/adrgu372/ROM3-j613/releases/download/stable-20261122.9
+          ROM3_OVERRIDE_FEED: ${{ inputs.override_feed }}
+          ROM3_OVERRIDE_MANIFEST_URL: ${{ inputs.override_manifest_url }}
+          ROM3_OVERRIDE_FINGERPRINT: FA80FF234BCDF36211649321EB9845C8BAA89A4A
           ROM3_KEY_URL: https://raw.githubusercontent.com/adrgu372/ROM3-j613/main/repo/keys/rom3-j613-packages.pub
           ROM3_FINGERPRINT: FA80FF234BCDF36211649321EB9845C8BAA89A4A
         run: |
@@ -51,6 +66,8 @@ jobs:
             -v /dev:/dev -v /run/udev:/run/udev:ro \
             -v "$GITHUB_WORKSPACE:/src" -w /src/upstream \
             -e ROM3_FEED -e ROM3_KEY_URL -e ROM3_FINGERPRINT \
+            -e ROM3_OVERRIDE_FEED -e ROM3_OVERRIDE_MANIFEST_URL \
+            -e ROM3_OVERRIDE_FINGERPRINT \
             registry.fedoraproject.org/fedora:44 \
             bash -euo pipefail -c '
               dnf install -y python3 gnupg2 tar gzip util-linux coreutils \

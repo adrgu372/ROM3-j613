@@ -27,10 +27,16 @@ fi
 git -C "$source_repo" fetch --depth 1 origin "$commit"
 git -C "$source_repo" checkout -q --detach FETCH_HEAD
 git -C "$source_repo" reset --hard "$commit"
-git -C "$source_repo" apply \
-    "$root/patches/0001-build-image-add-rom3-overlay.patch"
+for patch_file in \
+    "$root/patches/0001-build-image-add-rom3-overlay.patch" \
+    "$root/patches/0002-build-image-signed-override-feed.patch"; do
+    git -C "$source_repo" apply "$patch_file"
+done
 
-export ROM3_FEED=https://github.com/adrgu372/ROM3-j613/releases/download/stable-20261122.7
+export ROM3_FEED=https://github.com/adrgu372/ROM3-j613/releases/download/stable-20261122.9
+export ROM3_OVERRIDE_FEED=${ROM3_OVERRIDE_FEED:-}
+export ROM3_OVERRIDE_MANIFEST_URL=${ROM3_OVERRIDE_MANIFEST_URL:-}
+export ROM3_OVERRIDE_FINGERPRINT=${ROM3_OVERRIDE_FINGERPRINT:-FA80FF234BCDF36211649321EB9845C8BAA89A4A}
 export ROM3_KEY_URL=https://raw.githubusercontent.com/adrgu372/ROM3-j613/main/repo/keys/rom3-j613-packages.pub
 export ROM3_FINGERPRINT=FA80FF234BCDF36211649321EB9845C8BAA89A4A
 

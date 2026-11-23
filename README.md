@@ -94,7 +94,7 @@ update guard and initial local test packages now exist.
 
 The signed package feed is public:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/stable-20261122.7
+https://github.com/adrgu372/ROM3-j613/releases/tag/stable-20261122.9
 
 The snapshot contains all 27 direct sensitive dependencies of the meta-package.
 Its J613 kernel samples speaker V/I sense on the corrected MCA clock edge and
@@ -143,4 +143,9 @@ See [ROADMAP.md](ROADMAP.md).
 
 For a working `J613` installation, [docs/bootstrap.md](docs/bootstrap.md)
 attaches the signed ROM3 feed without upgrading the system.
+
+Replacement kernels or other sensitive packages can be delivered through a
+signed override feed hosted in any GitHub repository. See
+[docs/override-feed.md](docs/override-feed.md); signature checks and
+quarantine rules remain active, with only the exact manifest versions admitted.
 

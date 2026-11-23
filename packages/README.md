@@ -48,6 +48,10 @@ Imported recipes currently cover:
 - `rom3-j613-keyring`, with a boot-time service that re-establishes local trust
   after Aurora initializes or repairs the machine-local pacman master key
 
+`rom3-j613-guard` also provides `rom3-j613-override`, which authenticates an
+external signed package feed and keeps its version exceptions separate from
+the stable quarantine list.
+
 Generated binaries are excluded from Git.
 
 The signed binary snapshot mirrors every exact package required by the

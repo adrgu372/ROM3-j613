@@ -1,7 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-quarantine=/usr/share/rom3-j613/quarantine.packages
+quarantine=${ROM3_QUARANTINE:-/usr/share/rom3-j613/quarantine.packages}
+override_manifest=${ROM3_OVERRIDE_MANIFEST:-/var/lib/rom3-j613/override/manifest.json}
+pacman_conf=${ROM3_PACMAN_CONF:-/etc/pacman.conf}
 mode=${1:---check}
 
 if (( EUID != 0 )); then
@@ -25,13 +27,59 @@ esac
 pacman -Sy --noconfirm
 
 pending=$(mktemp)
+pending_details=$(mktemp)
 blocked=$(mktemp)
+approved=$(mktemp)
+approved_pending=$(mktemp)
 quarantine_sorted=$(mktemp)
-trap 'rm -f "$pending" "$blocked" "$quarantine_sorted"' EXIT
+pacman_config=
+cleanup() {
+    rm -f "$pending" "$pending_details" "$blocked" "$approved" \
+        "$approved_pending" "$quarantine_sorted"
+    [[ -z $pacman_config ]] || rm -f "$pacman_config"
+}
+trap cleanup EXIT
 
-pacman -Qu 2>/dev/null | awk '{print $1}' | sort -u > "$pending" || true
+pacman -Qu 2>/dev/null |
+    awk 'NF {print $1 "\t" $NF}' > "$pending_details" || true
+cut -f1 "$pending_details" | sort -u > "$pending"
 sort -u "$quarantine" > "$quarantine_sorted"
-comm -12 "$pending" "$quarantine_sorted" > "$blocked"
+
+if [[ -f $override_manifest ]]; then
+    python3 - "$override_manifest" > "$approved" <<'PY'
+import json
+import re
+import sys
+
+manifest = json.load(open(sys.argv[1], encoding="utf-8"))
+if (
+    manifest.get("schema_version") != 1
+    or manifest.get("distribution") != "ROM3-j613"
+    or not isinstance(manifest.get("packages"), dict)
+):
+    raise SystemExit("invalid active override manifest")
+for name, version in sorted(manifest["packages"].items()):
+    if not re.fullmatch(r"[a-z0-9@._+:-]+", name):
+        raise SystemExit(f"invalid package name in override: {name!r}")
+    if not isinstance(version, str) or not re.fullmatch(
+        r"[A-Za-z0-9@._+~:-]+", version
+    ):
+        raise SystemExit(f"invalid version in override for {name}")
+    print(f"{name}\t{version}")
+PY
+fi
+
+while IFS=$'\t' read -r package available_version; do
+    [[ -n $package ]] || continue
+    grep -qx "$package" "$quarantine_sorted" || continue
+    expected_version=$(awk -F'\t' -v name="$package" \
+        '$1 == name {print $2; exit}' "$approved")
+    if [[ -n $expected_version && $available_version == "$expected_version" ]]; then
+        printf '%s\t%s\n' "$package" "$available_version" >> "$approved_pending"
+    else
+        printf '%s\n' "$package" >> "$blocked"
+    fi
+done < "$pending_details"
 
 if [[ -s $blocked ]]; then
     echo "ROM3-j613: unqualified updates blocked:" >&2
@@ -48,12 +96,23 @@ fi
 
 echo "Proposed non-quarantined updates:"
 while IFS= read -r package; do
-    pacman -Qu "$package" || true
+    grep -qx "$package" "$blocked" && continue
+    expected_version=$(awk -F'\t' -v name="$package" \
+        '$1 == name {print $2; exit}' "$approved_pending")
+    if [[ -n $expected_version ]]; then
+        printf '%s (approved by override: %s)\n' "$package" "$expected_version"
+    else
+        pacman -Qu "$package" || true
+    fi
 done < "$pending"
 
 if [[ $mode == --check ]]; then
     echo
-    echo "ROM3-j613: no quarantined package would change."
+    if [[ -s $approved_pending ]]; then
+        echo "ROM3-j613: all quarantined changes are approved by the active override."
+    else
+        echo "ROM3-j613: no quarantined package would change."
+    fi
     exit 0
 fi
 
@@ -83,11 +142,49 @@ sha256sum "$backup"/boot.bin > "$backup/boot.bin.sha256" 2>/dev/null || true
 
 echo "Backup: $backup"
 echo "Btrfs snapshot: $snapshot_root/$stamp"
-echo "Starting full upgrade outside ROM3's quarantined packages..."
-pacman -Syu
+echo "Starting full upgrade with only signed override versions admitted..."
+
+pacman_config=$(mktemp)
+cp -a "$pacman_conf" "$pacman_config"
+python3 - "$pacman_config" "$approved" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+approved = {
+    line.split("\t", 1)[0]
+    for line in Path(sys.argv[2]).read_text().splitlines()
+    if line
+}
+lines = path.read_text().splitlines()
+in_options = False
+for index, line in enumerate(lines):
+    stripped = line.strip()
+    if stripped == "[options]":
+        in_options = True
+        continue
+    if in_options and stripped.startswith("[") and stripped.endswith("]"):
+        break
+    if in_options and stripped.startswith("IgnorePkg"):
+        names = [
+            name
+            for name in line.partition("=")[2].split()
+            if name not in approved
+        ]
+        lines[index] = "IgnorePkg = " + " ".join(names) if names else ""
+        break
+path.write_text("\n".join(line for line in lines if line != "") + "\n")
+PY
+
+targets=()
+while IFS=$'\t' read -r package version; do
+    [[ -n $package ]] || continue
+    targets+=("$package=$version")
+done < "$approved"
+pacman -Syu --config "$pacman_config" "${targets[@]}"
+rom3-j613-check
 
 echo
-echo "Update complete. Run:"
-echo "  rom3-j613-check"
+echo "Update complete. After the next boot, run:"
 echo "  /usr/share/rom3-j613/verify-live-system.sh"
 

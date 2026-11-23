@@ -1,0 +1,188 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: ROM3-j613 <packages@rom3-j613.invalid>
+Date: Mon, 23 Nov 2026 12:15:00 +0200
+Subject: [PATCH] build-image: admit a signed ROM3 override feed
+
+---
+--- a/scripts/build-image
++++ b/scripts/build-image
+@@ -8,6 +8,16 @@
+ rom3_manifest_url=${ROM3_MANIFEST_URL:-$rom3_feed/rom3-package-builds.json}
+ rom3_key_url=${ROM3_KEY_URL:-https://raw.githubusercontent.com/adrgu372/ROM3-j613/main/repo/keys/rom3-j613-packages.pub}
+ rom3_fingerprint=${ROM3_FINGERPRINT:-FA80FF234BCDF36211649321EB9845C8BAA89A4A}
++rom3_override_feed=${ROM3_OVERRIDE_FEED:-}
++rom3_override_manifest_url=${ROM3_OVERRIDE_MANIFEST_URL:-}
++rom3_override_fingerprint=${ROM3_OVERRIDE_FINGERPRINT:-$rom3_fingerprint}
++if [[ -n $rom3_override_feed ]]; then
++  rom3_override_manifest_url=${rom3_override_manifest_url:-$rom3_override_feed/rom3-overrides.json}
++  [[ $rom3_override_fingerprint == "$rom3_fingerprint" ]] || {
++    echo "ROM3 override feed must use the trusted ROM3 signing key" >&2
++    exit 1
++  }
++fi
+ export AURORA_DEVICE_TREE_COMPATIBLE=/nonexistent
+ profile=${1:?arch-kde required}
+ [[ $profile == arch-kde ]] || { echo 'ROM3-j613 supports only arch-kde' >&2; exit 1; }
+@@ -88,6 +98,25 @@
+ PY
+ chroot "$mountroot" pacman-key --add /tmp/rom3-j613-packages.pub
+ chroot "$mountroot" pacman-key --lsign-key "$rom3_fingerprint"
++if [[ -n $rom3_override_feed ]]; then
++  python3 - "$rom3_override_manifest_url" "$rom3_override_feed" "$mountroot/tmp" <<'PY'
++import pathlib
++import sys
++import urllib.parse
++import urllib.request
++manifest_url, feed, destination = sys.argv[1:]
++destination = pathlib.Path(destination)
++name = pathlib.PurePosixPath(urllib.parse.urlsplit(manifest_url).path).name
++if name != "rom3-overrides.json":
++    raise SystemExit("override manifest URL must end in rom3-overrides.json")
++urllib.request.urlretrieve(manifest_url, destination / name)
++urllib.request.urlretrieve(manifest_url + ".sig", destination / (name + ".sig"))
++PY
++  gpg --homedir "$mountroot/etc/pacman.d/gnupg" --batch --status-fd=1 \
++    --verify "$mountroot/tmp/rom3-overrides.json.sig" \
++    "$mountroot/tmp/rom3-overrides.json" |
++    grep -Fq "VALIDSIG $rom3_override_fingerprint"
++fi
+ # Bootstrap the repository from a temporary include. The release package owns
+ # the persistent files and installs them later in this transaction.
+ install -Dm644 /dev/stdin "$mountroot/tmp/rom3-j613-bootstrap.conf" <<EOF
+@@ -99,26 +128,83 @@
+   printf '\nInclude = /tmp/rom3-j613-bootstrap.conf\n' >> "$mountroot/etc/pacman.conf"
+ fi
+ chroot "$mountroot" pacman -Sy --noconfirm
+-python3 - "$rom3_manifest_url" "$rom3_feed" "$mountroot/var/cache/pacman/pkg" "$mountroot/tmp/rom3-ignore.txt" "$mountroot/tmp/rom3-pinned-names.txt" <<'PY'
++python3 - "$rom3_manifest_url" "$rom3_feed" "$mountroot/var/cache/pacman/pkg" "$mountroot/tmp/rom3-ignore.txt" "$mountroot/tmp/rom3-pinned-names.txt" "$mountroot/tmp/rom3-overrides.json" <<'PY'
+ import json
+ import pathlib
+ import sys
+ import urllib.request
+-manifest_url, feed, cache, ignore_file, names_file = sys.argv[1:]
++manifest_url, feed, cache, ignore_file, names_file, override_file = sys.argv[1:]
+ with urllib.request.urlopen(manifest_url) as response:
+     data = json.load(response)
+ cache_dir = pathlib.Path(cache)
+ cache_dir.mkdir(parents=True, exist_ok=True)
++override_packages = {}
++override_path = pathlib.Path(override_file)
++if override_path.is_file():
++    override = json.loads(override_path.read_text())
++    if (
++        override.get("schema_version") != 1
++        or override.get("distribution") != "ROM3-j613"
++        or not isinstance(override.get("packages"), dict)
++    ):
++        raise SystemExit("invalid ROM3 override manifest")
++    override_packages = override["packages"]
+ names = []
+ for item in data["artifacts"]:
++    if item["package"] in override_packages:
++        continue
+     names.append(item["package"])
+     for suffix in ("", ".sig"):
+         target = cache_dir / (item["file"] + suffix)
+         if not target.exists():
+             urllib.request.urlretrieve(feed + "/" + item["file"] + suffix, target)
+-pathlib.Path(ignore_file).write_text("IgnorePkg = " + " ".join(names) + "\n")
+-pathlib.Path(names_file).write_text("\n".join(names) + "\n")
++all_names = sorted(set(names) | set(override_packages))
++pathlib.Path(ignore_file).write_text("IgnorePkg = " + " ".join(all_names) + "\n")
++pathlib.Path(names_file).write_text("\n".join(all_names) + "\n")
++PY
++if [[ -n $rom3_override_feed ]]; then
++  python3 - "$mountroot/tmp/rom3-overrides.json" "$rom3_override_feed" "$mountroot/var/cache/pacman/pkg" "$mountroot/tmp/rom3-override-versions.tsv" <<'PY'
++import hashlib
++import json
++import pathlib
++import sys
++import urllib.request
++manifest_file, feed, cache, versions_file = sys.argv[1:]
++manifest = json.loads(pathlib.Path(manifest_file).read_text())
++packages = manifest.get("packages")
++artifacts = manifest.get("artifacts")
++if not isinstance(packages, dict) or not packages:
++    raise SystemExit("ROM3 override manifest has no packages")
++if not isinstance(artifacts, list) or not artifacts:
++    raise SystemExit("ROM3 override manifest has no artifacts")
++cache_dir = pathlib.Path(cache)
++cache_dir.mkdir(parents=True, exist_ok=True)
++seen = set()
++for item in artifacts:
++    name = item.get("package")
++    version = item.get("version")
++    filename = item.get("file")
++    expected = item.get("sha256")
++    if packages.get(name) != version or not isinstance(filename, str):
++        raise SystemExit(f"invalid ROM3 override artifact: {name!r}")
++    if pathlib.Path(filename).name != filename or name in seen:
++        raise SystemExit(f"unsafe or duplicate ROM3 override artifact: {name}")
++    seen.add(name)
++    package = cache_dir / filename
++    for suffix in ("", ".sig"):
++        target = cache_dir / (filename + suffix)
++        if not target.exists():
++            urllib.request.urlretrieve(feed + "/" + filename + suffix, target)
++    actual = hashlib.sha256(package.read_bytes()).hexdigest()
++    if actual != expected:
++        raise SystemExit(f"ROM3 override SHA-256 mismatch: {filename}")
++if seen != set(packages):
++    raise SystemExit("ROM3 override packages and artifacts disagree")
++pathlib.Path(versions_file).write_text(
++    "".join(f"{name}\t{version}\n" for name, version in sorted(packages.items()))
++)
+ PY
++fi
+ chroot "$mountroot" pacman -S --noconfirm --needed openssl openssl-3
+ pinned=()
+ for pkg in "$mountroot"/var/cache/pacman/pkg/*.pkg.tar.*; do
+@@ -133,7 +219,48 @@
+ if ! grep -q '^Include = /etc/pacman.d/rom3-j613.conf$' "$mountroot/etc/pacman.conf"; then
+   printf '\nInclude = /etc/pacman.d/rom3-j613.conf\n' >> "$mountroot/etc/pacman.conf"
+ fi
++if [[ -n $rom3_override_feed ]]; then
++  install -Dm644 /dev/stdin "$mountroot/etc/pacman.d/rom3-j613-overrides.conf" <<EOF
++[rom3-j613-overrides]
++SigLevel = Required DatabaseRequired
++Include = /etc/pacman.d/rom3-j613-overrides-mirrorlist
++EOF
++  printf 'Server = %s\n' "$rom3_override_feed" > \
++    "$mountroot/etc/pacman.d/rom3-j613-overrides-mirrorlist"
++  python3 - "$mountroot/etc/pacman.conf" <<'PY'
++from pathlib import Path
++import sys
++path = Path(sys.argv[1])
++include = "Include = /etc/pacman.d/rom3-j613-overrides.conf"
++base = "Include = /etc/pacman.d/rom3-j613.conf"
++lines = [line for line in path.read_text().splitlines() if line != include]
++at = lines.index(base)
++lines.insert(at, include)
++path.write_text("\n".join(lines) + "\n")
++PY
++  install -Dm644 "$mountroot/tmp/rom3-overrides.json" \
++    "$mountroot/var/lib/rom3-j613/override/manifest.json"
++  install -Dm644 "$mountroot/tmp/rom3-overrides.json.sig" \
++    "$mountroot/var/lib/rom3-j613/override/manifest.json.sig"
++  python3 - "$mountroot/var/lib/rom3-j613/override/state.json" "$rom3_override_feed" "$rom3_override_fingerprint" <<'PY'
++import json
++import pathlib
++import sys
++pathlib.Path(sys.argv[1]).write_text(json.dumps({
++    "feed": sys.argv[2],
++    "fingerprint": sys.argv[3],
++}, indent=2) + "\n")
++PY
++fi
+ sed -i "/^\[options\]/r $mountroot/tmp/rom3-ignore.txt" "$mountroot/etc/pacman.conf"
++if [[ -n $rom3_override_feed ]]; then
++  while IFS=$'\t' read -r package version; do
++    [[ $(chroot "$mountroot" pacman -Q "$package") == "$package $version" ]] || {
++      echo "ROM3 override did not install $package $version" >&2
++      exit 1
++    }
++  done < "$mountroot/tmp/rom3-override-versions.tsv"
++fi
+ python3 - "$root/scripts" "$mountroot/etc/pacman.conf" "$tag" "$edge_tag" <<'PY'
+ from pathlib import Path
+ import sys

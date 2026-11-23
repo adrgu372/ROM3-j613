@@ -118,9 +118,9 @@
     },
     {
       "package": "rom3-j613-guard",
-      "version": "1-5",
-      "file": "rom3-j613-guard-1-5-any.pkg.tar.xz",
-      "sha256": "027f663b4c9616902fc50ae0119b09750372aeacb199be544df8de9b7ccde8cd"
+      "version": "1-6",
+      "file": "rom3-j613-guard-1-6-any.pkg.tar.xz",
+      "sha256": "0ca55053c394f66e6b85ce41ca30d987b58f79919fc97c771f7b244269a60dbf"
     },
     {
       "package": "rom3-j613-keyring",

@@ -42,6 +42,12 @@ For an existing non-ROM3 installation, use `scripts/bootstrap-client.sh`; it
 performs the same key import and configures the repository without upgrading
 the kernel or any other package.
 
+An external GitHub release can carry replacement kernels or other sensitive
+packages as a signed override repository. The base repository stays enabled,
+only exact versions named by the signed override manifest are admitted, and
+all other quarantine entries remain blocked. See
+[override-feed.md](override-feed.md).
+
 ## Immutable releases
 
 Never mutate an existing snapshot in place. A new tested stack gets a new tag.

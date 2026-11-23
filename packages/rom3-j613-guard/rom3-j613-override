@@ -1,0 +1,386 @@
+#!/usr/bin/env python3
+"""Manage an authenticated ROM3-j613 package override feed."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+from typing import NoReturn
+import urllib.parse
+import urllib.request
+
+STATE_DIR = Path(
+    os.environ.get("ROM3_OVERRIDE_STATE_DIR", "/var/lib/rom3-j613/override")
+)
+PACMAN_CONF = Path(os.environ.get("ROM3_PACMAN_CONF", "/etc/pacman.conf"))
+MIRRORLIST = Path(
+    os.environ.get(
+        "ROM3_OVERRIDE_MIRRORLIST",
+        "/etc/pacman.d/rom3-j613-overrides-mirrorlist",
+    )
+)
+REPO_CONF = Path(
+    os.environ.get(
+        "ROM3_OVERRIDE_REPO_CONF",
+        "/etc/pacman.d/rom3-j613-overrides.conf",
+    )
+)
+PACMAN_KEYRING = Path(
+    os.environ.get("ROM3_PACMAN_KEYRING", "/etc/pacman.d/gnupg")
+)
+REPO_NAME = "rom3-j613-overrides"
+INCLUDE_LINE = f"Include = {REPO_CONF}"
+PACKAGE_RE = re.compile(r"^[a-z0-9@._+:-]+$")
+VERSION_RE = re.compile(r"^[A-Za-z0-9@._+~:-]+$")
+FINGERPRINT_RE = re.compile(r"^[0-9A-F]{40}(?:[0-9A-F]{24})?$")
+
+
+def fail(message: str) -> NoReturn:
+    print(f"rom3-j613-override: {message}", file=sys.stderr)
+    raise SystemExit(1)
+
+
+def require_root() -> None:
+    if os.geteuid() != 0:
+        fail("must run as root")
+
+
+def run(
+    command: list[str],
+    *,
+    check: bool = True,
+    capture: bool = False,
+    env: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        command,
+        check=check,
+        text=True,
+        capture_output=capture,
+        env=env,
+    )
+
+
+def download(url: str, destination: Path) -> None:
+    parsed = urllib.parse.urlsplit(url)
+    if parsed.scheme == "file":
+        shutil.copy2(urllib.request.url2pathname(parsed.path), destination)
+        return
+    if parsed.scheme not in {"http", "https"}:
+        fail(f"unsupported URL scheme in {url!r}")
+    with urllib.request.urlopen(url, timeout=60) as response:
+        destination.write_bytes(response.read())
+
+
+def validate_manifest(document: object) -> dict[str, object]:
+    if not isinstance(document, dict):
+        fail("override manifest is not a JSON object")
+    if document.get("schema_version") != 1:
+        fail("override manifest schema_version must be 1")
+    if document.get("distribution") != "ROM3-j613":
+        fail("override manifest distribution must be ROM3-j613")
+
+    packages = document.get("packages")
+    if not isinstance(packages, dict) or not packages:
+        fail("override manifest must contain a non-empty packages object")
+    for name, version in packages.items():
+        if not isinstance(name, str) or not PACKAGE_RE.fullmatch(name):
+            fail(f"invalid package name in manifest: {name!r}")
+        if not isinstance(version, str) or not VERSION_RE.fullmatch(version):
+            fail(f"invalid version for {name}: {version!r}")
+
+    base = document.get("base_snapshot")
+    if not isinstance(base, str) or not re.fullmatch(
+        r"stable-[0-9]{8}\.[0-9]+", base
+    ):
+        fail("base_snapshot must look like stable-YYYYMMDD.N")
+
+    artifacts = document.get("artifacts")
+    if not isinstance(artifacts, list) or not artifacts:
+        fail("override manifest must contain a non-empty artifacts array")
+    artifact_names: set[str] = set()
+    for artifact in artifacts:
+        if not isinstance(artifact, dict):
+            fail("each manifest artifact must be an object")
+        name = artifact.get("package")
+        version = artifact.get("version")
+        filename = artifact.get("file")
+        digest = artifact.get("sha256")
+        if packages.get(name) != version:
+            fail(f"artifact {name!r} does not match the packages map")
+        if name in artifact_names:
+            fail(f"duplicate artifact for {name}")
+        artifact_names.add(name)
+        if not isinstance(filename, str) or Path(filename).name != filename:
+            fail(f"unsafe artifact filename for {name}")
+        if not isinstance(digest, str) or not re.fullmatch(
+            r"[0-9a-f]{64}", digest
+        ):
+            fail(f"invalid SHA-256 for {name}")
+    if artifact_names != set(packages):
+        fail("artifacts and packages must describe the same package names")
+    return document
+
+
+def fingerprint_from_key(key_file: Path) -> str:
+    result = run(
+        ["gpg", "--batch", "--with-colons", "--show-keys", str(key_file)],
+        capture=True,
+    )
+    for line in result.stdout.splitlines():
+        fields = line.split(":")
+        if fields[0] == "fpr" and len(fields) > 9:
+            return fields[9].upper()
+    fail(f"could not read a fingerprint from {key_file}")
+
+
+def verify_signature(
+    data: Path,
+    signature: Path,
+    fingerprint: str,
+    homedir: Path = PACMAN_KEYRING,
+) -> None:
+    result = run(
+        [
+            "gpg",
+            "--homedir",
+            str(homedir),
+            "--batch",
+            "--status-fd=1",
+            "--verify",
+            str(signature),
+            str(data),
+        ],
+        check=False,
+        capture=True,
+    )
+    valid = any(
+        line.startswith("[GNUPG:] VALIDSIG ")
+        and line.split()[2].upper() == fingerprint
+        for line in result.stdout.splitlines()
+    )
+    if result.returncode != 0 or not valid:
+        detail = (result.stderr or result.stdout).strip()
+        fail(f"signature verification failed for {data.name}: {detail}")
+
+
+def update_ignore_pkg(path: Path, names: set[str], *, remove: bool) -> None:
+    lines = path.read_text().splitlines()
+    options_at = next(
+        (index for index, line in enumerate(lines) if line.strip() == "[options]"),
+        None,
+    )
+    if options_at is None:
+        fail(f"{path}: missing [options] section")
+
+    ignore_at = None
+    for index in range(options_at + 1, len(lines)):
+        line = lines[index].strip()
+        if line.startswith("[") and line.endswith("]"):
+            break
+        if line.startswith("IgnorePkg"):
+            ignore_at = index
+            break
+
+    current: set[str] = set()
+    if ignore_at is not None:
+        current = set(lines[ignore_at].partition("=")[2].split())
+    if remove:
+        current.difference_update(names)
+    else:
+        current.update(names)
+
+    replacement = (
+        ["IgnorePkg = " + " ".join(sorted(current))] if current else []
+    )
+    if ignore_at is None:
+        lines[options_at + 1 : options_at + 1] = replacement
+    else:
+        lines[ignore_at : ignore_at + 1] = replacement
+    path.write_text("\n".join(lines) + "\n")
+
+
+def update_include(path: Path, *, add: bool) -> None:
+    lines = path.read_text().splitlines()
+    kept = [line for line in lines if line.strip() != INCLUDE_LINE]
+    if add:
+        base_include = "Include = /etc/pacman.d/rom3-j613.conf"
+        insert_at = next(
+            (index for index, line in enumerate(kept) if line.strip() == base_include),
+            len(kept),
+        )
+        kept.insert(insert_at, INCLUDE_LINE)
+    path.write_text("\n".join(kept) + "\n")
+
+
+def configure(args: argparse.Namespace) -> int:
+    require_root()
+    feed = args.feed.rstrip("/")
+    parsed = urllib.parse.urlsplit(feed)
+    if parsed.scheme not in {"file", "http", "https"}:
+        fail("feed must use file, http or https")
+    fingerprint = re.sub(r"\s+", "", args.fingerprint).upper()
+    if not FINGERPRINT_RE.fullmatch(fingerprint):
+        fail("fingerprint must contain 40 or 64 hexadecimal characters")
+
+    with tempfile.TemporaryDirectory(prefix="rom3-override-") as temporary:
+        temp = Path(temporary)
+        manifest_path = temp / "rom3-overrides.json"
+        signature_path = temp / "rom3-overrides.json.sig"
+        download(f"{feed}/rom3-overrides.json", manifest_path)
+        download(f"{feed}/rom3-overrides.json.sig", signature_path)
+
+        if args.key:
+            key_path = temp / "override-key.asc"
+            download(args.key, key_path)
+            if fingerprint_from_key(key_path) != fingerprint:
+                fail("downloaded key does not match --fingerprint")
+            temporary_keyring = temp / "gnupg"
+            temporary_keyring.mkdir(mode=0o700)
+            run(
+                [
+                    "gpg",
+                    "--homedir",
+                    str(temporary_keyring),
+                    "--batch",
+                    "--import",
+                    str(key_path),
+                ],
+                capture=True,
+            )
+            verify_signature(
+                manifest_path,
+                signature_path,
+                fingerprint,
+                temporary_keyring,
+            )
+            run(["pacman-key", "--add", str(key_path)])
+            run(["pacman-key", "--lsign-key", fingerprint])
+        else:
+            verify_signature(manifest_path, signature_path, fingerprint)
+        manifest = validate_manifest(json.loads(manifest_path.read_text()))
+        names = set(manifest["packages"])
+
+        pacman_backup = PACMAN_CONF.read_bytes()
+        repo_existed = REPO_CONF.exists()
+        mirror_existed = MIRRORLIST.exists()
+        repo_backup = REPO_CONF.read_bytes() if repo_existed else None
+        mirror_backup = MIRRORLIST.read_bytes() if mirror_existed else None
+
+        REPO_CONF.parent.mkdir(parents=True, exist_ok=True)
+        MIRRORLIST.parent.mkdir(parents=True, exist_ok=True)
+        STATE_DIR.mkdir(parents=True, exist_ok=True)
+        REPO_CONF.write_text(
+            f"[{REPO_NAME}]\n"
+            "SigLevel = Required DatabaseRequired\n"
+            f"Include = {MIRRORLIST}\n"
+        )
+        MIRRORLIST.write_text(f"Server = {feed}\n")
+        update_include(PACMAN_CONF, add=True)
+        update_ignore_pkg(PACMAN_CONF, names, remove=False)
+
+        try:
+            run(["pacman-conf", "--config", str(PACMAN_CONF)], capture=True)
+            run(["pacman", "-Sy", "--noconfirm"])
+        except (OSError, subprocess.CalledProcessError) as error:
+            PACMAN_CONF.write_bytes(pacman_backup)
+            if repo_backup is None:
+                REPO_CONF.unlink(missing_ok=True)
+            else:
+                REPO_CONF.write_bytes(repo_backup)
+            if mirror_backup is None:
+                MIRRORLIST.unlink(missing_ok=True)
+            else:
+                MIRRORLIST.write_bytes(mirror_backup)
+            fail(f"could not authenticate the override repository: {error}")
+
+        (STATE_DIR / "manifest.json").write_bytes(manifest_path.read_bytes())
+        (STATE_DIR / "manifest.json.sig").write_bytes(
+            signature_path.read_bytes()
+        )
+        (STATE_DIR / "state.json").write_text(
+            json.dumps(
+                {"feed": feed, "fingerprint": fingerprint},
+                indent=2,
+            )
+            + "\n"
+        )
+
+    print(f"ROM3-j613 override feed: {feed}")
+    print(f"Signing fingerprint: {fingerprint}")
+    print("Approved package versions:")
+    for name, version in sorted(manifest["packages"].items()):
+        print(f"  {name} {version}")
+    print("\nRun:")
+    print("  sudo rom3-j613-update --check")
+    return 0
+
+
+def status(_: argparse.Namespace) -> int:
+    manifest_path = STATE_DIR / "manifest.json"
+    state_path = STATE_DIR / "state.json"
+    if not manifest_path.is_file() or not state_path.is_file():
+        print("ROM3-j613 override feed is not configured.")
+        return 0
+    manifest = validate_manifest(json.loads(manifest_path.read_text()))
+    state = json.loads(state_path.read_text())
+    print(f"Feed: {state.get('feed')}")
+    print(f"Fingerprint: {state.get('fingerprint')}")
+    print(f"Base snapshot: {manifest['base_snapshot']}")
+    print("Approved packages:")
+    for name, version in sorted(manifest["packages"].items()):
+        print(f"  {name} {version}")
+    return 0
+
+
+def disable(_: argparse.Namespace) -> int:
+    require_root()
+    manifest_path = STATE_DIR / "manifest.json"
+    if manifest_path.is_file():
+        manifest = validate_manifest(json.loads(manifest_path.read_text()))
+        update_ignore_pkg(PACMAN_CONF, set(manifest["packages"]), remove=True)
+    update_include(PACMAN_CONF, add=False)
+    REPO_CONF.unlink(missing_ok=True)
+    MIRRORLIST.unlink(missing_ok=True)
+    for name in ("manifest.json", "manifest.json.sig", "state.json"):
+        (STATE_DIR / name).unlink(missing_ok=True)
+    print("ROM3-j613 override feed disabled.")
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(prog="rom3-j613-override")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    configure_parser = subparsers.add_parser(
+        "configure", help="configure and authenticate an override feed"
+    )
+    configure_parser.add_argument("--feed", required=True)
+    configure_parser.add_argument("--fingerprint", required=True)
+    configure_parser.add_argument(
+        "--key", help="public key URL; omit when the key is already trusted"
+    )
+    configure_parser.set_defaults(handler=configure)
+
+    status_parser = subparsers.add_parser("status")
+    status_parser.set_defaults(handler=status)
+
+    disable_parser = subparsers.add_parser("disable")
+    disable_parser.set_defaults(handler=disable)
+
+    args = parser.parse_args()
+    try:
+        return args.handler(args)
+    except FileNotFoundError as error:
+        fail(f"required command or file is missing: {error.filename}")
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

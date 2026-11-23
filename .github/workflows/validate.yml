@@ -20,6 +20,10 @@ jobs:
       - name: Validate Python tools
         run: |
           python3 -m py_compile scripts/*.py
+          python3 -m py_compile \
+            packages/rom3-j613-guard/rom3-j613-check \
+            packages/rom3-j613-guard/rom3-j613-override
+          python3 scripts/test-override-tools.py
           test "$(sha256sum installer/keys/catalog-signing.ed25519.pub | cut -d' ' -f1)" = \
             2b7e847f34019f26eb9fc0dbd675611446357078f3057434be9491ba97c4404c
       - name: Validate shell scripts
