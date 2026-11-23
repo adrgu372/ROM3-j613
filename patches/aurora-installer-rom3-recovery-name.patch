@@ -2,7 +2,25 @@ diff --git a/macOS/Packaging/build-app.sh b/macOS/Packaging/build-app.sh
 index 8436458..d07fca2 100755
 --- a/macOS/Packaging/build-app.sh
 +++ b/macOS/Packaging/build-app.sh
-@@ -325,11 +325,12 @@ done
+@@ -237,7 +237,7 @@ swift_tool="$(xcrun --find swift)"
+   cd "$package_directory"
+   "$swift_tool" build \
+     --configuration "$build_configuration" \
+-    "${swift_test_arguments[@]}" \
++    "${swift_test_arguments[@]+"${swift_test_arguments[@]}"}" \
+     --jobs "$build_jobs"
+ )
+ binary_directory="$({
+@@ -273,7 +273,7 @@ fi
+   cd "$package_directory"
+   "$swift_tool" build \
+     --configuration "$build_configuration" \
+-    "${swift_test_arguments[@]}" \
++    "${swift_test_arguments[@]+"${swift_test_arguments[@]}"}" \
+     --jobs "$build_jobs" \
+     --product AuroraAppleInstallerHelper \
+     "${helper_link_arguments[@]}"
+@@ -325,11 +325,13 @@ done
  install -m 0444 "$package_directory/Design/Assets/MacBookPowerButton.png" "$resources/MacBookPowerButton.png"
  install -m 0444 "$package_directory/Design/Assets/MacDesktopPowerButton.png" "$resources/MacDesktopPowerButton.png"
  mkdir -p "$resources/RecoveryTemplate"
@@ -10,6 +28,7 @@ index 8436458..d07fca2 100755
 -strip_installed_swift "$resources/RecoveryTemplate/Aurora Installer.app/Contents/MacOS/OmarchyRecovery"
 +recovery_destination="$resources/RecoveryTemplate/$INSTALLER_APP_NAME.app"
 +/usr/bin/ditto "$recovery_template" "$recovery_destination"
++plutil -replace CFBundleDisplayName -string "$INSTALLER_APP_NAME" "$recovery_destination/Contents/Info.plist"
 +strip_installed_swift "$recovery_destination/Contents/MacOS/OmarchyRecovery"
  codesign --force --sign "$signing_identity" "${timestamp_arguments[@]}" \
 -  --options runtime "$resources/RecoveryTemplate/Aurora Installer.app"
@@ -28,3 +47,71 @@ index 8436458..d07fca2 100755
  [[ $recovery_hash =~ ^([0-9a-f]{40}|[0-9a-f]{64})$ ]] || fail "cannot identify the signed Recovery template"
  plutil -replace EnvironmentVariables.OMARCHY_RECOVERY_TEMPLATE_REQUIREMENT \
    -string "cdhash H\"$recovery_hash\"" "$contents/Library/LaunchDaemons/$daemon_plist_name"
+diff --git a/macOS/Recovery/Sources/Account/RecoveryVersionMetadata.swift b/macOS/Recovery/Sources/Account/RecoveryVersionMetadata.swift
+index 4fb70bd..b760ae5 100644
+--- a/macOS/Recovery/Sources/Account/RecoveryVersionMetadata.swift
++++ b/macOS/Recovery/Sources/Account/RecoveryVersionMetadata.swift
+@@ -68,9 +68,13 @@ public enum RecoveryVersionMetadata {
+     }
+     if fm.fileExists(atPath: marker.path) {
+       let bytes = try read(marker, 65536)
++      let recoveryAppName = Bundle.main.bundleURL.lastPathComponent
++      let acceptedAppNames: Set<String> = [recoveryAppName, "Aurora Installer.app"]
+       guard
+         let launch = try PropertyListSerialization.propertyList(from: bytes, format: nil)
+-          as? [String: Any], launch["AppName"] as? String == "Aurora Installer.app"
++          as? [String: Any],
++        let appName = launch["AppName"] as? String,
++        acceptedAppNames.contains(appName)
+       else { throw AccountSetupFailure("The Recovery launcher belongs to another application.") }
+       if !fm.fileExists(atPath: disabled.path) {
+         relocated[marker.standardizedFileURL.path] = disabled
+diff --git a/macOS/Sources/AuroraAppleInstaller/NativeRecoveryInstallation.swift b/macOS/Sources/AuroraAppleInstaller/NativeRecoveryInstallation.swift
+index ebabceb..ca9b43b 100644
+--- a/macOS/Sources/AuroraAppleInstaller/NativeRecoveryInstallation.swift
++++ b/macOS/Sources/AuroraAppleInstaller/NativeRecoveryInstallation.swift
+@@ -168,9 +168,11 @@
+         owner: owner, parentIsVolumeRoot: true, verify: { try verifyApp($0, template.requirement) })
+       let launcher = try system.read(
+         "Finish Installation.app/Contents/Resources/step2.sh", maximum: 65536)
++      let expectedLauncher =
++        "../../../" + InstallerProductIdentity.recoveryAppBundleName + "/"
++        + PublishedContractNames.recoveryExecutablePath
+       guard
+-        String(data: launcher, encoding: .utf8)?.contains(
+-          "../../../Aurora Installer.app/" + PublishedContractNames.recoveryExecutablePath) == true,
++        String(data: launcher, encoding: .utf8)?.contains(expectedLauncher) == true,
+         let marker = try PropertyListSerialization.propertyList(
+           from: system.read(".IAPhysicalMedia", maximum: 65536), format: nil) as? [String: Any],
+         marker["AppName"] as? String == InstallerProductIdentity.recoveryAppBundleName
+diff --git a/macOS/Sources/AuroraAppleInstaller/RecoveryAccountHandoff.swift b/macOS/Sources/AuroraAppleInstaller/RecoveryAccountHandoff.swift
+index a10bc2c..b4a2e94 100644
+--- a/macOS/Sources/AuroraAppleInstaller/RecoveryAccountHandoff.swift
++++ b/macOS/Sources/AuroraAppleInstaller/RecoveryAccountHandoff.swift
+@@ -133,7 +133,8 @@
+       }
+       _ = try AccountNativeCommand.checked("/sbin/mount", ["-u", "-w", mount])
+       let system = URL(fileURLWithPath: mount, isDirectory: true)
+-      let destination = system.appendingPathComponent("Aurora Installer.app", isDirectory: true)
++      let destination = system.appendingPathComponent(
++        InstallerProductIdentity.recoveryAppBundleName, isDirectory: true)
+       try resumeAppUpdate(system: system, target: target)
+       let configuration = try installationConfiguration(system: system)
+       guard let config = try JSONSerialization.jsonObject(with: configuration) as? [String: Any],
+@@ -144,7 +145,7 @@
+       // Keep installation inputs outside the immutable, signed Recovery app.
+       // Older installations are verified and migrated before replacing their app.
+       _ = try RecoveryInstallData.migrateLegacy(
+-        system: system, appName: "Aurora Installer.app", target: target)
++        system: system, appName: InstallerProductIdentity.recoveryAppBundleName, target: target)
+       try RecoveryAccountInstaller.refreshMountedGroup(target)
+       let scratch = system.appendingPathComponent(
+         ".aurora-recovery-update-\(UUID().uuidString)", isDirectory: true)
+@@ -271,6 +272,6 @@
+       read: (URL, Int) throws -> Data = RecoveryAccountInstaller.protectedRead
+     ) throws -> Data {
+       let path = try RecoveryInstallData.configuration(
+-        system: system, appName: "Aurora Installer.app")
++        system: system, appName: InstallerProductIdentity.recoveryAppBundleName)
+       return try read(path, 65536)
+     }

@@ -1,0 +1,81 @@
+diff --git a/macOS/Sources/AuroraAppleInstallerApp/LiveInstallerEnvironment.swift b/macOS/Sources/AuroraAppleInstallerApp/LiveInstallerEnvironment.swift
+index 1e25cea..ae4952c 100644
+--- a/macOS/Sources/AuroraAppleInstallerApp/LiveInstallerEnvironment.swift
++++ b/macOS/Sources/AuroraAppleInstallerApp/LiveInstallerEnvironment.swift
+@@ -1363,9 +1363,19 @@ final class LiveInstallerEnvironment: InstallerEnvironment, @unchecked Sendable
+       shrinkable[candidate.sourceIdentifier] =
+         candidate.lengthBytes - candidate.minimumContainerBytes
+     }
++    // The welcome inspection uses the engine's generic baseline metadata.
++    // A release can have a smaller authenticated payload, so don't hide a
++    // usable free extent before that signed metadata is available. The selected
++    // target is inspected and planned again against the authenticated payload.
++    let initiallyAvailableFreeOffsets = Set(
++      layout.regions.lazy.filter {
++        $0.kind == .free && $0.lengthBytes >= 1_000_000_000
++      }.map(\.offsetBytes))
+     return DiskLayoutDisplay(
+       layout: layout,
+-      freeSpaceOffsets: Set(inventory.candidates.filter { $0.kind == "free" }.map(\.offsetBytes)),
++      freeSpaceOffsets: Set(
++        inventory.candidates.filter { $0.kind == "free" }.map(\.offsetBytes)
++      ).union(initiallyAvailableFreeOffsets),
+       shrinkableBytes: shrinkable,
+       resettableSources: Set(
+         inventory.candidates.filter { $0.kind == "reinstall" }.map(\.sourceIdentifier)),
+diff --git a/macOS/Tests/AuroraAppleInstallerAppTests/LiveNativeInspectionTests.swift b/macOS/Tests/AuroraAppleInstallerAppTests/LiveNativeInspectionTests.swift
+index b1ea76f..57c412c 100644
+--- a/macOS/Tests/AuroraAppleInstallerAppTests/LiveNativeInspectionTests.swift
++++ b/macOS/Tests/AuroraAppleInstallerAppTests/LiveNativeInspectionTests.swift
+@@ -50,6 +50,51 @@ final class LiveNativeInspectionTests: XCTestCase {
+     XCTAssertEqual(calls, [false])
+   }
+ 
++  func testWelcomeLayoutOffersFreeSpaceBeyondGenericBaselineRequirements() throws {
++    let gib: UInt64 = 1 << 30
++    let candidate = EngineInstallCandidate(
++      kind: "resize", sourceIdentifier: "disk0s2",
++      offsetBytes: 128 * 1_048_576, lengthBytes: 110 * gib,
++      minimumInstallBytes: 40 * gib, minimumContainerBytes: 76 * gib,
++      identityDigest: nil, recommendedInstallBytes: 70 * gib,
++      recommendedContainerBytes: 76 * gib)
++    let unsigned = EngineInventoryMessage(
++      layoutDigest: "", systemStoreIdentifier: "disk0", candidates: [candidate])
++    let inventoryMessage = EngineInventoryMessage(
++      layoutDigest: unsigned.computedLayoutDigest,
++      systemStoreIdentifier: "disk0", candidates: [candidate])
++    let encoder = JSONEncoder()
++    encoder.keyEncodingStrategy = .convertToSnakeCase
++    let payload = try JSONSerialization.jsonObject(with: encoder.encode(inventoryMessage))
++    var bytes = Data()
++    for (index, row) in [
++      ("inspection", ["device_identifier": "apple,j613", "support": "supported"] as Any),
++      ("inventory", payload),
++    ].enumerated() {
++      bytes.append(
++        try JSONSerialization.data(withJSONObject: [
++          "schema_version": 1, "sequence": index + 1, "type": row.0, "payload": row.1,
++        ]))
++      bytes.append(10)
++    }
++    let inventory = try XCTUnwrap(
++      AppleInstallerTrustCore().validateEngineTranscript(bytes).inventory)
++    let layout = NativeDiskLayout(
++      diskBytes: 250 * gib,
++      regions: [
++        NativeDiskLayout.Region(
++          kind: .macOS, identifier: "disk0s2", offsetBytes: 524_312_576,
++          lengthBytes: 110 * gib, name: "Macintosh HD"),
++        NativeDiskLayout.Region(
++          kind: .free, offsetBytes: 110 * gib + 524_312_576,
++          lengthBytes: 35 * gib, name: "Free"),
++      ])
++    let display = try XCTUnwrap(
++      LiveInstallerEnvironment.layoutDisplay(layout, inventory: inventory))
++    XCTAssertEqual(display.options.map(\.kind), [.freeSpace])
++    XCTAssertEqual(display.options.first?.maximumBytes, 35 * gib)
++  }
++
+   private func fixture() throws -> (AppleSiliconHostInspection, Data, NativeKnownInstallation) {
+     let unit: UInt64 = 1_048_576
+     let candidate = EngineInstallCandidate(

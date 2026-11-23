@@ -1,0 +1,40 @@
+diff --git a/macOS/Sources/AuroraAppleInstallerApp/InstallerComponents.swift b/macOS/Sources/AuroraAppleInstallerApp/InstallerComponents.swift
+index fe700cc..2d77c33 100644
+--- a/macOS/Sources/AuroraAppleInstallerApp/InstallerComponents.swift
++++ b/macOS/Sources/AuroraAppleInstallerApp/InstallerComponents.swift
+@@ -293,7 +293,14 @@ struct TechnicalDetailText: View {
+ extension EnvironmentValues {
+   /// Offscreen renders can't capture Liquid Glass, so they draw the bordered
+   /// style macOS 15 uses. The app never sets this.
+-  @Entry var installerDrawsBorderedButtons = false
++  var installerDrawsBorderedButtons: Bool {
++    get { self[InstallerDrawsBorderedButtonsKey.self] }
++    set { self[InstallerDrawsBorderedButtonsKey.self] = newValue }
++  }
++}
++
++private struct InstallerDrawsBorderedButtonsKey: EnvironmentKey {
++  static let defaultValue = false
+ }
+ 
+ /// Glass on macOS 26, bordered before it.
+diff --git a/macOS/Sources/AuroraAppleInstallerApp/OnePage/PartitionsPanel.swift b/macOS/Sources/AuroraAppleInstallerApp/OnePage/PartitionsPanel.swift
+index bc4e7c1..468fd14 100644
+--- a/macOS/Sources/AuroraAppleInstallerApp/OnePage/PartitionsPanel.swift
++++ b/macOS/Sources/AuroraAppleInstallerApp/OnePage/PartitionsPanel.swift
+@@ -5,7 +5,14 @@ import SwiftUI
+ 
+ extension EnvironmentValues {
+   /// Debug renders only: the row whose ⋯ menu is drawn open.
+-  @Entry var partitionMenuPreviewRow: String? = nil
++  var partitionMenuPreviewRow: String? {
++    get { self[PartitionMenuPreviewRowKey.self] }
++    set { self[PartitionMenuPreviewRowKey.self] = newValue }
++  }
++}
++
++private struct PartitionMenuPreviewRowKey: EnvironmentKey {
++  static let defaultValue: String? = nil
+ }
+ 
+ // MARK: - The screen
