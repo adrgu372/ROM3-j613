@@ -1,0 +1,118 @@
+name: rom3-j613-publish-installer-payload
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run:
+        description: Actions run containing rom3-j613-native-installer-payload
+        required: true
+        default: "45037917742"
+
+permissions:
+  contents: write
+  actions: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out ROM3 metadata
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+
+      - name: Download assembled native payload
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: rom3-j613-native-installer-payload
+          path: payload
+          run-id: ${{ inputs.source_run }}
+          github-token: ${{ github.token }}
+
+      - name: Verify payload inventory
+        run: |
+          set -euo pipefail
+          test -s payload/installer-data-arch-kde.json
+          test -s payload/delivery.json
+          test -s payload/SHA256SUMS
+          test "$(find payload -maxdepth 1 -name 'arch-kde-20261122.6.zip.part.*' | wc -l)" -ge 2
+          (
+            cd payload
+            sha256sum -c SHA256SUMS
+          )
+
+      - name: Prepare release metadata
+        run: |
+          set -euo pipefail
+          cp scripts/reassemble-native-installer-payload.sh payload/
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          payload = Path("payload")
+          delivery = json.loads((payload / "delivery.json").read_text())
+          parts = sorted(payload.glob("arch-kde-20261122.6.zip.part.*"))
+
+          def digest(path):
+              with path.open("rb") as stream:
+                  return hashlib.file_digest(stream, "sha256").hexdigest()
+
+          document = {
+              "schema_version": 1,
+              "distribution": "ROM3-j613",
+              "image_release": "image-20261122.5",
+              "installer_payload_release": "image-20261122.6",
+              "release_id": "20261122.6",
+              "installation_profile": "arch-kde",
+              "device_identifiers": ["apple,j613"],
+              "metadata_asset": "installer-data-arch-kde.json",
+              "payload_asset": "arch-kde-20261122.6.zip",
+              "payload_parts": [
+                  {
+                      "name": part.name,
+                      "bytes": part.stat().st_size,
+                      "sha256": digest(part),
+                  }
+                  for part in parts
+              ],
+              "delivery": delivery,
+          }
+          (payload / "payload.json").write_text(json.dumps(document, indent=2) + "\n")
+          PY
+          (
+            cd payload
+            find . -maxdepth 1 -type f ! -name SHA256SUMS -printf '%f\n' |
+              sort |
+              xargs sha256sum > SHA256SUMS
+            sha256sum -c SHA256SUMS
+          )
+
+      - name: Publish installer payload prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release view image-20261122.6 --repo adrgu372/ROM3-j613 >/dev/null 2>&1 && {
+            echo "release image-20261122.6 already exists" >&2
+            exit 1
+          }
+          gh release create image-20261122.6 \
+            payload/arch-kde-20261122.6.zip.part.* \
+            payload/installer-data-arch-kde.json \
+            payload/delivery.json \
+            payload/payload.json \
+            payload/SHA256SUMS \
+            payload/reassemble-native-installer-payload.sh \
+            payload/installer-payload.log \
+            --repo adrgu372/ROM3-j613 \
+            --target "$GITHUB_SHA" \
+            --title "ROM3-j613 installer payload 20261122.6" \
+            --notes-file installer/releases/image-20261122.6.md \
+            --prerelease
