@@ -12,9 +12,31 @@
     func testPublicCatalogAdmitsJ613AndArtifactURLs() async throws {
       let descriptorData = try await fetch("release.json")
       let trustRootData = try await fetch("trust-root.ed25519.pub")
-      let configuration = try InstallerReleaseConfigurationLoader().load(
-        descriptor: descriptorData,
-        trustRootPublicKey: trustRootData
+      let descriptor = try XCTUnwrap(
+        JSONSerialization.jsonObject(with: descriptorData) as? [String: Any]
+      )
+      let channelObjects = try XCTUnwrap(descriptor["channels"] as? [String: Any])
+      var endpoints = [ReleaseChannel: URL]()
+      for channel in ReleaseChannel.allCases {
+        let value = try XCTUnwrap(channelObjects[channel.rawValue] as? [String: Any])
+        endpoints[channel] = try XCTUnwrap(
+          URL(string: try XCTUnwrap(value["catalog_url"] as? String))
+        )
+      }
+      let trustRoot = try AppOwnedTrustRoot(
+        rawRepresentation: trustRootData,
+        expectedFingerprint: try XCTUnwrap(descriptor["trust_root_fingerprint"] as? String)
+      )
+      let configuration = InstallerReleaseConfiguration(
+        channels: try XCTUnwrap(ReleaseChannelEndpoints(endpoints: endpoints)),
+        defaultChannel: .testing,
+        trustRoot: trustRoot,
+        helperMachServiceName: try XCTUnwrap(
+          descriptor["helper_mach_service_name"] as? String
+        ),
+        helperCodeSigningRequirement: try XCTUnwrap(
+          descriptor["helper_code_signing_requirement"] as? String
+        )
       )
       XCTAssertEqual(configuration.defaultChannel, .testing)
 
