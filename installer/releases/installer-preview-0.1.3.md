@@ -43,3 +43,15 @@ Validated on MacBook Air M3 `Mac15,12` (`apple,j613`) with macOS 26.7.2:
 - rollback and repeated cold-boot recovery exercises
 
 Use this build only for controlled testing on a backed-up J613 installation.
+
+## Verification
+
+Built by
+[workflow run 45144716504](https://github.com/adrgu372/ROM3-j613/actions/runs/45144716504)
+on the macOS 26 arm64 runner with Xcode 26.2. The application passed strict
+deep signature verification, and CI confirmed that the package is unsigned.
+
+```text
+77d6f5a97cd0c159d31b4ac8e971e97c8a05c1afe09944e34d63ca07eeccaeca  ROM3-j613-Installer-0.1.3.pkg
+288481429a77e2396f4d4a0489d40a7e78162d6343a128f1481c44fb7f5d2fec  ROM3-j613-Installer-0.1.3.app.zip
+```
