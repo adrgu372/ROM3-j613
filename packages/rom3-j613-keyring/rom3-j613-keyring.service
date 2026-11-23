@@ -1,0 +1,15 @@
+[Unit]
+Description=Import and locally trust the ROM3-j613 package signing key
+Documentation=https://github.com/adrgu372/ROM3-j613
+ConditionPathExists=/usr/share/pacman/keyrings/rom3-j613.gpg
+Wants=aurora-alarm-keyring.service
+After=local-fs.target aurora-alarm-keyring.service
+Before=aurora-firstboot.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/pacman-key --populate rom3-j613
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -45,7 +45,8 @@ Imported recipes currently cover:
 - `rom3-j613-meta`
 - `rom3-j613-guard`
 - `rom3-j613-release`
-- `rom3-j613-keyring` template, populated after the production key exists
+- `rom3-j613-keyring`, with a boot-time service that re-establishes local trust
+  after Aurora initializes or repairs the machine-local pacman master key
 
 Generated binaries are excluded from Git.
 

@@ -26,7 +26,9 @@ The secret key directory must never be committed or uploaded.
 
 ## Client trust
 
-Users import the exported public key into `pacman-key` and configure:
+ROM3-built images install `rom3-j613-keyring`, whose service imports and
+locally trusts the exported public key after Aurora creates or repairs the
+machine-local pacman master key. The client configuration is:
 
 ```ini
 [rom3-j613]
@@ -35,6 +37,10 @@ Server = https://HOST/rom3-j613/$arch
 ```
 
 Unsigned package installation must remain disabled.
+
+For an existing non-ROM3 installation, use `scripts/bootstrap-client.sh`; it
+performs the same key import and configures the repository without upgrading
+the kernel or any other package.
 
 ## Immutable releases
 

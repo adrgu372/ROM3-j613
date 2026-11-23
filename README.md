@@ -94,13 +94,14 @@ update guard and initial local test packages now exist.
 
 The signed package feed is public:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/stable-20261122.5
+https://github.com/adrgu372/ROM3-j613/releases/tag/stable-20261122.7
 
 The snapshot contains all 27 direct sensitive dependencies of the meta-package.
 Its J613 kernel samples speaker V/I sense on the corrected MCA clock edge and
 ships the matching `speakersafetyd` probe-rate fix. Five PipeWire restarts,
 44.1 kHz and 48 kHz playback, GPU acceleration and the J613 panel were verified
-on the reference laptop.
+on the reference laptop. Its keyring package repopulates and locally trusts the
+ROM3 signing key after Aurora creates the machine's pacman master key.
 
 The source filesystem image is public:
 

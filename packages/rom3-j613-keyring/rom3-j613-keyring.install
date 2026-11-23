@@ -1,0 +1,13 @@
+populate_rom3_keyring() {
+  if [ -x /usr/bin/pacman-key ]; then
+    /usr/bin/pacman-key --populate rom3-j613
+  fi
+}
+
+post_install() {
+  populate_rom3_keyring
+}
+
+post_upgrade() {
+  populate_rom3_keyring
+}

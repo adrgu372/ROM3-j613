@@ -1,20 +1,23 @@
 pkgname=rom3-j613-keyring
 pkgver=1
-pkgrel=1
+pkgrel=3
 pkgdesc='ROM3-j613 package signing keyring'
 arch=('any')
 url='https://github.com/adrgu372/ROM3-j613'
 license=('custom')
-depends=('pacman')
+depends=('pacman' 'systemd')
+install=rom3-j613-keyring.install
 source=(
   rom3-j613-packages.pub
   rom3-j613.gpg
   rom3-j613-trusted
+  rom3-j613-keyring.service
 )
 sha256sums=(
   '26dfa1beaccc70c0a16f9596e2d0cc39d2982e5a9ff862714e479447301d8e2a'
   'dd133df56430429e7d5243b764a62f074a4ef9cead77cc0d5333f4707c25515d'
-  '84f5056a9ceec9ecdbb4ca78d0003b84ed1ed80e03d2ca420861c30fe0254ed6'
+  'e107f7c4a6919b9868613724db83c618d6dc282bcfd01f5e529ffebe7a5e9b14'
+  '611b142c2a342d6c24c77428c74a39782955d7df40277c589f117d439243c103'
 )
 options=('!strip')
 
@@ -27,5 +30,11 @@ package() {
     "$pkgdir/usr/share/pacman/keyrings/rom3-j613-trusted"
   install -Dm644 /dev/null \
     "$pkgdir/usr/share/pacman/keyrings/rom3-j613-revoked"
+  install -Dm644 rom3-j613-keyring.service \
+    "$pkgdir/usr/lib/systemd/system/rom3-j613-keyring.service"
+  install -Dm644 /dev/stdin \
+    "$pkgdir/usr/lib/systemd/system-preset/90-rom3-j613-keyring.preset" <<'EOF'
+enable rom3-j613-keyring.service
+EOF
 }
 

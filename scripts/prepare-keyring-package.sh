@@ -19,7 +19,7 @@ cp "$public_key" "$package/rom3-j613-packages.pub"
 GNUPGHOME="$work" gpg --batch --import "$package/rom3-j613-packages.pub"
 GNUPGHOME="$work" gpg --batch --export > "$package/rom3-j613.gpg"
 GNUPGHOME="$work" gpg --batch --with-colons --list-keys |
-    awk -F: '$1=="pub"{want=1; next} want && $1=="fpr"{print $10; exit}' \
+    awk -F: '$1=="pub"{want=1; next} want && $1=="fpr"{print $10 ":4:"; exit}' \
     > "$package/rom3-j613-trusted"
 
 [[ -s $package/rom3-j613.gpg ]]
@@ -37,6 +37,7 @@ names = [
     "rom3-j613-packages.pub",
     "rom3-j613.gpg",
     "rom3-j613-trusted",
+    "rom3-j613-keyring.service",
 ]
 sums = "\n".join(
     f"  '{hashlib.sha256((directory / name).read_bytes()).hexdigest()}'"

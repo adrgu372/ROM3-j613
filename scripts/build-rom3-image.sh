@@ -30,7 +30,7 @@ git -C "$source_repo" reset --hard "$commit"
 git -C "$source_repo" apply \
     "$root/patches/0001-build-image-add-rom3-overlay.patch"
 
-export ROM3_FEED=https://github.com/adrgu372/ROM3-j613/releases/download/stable-20261122.5
+export ROM3_FEED=https://github.com/adrgu372/ROM3-j613/releases/download/stable-20261122.7
 export ROM3_KEY_URL=https://raw.githubusercontent.com/adrgu372/ROM3-j613/main/repo/keys/rom3-j613-packages.pub
 export ROM3_FINGERPRINT=FA80FF234BCDF36211649321EB9845C8BAA89A4A
 
