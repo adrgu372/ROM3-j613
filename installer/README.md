@@ -26,7 +26,7 @@ is not a valid ROM3 delivery.
 `profile.json` and `payload-plan.json` are the ROM3-owned source of truth until
 the final signed catalog is generated.
 
-The verified image payload is published at:
+The verified source filesystem image is published at:
 
 https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261122.5
 
@@ -34,10 +34,15 @@ The release splits the filesystem archive below GitHub's per-asset size limit.
 Its signed `SHA256SUMS` and `reassemble-image-payload.sh` reconstruct the exact
 archive covered by the Sigstore provenance attestation.
 
-The same release contains the ROM3 schema-5 testing catalog. It is signed by the
-ROM3 Ed25519 catalog key and admits only `apple,j613`. It cannot be used with an
-installer binary that trusts the upstream Aurora catalog root; a ROM3 installer
-build must bundle `installer/keys/catalog-signing.ed25519.pub`.
+The native installer payload and current catalog are published at:
+
+https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261122.6
+
+That release contains the native ZIP in six parts and `os_list` metadata. Its
+schema-5 testing catalog is signed by the ROM3 Ed25519 key and admits only
+`apple,j613`. It cannot be used with an installer binary that trusts the
+upstream Aurora catalog root; a ROM3 installer build must bundle
+`installer/keys/catalog-signing.ed25519.pub`.
 
 ## Technical-preview macOS build
 

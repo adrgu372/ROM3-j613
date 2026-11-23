@@ -28,9 +28,17 @@ The raw Ed25519 trust root fingerprint is:
 sha256:2b7e847f34019f26eb9fc0dbd675611446357078f3057434be9491ba97c4404c
 ```
 
-The catalog pins package snapshot `stable-20261122.5`, image release
-`image-20261122.5`, kernel `7.3.0.aurora1-43`, `speakersafetyd 2.0.1-1.2`, and
-filesystem archive:
+The catalog pins package snapshot `stable-20261122.5`, source filesystem release
+`image-20261122.5`, native installer payload release `image-20261122.6`,
+kernel `7.3.0.aurora1-43`, and `speakersafetyd 2.0.1-1.2`.
+
+Native installer payload:
+
+```text
+sha256:9bd87e6f77fe55a0e624b2fb7175a2f9b1ac24658761773733e2edfefab04c4a
+```
+
+Source filesystem archive:
 
 ```text
 sha256:0f01a50a55c3e48bd4fecfe45883b7f4e28e90328b88bf6a90a847e2a7951f68

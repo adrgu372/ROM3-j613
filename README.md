@@ -102,16 +102,21 @@ ships the matching `speakersafetyd` probe-rate fix. Five PipeWire restarts,
 44.1 kHz and 48 kHz playback, GPU acceleration and the J613 panel were verified
 on the reference laptop.
 
-The verified installer payload is public:
+The source filesystem image is public:
 
 https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261122.5
 
 It contains the filesystem archive split into GitHub-sized parts, Sigstore
 provenance, signed checksums and a reassembly script.
 
-The release also publishes the J613-only schema-5 catalog on the `testing`
-channel. The upstream Aurora installer does not trust this catalog; a ROM3
-installer build must bundle the ROM3 catalog root.
+The native installer payload assembled from that image is public:
+
+https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261122.6
+
+It contains the native installer ZIP in six parts, `os_list` metadata, the
+J613-only schema-5 catalog on the `testing` channel, signed checksums and a
+payload reassembly script. The upstream Aurora installer does not trust this
+catalog; a ROM3 installer build must bundle the ROM3 catalog root.
 
 `scripts/build-rom3-installer-macos.sh` prepares that installer on macOS from
 the pinned upstream revision. It produces an ad-hoc technical-preview build;
