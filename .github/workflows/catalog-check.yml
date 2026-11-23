@@ -1,0 +1,46 @@
+name: rom3-j613-catalog-check
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  catalog:
+    runs-on: macos-26
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+
+    steps:
+      - name: Check out ROM3 metadata
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          path: rom3
+          persist-credentials: false
+
+      - name: Check out pinned installer trust core
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: aurora-silicon/aurora-installer
+          ref: a0b34140669f69e3a777c70480e60244a470d50f
+          path: upstream
+          persist-credentials: false
+
+      - name: Install public catalog test
+        run: |
+          set -euo pipefail
+          install -m 0644 \
+            rom3/installer/tests/ROM3PublicCatalogTests.swift \
+            upstream/macOS/Tests/AuroraAppleInstallerTrustCoreTests/
+
+      - name: Verify public catalog and artifact URLs
+        working-directory: upstream/macOS
+        run: |
+          set -euo pipefail
+          xcrun swift test --filter ROM3PublicCatalogTests
