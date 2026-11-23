@@ -1,0 +1,62 @@
+diff --git a/macOS/Package.swift b/macOS/Package.swift
+index 8d0b389..67dc996 100644
+--- a/macOS/Package.swift
++++ b/macOS/Package.swift
+@@ -103,7 +103,8 @@
+     .target(
+       name: "AuroraInstallerUXCore",
+       dependencies: ["AuroraAppleInstallerTrustCore", "RecoveryAccountCore"],
+-      path: "Sources/AuroraInstallerUXCore"
++      path: "Sources/AuroraInstallerUXCore",
++      swiftSettings: rom3Settings
+     ),
+     .executableTarget(
+       name: "AuroraAppleInstallerApp",
+@@ -144,6 +145,7 @@
+     .testTarget(
+       name: "AuroraInstallerUXCoreTests",
+       dependencies: ["AuroraInstallerUXCore"],
+-      path: "Tests/AuroraInstallerUXCoreTests"
++      path: "Tests/AuroraInstallerUXCoreTests",
++      swiftSettings: rom3Settings
+     ),
+   ]
+ )
+diff --git a/macOS/Sources/AuroraInstallerUXCore/InstallerBuildProfile.swift b/macOS/Sources/AuroraInstallerUXCore/InstallerBuildProfile.swift
+index 927bbb9..7814c4c 100644
+--- a/macOS/Sources/AuroraInstallerUXCore/InstallerBuildProfile.swift
++++ b/macOS/Sources/AuroraInstallerUXCore/InstallerBuildProfile.swift
+@@ -37,7 +37,12 @@
+       case .standard: InstallerProductIdentity.appIdentifier
+       case .privatePlain: InstallerProductIdentity.appIdentifier + ".private-m3-20260922"
+       case .privateLimine: InstallerProductIdentity.appIdentifier + ".private-limine-20260922"
+-      case .developer: InstallerProductIdentity.appIdentifier + ".developer"
++      case .developer:
++        #if AURORA_ROM3_J613
++          InstallerProductIdentity.appIdentifier + ".developer.rom3-j613"
++        #else
++          InstallerProductIdentity.appIdentifier + ".developer"
++        #endif
+       }
+     }
+ 
+diff --git a/macOS/Tests/AuroraInstallerUXCoreTests/InstallerBuildProfileTests.swift b/macOS/Tests/AuroraInstallerUXCoreTests/InstallerBuildProfileTests.swift
+index 3957981..e4631ec 100644
+--- a/macOS/Tests/AuroraInstallerUXCoreTests/InstallerBuildProfileTests.swift
++++ b/macOS/Tests/AuroraInstallerUXCoreTests/InstallerBuildProfileTests.swift
+@@ -45,7 +45,14 @@
+       XCTAssertEqual(profile, .developer)
+       XCTAssertTrue(profile.allowsEncryption)
+       XCTAssertFalse(profile.showsReleaseChannels)
+-      XCTAssertEqual(profile.workspaceName, InstallerProductIdentity.appIdentifier + ".developer")
++      #if AURORA_ROM3_J613
++        XCTAssertEqual(
++          profile.workspaceName,
++          InstallerProductIdentity.appIdentifier + ".developer.rom3-j613")
++      #else
++        XCTAssertEqual(
++          profile.workspaceName, InstallerProductIdentity.appIdentifier + ".developer")
++      #endif
+       for other in [InstallerBuildProfile.standard, .privatePlain, .privateLimine] {
+         XCTAssertNotEqual(profile.workspaceName, other.workspaceName)
+       }
