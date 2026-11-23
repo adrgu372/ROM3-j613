@@ -125,17 +125,35 @@ cp "$source_root/Release/trust-root.ed25519.pub" "$release_inputs/trust-root.ed2
 cp "$catalog_dir/catalog.json" "$release_inputs/catalog.json"
 cp "$catalog_dir/catalog.json.sig" "$release_inputs/catalog.json.sig"
 
+# build-app.sh copies Release/Profiles only when the directory already exists.
+# The app resolves every selected distribution through Release/Profiles/<id>,
+# so stage the ROM3 profile explicitly before packaging.
+profile_inputs="$release_inputs/Profiles/arch-kde"
+mkdir -p "$profile_inputs"
+cp "$release_inputs/release.json" "$profile_inputs/release.json"
+cp "$release_inputs/trust-root.ed25519.pub" "$profile_inputs/trust-root.ed25519.pub"
+cp "$release_inputs/catalog.json" "$profile_inputs/catalog.json"
+cp "$release_inputs/catalog.json.sig" "$profile_inputs/catalog.json.sig"
+
 cd "$source_root"
 AURORA_DEVELOPER_BUILD=1 \
 AURORA_ROM3_J613=1 \
 AURORA_APP_SIGNING_IDENTITY="-" \
-AURORA_APP_VERSION="0.1.4" \
+AURORA_APP_VERSION="0.1.5" \
 bash Packaging/build-app.sh "$release_inputs" "$output/app"
+
+profile_destination="$output/app/ROM3-j613 Installer.app/Contents/Resources/Release/Profiles/arch-kde"
+for profile_file in release.json trust-root.ed25519.pub catalog.json catalog.json.sig; do
+    [[ -f "$profile_destination/$profile_file" ]] || {
+        echo "missing staged installer profile file: $profile_destination/$profile_file" >&2
+        exit 1
+    }
+done
 
 if [[ -x Packaging/build-developer-pkg.sh ]]; then
     bash Packaging/build-developer-pkg.sh \
         "$output/app/ROM3-j613 Installer.app" \
-        "$output/ROM3-j613-Installer-0.1.4.pkg"
+        "$output/ROM3-j613-Installer-0.1.5.pkg"
 fi
 
 cat <<EOF

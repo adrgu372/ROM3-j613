@@ -63,7 +63,7 @@ qualification on this board.
 
 The CI-built technical-preview artifact is published here:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/installer-preview-0.1.4
+https://github.com/adrgu372/ROM3-j613/releases/tag/installer-preview-0.1.5
 
 It is restricted to `apple,j613`. The `.pkg` is deliberately unsigned and the
 application is ad-hoc signed. It has not completed a clean install, cold boot

@@ -126,7 +126,7 @@ separate release gates.
 
 A CI-built technical preview is available as a prerelease:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/installer-preview-0.1.4
+https://github.com/adrgu372/ROM3-j613/releases/tag/installer-preview-0.1.5
 
 It targets only `apple,j613`. The package is intentionally unsigned and the
 app is ad-hoc signed; do not treat it as a production installer.
