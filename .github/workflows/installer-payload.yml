@@ -62,8 +62,15 @@ jobs:
           set -euo pipefail
           archive=input/image/arch-kde-filesystems.tar.zst
           cat input/image/arch-kde-filesystems.tar.zst.part.* > "$archive"
-          echo "0f01a50a55c3e48bd4fecfe45883b7f4e28e90328b88bf6a90a847e2a7951f68  $archive" \
-            | sha256sum -c -
+          expected=$(python3 - input/image/arch-kde-payload.json <<'PY'
+          import json
+          import sys
+
+          payload = json.load(open(sys.argv[1], encoding="utf-8"))
+          print(payload["filesystem_archive"]["sha256"])
+          PY
+          )
+          echo "$expected  $archive" | sha256sum -c -
           mkdir input/bundle
           tar --zstd -xf "$archive" -C input/bundle
           unzip -q input/recovery/ROM3-j613-Installer-0.1.3.app.zip -d input/recovery/unpacked
