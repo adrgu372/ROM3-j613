@@ -32,7 +32,7 @@
 - [x] Implement `rom3-j613-update`.
 - [x] Read and enforce `verified-stack.json`.
 - [x] Refuse unqualified changes to quarantined packages.
-- [ ] Create a Btrfs snapshot and ESP backup before sensitive changes.
+- [x] Create a Btrfs snapshot and ESP backup before sensitive changes.
 - [x] Generate Stage 2 as a separate candidate.
 - [x] Require cold-boot verification after publishing.
 

@@ -37,6 +37,16 @@ ROM3-j613 package signing <packages@rom3-j613.invalid>
 After bootstrap, inspect pending changes with:
 
 ```bash
-rom3-j613-update --check
+sudo rom3-j613-update --check
 ```
+
+Apply a reviewed update with:
+
+```bash
+sudo rom3-j613-update --apply
+```
+
+Do not substitute an unrestricted `pacman -Syu`; the update guard preserves
+the tested kernel, display, GPU and audio stack. See
+[update-model.md](update-model.md).
 

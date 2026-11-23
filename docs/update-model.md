@@ -3,6 +3,18 @@
 ROM3 does not claim that an unrestricted `pacman -Syu` is safe. Arch Linux ARM
 is rolling, while ROM3 qualifies a specific hardware stack.
 
+The supported user-facing update command is:
+
+```bash
+sudo rom3-j613-update --apply
+```
+
+Check the proposed transaction first:
+
+```bash
+sudo rom3-j613-update --check
+```
+
 ## Policy
 
 Packages listed in `stack/quarantine.packages` may move only when:
@@ -14,10 +26,13 @@ Packages listed in `stack/quarantine.packages` may move only when:
 5. a cold boot verifies display, GPU, render node and audio;
 6. the new combination is signed and published as a new snapshot.
 
-## Intended client flow
+## Client flow
 
 ```text
-rom3-j613-update
+sudo rom3-j613-update --check
+  -> show the proposed transaction and fail on unqualified changes
+
+sudo rom3-j613-update --apply
   -> refresh package databases
   -> compute proposed transaction
   -> compare quarantine with verified-stack.json
@@ -28,6 +43,27 @@ rom3-j613-update
   -> generate Stage 2 candidate
   -> require cold-boot validation
 ```
+
+`--apply` invokes `pacman -Syu` with a temporary pacman configuration. It
+removes from `IgnorePkg` only packages explicitly approved by the active signed
+override manifest; a normal update without an override keeps the ROM3 stack
+pinned. This lets ordinary packages move while the kernel, display, GPU and
+audio stack remain an exact tested set.
+
+Do not replace either command with an unrestricted `pacman -Syu`. A direct
+upgrade can update dependencies around the protected packages without the
+ROM3 preflight, backup, signature-approved exception list and post-update
+package check.
+
+After a kernel update, reboot and verify the running hardware stack:
+
+```bash
+sudo /usr/share/rom3-j613/verify-live-system.sh
+```
+
+The Btrfs snapshot and ESP backup paths are printed by `--apply` before the
+transaction starts. Keep them until the new kernel has booted and passed the
+live checks.
 
 Ordinary packages can still follow Arch Linux ARM, but a transaction that
 crosses an unqualified compatibility boundary must fail closed.

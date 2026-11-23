@@ -23,8 +23,8 @@ replace components responsible for display, GPU or speaker-safety regressions.
 ```text
 Board:           apple,j613
 Hardware:        MacBook Air 13-inch M3
-Kernel:          7.3.0-1-42-ARCH
-Aurora kernel:   linux-aurora 7.3.0.aurora1-42
+Kernel:          7.3.0-1-43-ARCH
+Aurora kernel:   linux-aurora 7.3.0.aurora1-43
 Bootloader:      aura 1.0.0b14.1-3
 U-Boot:          uboot-aurora 2026.07.aurora11-1
 Display:         2560x1600 internal panel
@@ -32,7 +32,7 @@ GPU:             Apple M3 G15G
 Render node:     /dev/dri/renderD128
 OpenGL:          Apple M3 (G15G C0)
 Audio:           speakersafetyd active
-Stage 2 SHA-256: db2c95327e89fb70a636a8767efb8379bbf281596f52b9f6793c97db8eaeda09
+Stage 2 SHA-256: aa3cf66524f3e76f50e3a70223a1484eac3b2caa7fe375f3f6ede07d1004baab
 ```
 
 The verified diagnostics, package set and recovery procedures currently live
@@ -143,6 +143,29 @@ See [ROADMAP.md](ROADMAP.md).
 
 For a working `J613` installation, [docs/bootstrap.md](docs/bootstrap.md)
 attaches the signed ROM3 feed without upgrading the system.
+
+## Updating an installed system
+
+Use the ROM3 update guard instead of an unrestricted `pacman -Syu`:
+
+```bash
+# Preview pending changes without modifying the system.
+sudo rom3-j613-update --check
+
+# Apply the reviewed update.
+sudo rom3-j613-update --apply
+```
+
+`--apply` takes a read-only Btrfs snapshot and boot backups before updating,
+keeps unqualified quarantined packages blocked, and runs `rom3-j613-check`
+after the transaction. A kernel update requires a reboot followed by:
+
+```bash
+sudo /usr/share/rom3-j613/verify-live-system.sh
+```
+
+Running `pacman -Syu` directly is not the supported update path for the
+protected ROM3 stack. See [docs/update-model.md](docs/update-model.md).
 
 Replacement kernels or other sensitive packages can be delivered through a
 signed override feed hosted in any GitHub repository. See
