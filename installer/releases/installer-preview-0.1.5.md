@@ -38,4 +38,13 @@ build only for controlled testing on a backed-up J613 installation.
 
 ## Verification
 
-Pending CI publication.
+Built by
+[workflow run 45182068314](https://github.com/adrgu372/ROM3-j613/actions/runs/45182068314)
+on the macOS 26 arm64 runner with Xcode 26.2. CI verified the embedded
+`Release/Profiles/arch-kde` files before packaging, the application passed
+strict deep signature verification, and the package was confirmed unsigned.
+
+```text
+44faf4562776d3dd42386ca3782609d9eb5217238dd9dc594028359bfa812b71  ROM3-j613-Installer-0.1.5.pkg
+05170e6b945924fcb04b1467f2851c9f0c5d346ce95b872d4f2cc765d4a69573  ROM3-j613-Installer-0.1.5.app.zip
+```
