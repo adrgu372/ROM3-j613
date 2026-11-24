@@ -49,7 +49,7 @@ system; these boxes will be checked as their repeatability evidence is added.
 - [x] Reuse the existing Aurora Installer `arch-kde` profile.
 - [x] Replace only the payload and trust metadata initially.
 - [x] Build and publish an ad-hoc macOS technical preview.
-- [ ] Test clean install, first boot, cold boot and recovery.
+- [X] Test clean install, first boot, cold boot and recovery.
 
 ## Phase 4: release
 
