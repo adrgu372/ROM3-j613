@@ -4,7 +4,7 @@
     {
       "id": "linux",
       "repository": "aurora-silicon/linux",
-      "branch": "integration/aurora",
+      "branch": "main",
       "pin_file": "packages/linux-aurora/PKGBUILD",
       "pin_regex": "(?m)^_commit=([0-9a-f]{40})$",
       "role": "kernel",
@@ -40,7 +40,8 @@
       "pin_regex": "(?m)^_commit=([0-9a-f]{40})$",
       "role": "audio",
       "critical_paths": [
-        ""
+        "firs/j413/",
+        "firs/j613/"
       ]
     },
     {

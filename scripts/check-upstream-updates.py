@@ -91,6 +91,17 @@ def compare(repository: str, base: str, head: str) -> dict:
     )
 
 
+def current_head(repository: str, branch: str) -> tuple[str, str]:
+    try:
+        data = gh_api(f"repos/{repository}/commits/{encoded_ref(branch)}")
+        return branch, data["sha"]
+    except RuntimeError:
+        info = gh_api(f"repos/{repository}")
+        fallback = info["default_branch"]
+        data = gh_api(f"repos/{repository}/commits/{encoded_ref(fallback)}")
+        return fallback, data["sha"]
+
+
 def classify(source: dict, files: list[str], messages: list[str]) -> tuple[str, list[str]]:
     def is_critical(path: str) -> bool:
         return any(
@@ -140,7 +151,7 @@ def classify(source: dict, files: list[str], messages: list[str]) -> tuple[str, 
         else:
             decision = "WAIT"
     elif role in {"aura", "audio"}:
-        decision = "REVIEW MATCHED STACK" if has_changes else "WAIT"
+        decision = "REVIEW MATCHED STACK" if critical else "WAIT"
     elif role in {"image", "installer"}:
         decision = "REVIEW REBUILD" if has_changes else "WAIT"
     else:
@@ -202,14 +213,15 @@ def render_report(
         "",
         "## Sources",
         "",
-        "| Source | Pinned | Upstream | Ahead | Behind | New | Relevant | Decision |",
-        "|---|---:|---:|---:|---:|---:|---:|---|",
+        "| Source | Branch | Pinned | Upstream | Ahead | Behind | New | Relevant | Decision |",
+        "|---|---|---:|---:|---:|---:|---:|---:|---|",
     ]
     for item in results:
         lines.append(
-            "| {id} | `{pin}` | `{head}` | {ahead} | {behind} | {new} | "
-            "{relevant} | **{decision}** |".format(
+            "| {id} | `{branch}` | `{pin}` | `{head}` | {ahead} | {behind} | "
+            "{new} | {relevant} | **{decision}** |".format(
                 id=item["id"],
+                branch=item["branch"],
                 pin=item["pin"][:12],
                 head=item["head"][:12],
                 ahead=item["ahead_of_pin"],
@@ -231,6 +243,8 @@ def render_report(
                 f"### {item['id']}",
                 "",
                 f"- Decision: **{item['decision']}**",
+                f"- Branch: `{item['branch']}`",
+                f"- Previous branch: `{item['previous_branch'] or 'baseline'}`",
                 f"- New commits: `{item['new_commits']}`",
                 f"- Pin distance observed: `{item['ahead_of_pin']}` ahead, "
                 f"`{item['behind_pin']}` behind",
@@ -317,20 +331,27 @@ def main() -> int:
     for source in sources:
         source_id = source["id"]
         repository = source["repository"]
-        branch = source["branch"]
+        configured_branch = source["branch"]
         try:
             pin = extract_pin(ROOT / source["pin_file"], source["pin_regex"])
-            head_data = gh_api(
-                f"repos/{repository}/commits/{encoded_ref(branch)}"
-            )
-            head = head_data["sha"]
+            branch, head = current_head(repository, configured_branch)
             distance = compare(repository, pin, branch)
-            previous_head = previous_sources.get(source_id)
+            previous_entry = previous_sources.get(source_id)
+            if isinstance(previous_entry, dict):
+                previous_head = previous_entry.get("sha")
+                previous_branch = previous_entry.get("branch")
+            else:
+                previous_head = previous_entry
+                previous_branch = None
             commits: list[dict] = []
             files: list[str] = []
+            new_commit_count = 0
             if previous_head and previous_head != head:
                 change = compare(repository, previous_head, head)
                 commits = change.get("commits", [])
+                new_commit_count = int(
+                    change.get("ahead_by", len(commits))
+                )
                 files = sorted(
                     {
                         item["filename"]
@@ -352,18 +373,23 @@ def main() -> int:
                 {
                     "id": source_id,
                     "role": source["role"],
+                    "branch": branch,
+                    "previous_branch": previous_branch,
                     "pin": pin,
                     "head": head,
                     "ahead_of_pin": int(distance.get("ahead_by", 0)),
                     "behind_pin": int(distance.get("behind_by", 0)),
-                    "new_commits": len(commits),
+                    "new_commits": new_commit_count,
                     "critical_files": critical_files,
                     "categories": categories,
                     "messages": messages,
                     "decision": decision,
                 }
             )
-            next_sources[source_id] = head
+            next_sources[source_id] = {
+                "sha": head,
+                "branch": branch,
+            }
         except (RuntimeError, KeyError, ValueError) as error:
             errors.append(f"{source_id}: {error}")
 
