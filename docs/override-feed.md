@@ -55,6 +55,7 @@ gh release create override-20261123.1 \
   repo/overrides/override-20261123.1/aarch64/* \
   --repo OWNER/REPOSITORY \
   --title "Tested ROM3 override 20261123.1" \
+  --prerelease \
   --notes "Replacement kernel and matching components for apple,j613."
 ```
 
@@ -63,6 +64,10 @@ Use the exact release URL, not `latest`, when configuring an installed system:
 ```text
 https://github.com/OWNER/REPOSITORY/releases/download/override-20261123.1
 ```
+
+The override release must be marked as a prerelease even when its packages are
+qualified. Otherwise its newer release timestamp can replace the stable
+snapshot behind `releases/latest/download`, breaking the base repository URL.
 
 The manifest records its `stable-YYYYMMDD.N` base snapshot. An image must use
 packages from the same base plus the replacements in this manifest.
