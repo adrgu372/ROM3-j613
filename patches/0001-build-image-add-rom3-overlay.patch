@@ -11,7 +11,7 @@ Build only the J613 KDE image, preinstall and pin the exact tested ROM3 package 
  root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
  source "$root/scripts/testlib.sh"
  # An image serves every Mac, whichever one builds it.
-+rom3_feed=${ROM3_FEED:-https://github.com/adrgu372/ROM3-j613/releases/download/stable-20261124.1}
++rom3_feed=${ROM3_FEED:-https://github.com/adrgu372/ROM3-j613/releases/download/stable-20261124.2}
 +rom3_manifest_url=${ROM3_MANIFEST_URL:-$rom3_feed/rom3-package-builds.json}
 +rom3_key_url=${ROM3_KEY_URL:-https://raw.githubusercontent.com/adrgu372/ROM3-j613/main/repo/keys/rom3-j613-packages.pub}
 +rom3_fingerprint=${ROM3_FINGERPRINT:-FA80FF234BCDF36211649321EB9845C8BAA89A4A}

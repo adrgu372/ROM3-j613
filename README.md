@@ -94,7 +94,7 @@ update guard and initial local test packages now exist.
 
 The signed package feed is public:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/stable-20261124.1
+https://github.com/adrgu372/ROM3-j613/releases/tag/stable-20261124.2
 
 The snapshot contains the complete direct dependency closure of the
 meta-package. Kernel 44 carries the SIO protocol-10 tables required by Aura b17,

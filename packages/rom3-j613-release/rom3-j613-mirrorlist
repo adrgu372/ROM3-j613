@@ -1,7 +1,7 @@
 # ROM3-j613 package feed
 #
-# GitHub's "latest release" alias is used only as the bootstrap transport.
-# All database and package signatures remain mandatory. Future hosting changes
-# should keep the same repository name and package identity.
-Server = https://github.com/adrgu372/ROM3-j613/releases/latest/download
+# This release package is immutable together with its snapshot. Pinning the
+# tag avoids GitHub's cached "latest" alias serving assets from another
+# release while a signed override is being published.
+Server = https://github.com/adrgu372/ROM3-j613/releases/download/stable-20261124.2
 

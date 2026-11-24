@@ -1,6 +1,6 @@
 pkgname=rom3-j613-release
 pkgver=1
-pkgrel=1
+pkgrel=2
 pkgdesc='ROM3-j613 pacman repository configuration and release identity'
 arch=('any')
 url='https://github.com/adrgu372/ROM3-j613'
@@ -8,7 +8,7 @@ license=('custom')
 source=('rom3-j613.conf' 'rom3-j613-mirrorlist')
 sha256sums=(
   '89dc56a4ce6e9f02cab3a493c6c1eb6b2a0ee37457a2465614dbe21c330aa15d'
-  '11648426f700c860800d6d3f12766637811d1f443de25e095de2acbb00b922c5'
+  '44674e6d20251424941efb1ea6ace9dbb5febd8a58b17d88f2222533d4abec20'
 )
 options=('!strip')
 
