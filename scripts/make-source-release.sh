@@ -35,9 +35,9 @@ commit=$(git -C "$root" rev-parse HEAD)
     exit 1
 }
 
-temporary=$(mktemp -d)
-trap 'rm -rf "$temporary"' EXIT
 mkdir -p "$output"
+temporary=$(mktemp -d "$output/.source-work.XXXXXX")
+trap 'rm -rf "$temporary"' EXIT
 
 git -C "$root" archive --format=tar.gz \
     --prefix="ROM3-j613-$commit/" \
