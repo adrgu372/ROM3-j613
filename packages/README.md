@@ -28,7 +28,7 @@ kwin-rom3-j613
 Those variants must declare both compatibility and conflict:
 
 ```ini
-provides=('linux-aurora=7.3.0.aurora1-42')
+provides=('linux-aurora=7.3.0.aurora1-44')
 conflicts=('linux-aurora')
 replaces=('linux-aurora')
 ```
