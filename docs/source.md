@@ -1,0 +1,49 @@
+# Corresponding source
+
+The binary releases for `stable-20261124.2` are accompanied by the exact
+sources used to build the ROM3-specific packages.
+
+## Source bundles
+
+- `linux-7.3.0.aurora1-44-source.tar.zst` contains the pinned upstream Linux
+  archive, the ROM3 kernel recipe, configuration, DTB ABI and every patch used
+  for the kernel and headers packages.
+- `aura-1.0.0b17-1-source.tar.zst` contains Aura at tag `v1.0.0b17` with the
+  ROM3 J613 card-idle-mask patch applied, plus the ROM3 recipe and
+  qualification file.
+- `rom3-j613-source-<commit>.tar.gz` contains the complete ROM3 Git tree used
+  for the repository metadata, update guard, keyring, meta-package, release
+  package and build scripts.
+
+`SOURCE-SHA256SUMS` authenticates the bundles and has a detached signature
+from the ROM3 package-signing key:
+
+```text
+FA80FF234BCDF36211649321EB9845C8BAA89A4A
+```
+
+## Licenses
+
+- The Linux kernel and headers are GPL-2.0-only.
+- Aura is distributed under its upstream MIT/GPL-2.0 terms.
+- ROM3 source is distributed under GPL-2.0; see `LICENSE` in the ROM3 source
+  archive.
+
+The exact upstream commits and package versions are recorded in the kernel
+and Aura bundles and in `rom3-package-builds.json`.
+
+## Upstream-only packages
+
+Packages copied unchanged from Aurora Silicon and Arch Linux ARM retain their
+upstream licenses. Their exact versions are listed in
+`rom3-package-builds.json`; corresponding source is available from:
+
+- Aurora packages:
+  <https://github.com/aurora-silicon/alarm-aurora/tree/main/packages>
+- Arch Linux ARM package recipes:
+  <https://github.com/archlinuxarm/PKGBUILDs>
+- Arch Linux package sources:
+  <https://gitlab.archlinux.org/archlinux/packaging/packages>
+
+Each binary package's `.BUILDINFO` also records its `pkgbuild_sha256sum`, build
+environment and exact installed dependency set.
