@@ -9,6 +9,7 @@ repo/aarch64/*.sig
 repo/aarch64/*.db*
 repo/aarch64/*.files*
 repo/snapshots/
+repo/overrides/
 *.img
 *.raw
 *.bin

@@ -33,7 +33,27 @@ approved=$(mktemp)
 approved_pending=$(mktemp)
 quarantine_sorted=$(mktemp)
 pacman_config=
+swapfile=${ROM3_SWAPFILE:-/swap/swapfile}
+swapfile_kib=
+swapfile_active=false
+
+restore_swapfile() {
+    $swapfile_active || return 0
+    if [[ ! -e $swapfile ]]; then
+        [[ -n $swapfile_kib ]] || {
+            echo "cannot restore swapfile: $swapfile is missing" >&2
+            return 1
+        }
+        btrfs filesystem mkswapfile --size "${swapfile_kib}K" "$swapfile"
+        chmod 600 "$swapfile"
+    fi
+    systemctl reset-failed swap-swapfile.swap 2>/dev/null || true
+    systemctl start swap-swapfile.swap || swapon "$swapfile"
+    swapfile_active=false
+}
+
 cleanup() {
+    restore_swapfile || true
     rm -f "$pending" "$pending_details" "$blocked" "$approved" \
         "$approved_pending" "$quarantine_sorted"
     [[ -z $pacman_config ]] || rm -f "$pacman_config"
@@ -128,7 +148,36 @@ if [[ $root_fstype != btrfs ]]; then
 fi
 
 install -d -m755 "$snapshot_root"
+
+# Btrfs refuses to snapshot a subvolume with an active swapfile. Snapshot
+# first, then replace the old swapfile with an independent one and re-enable
+# it. Keeping swap disabled until the snapshot is removed would be unsafe on
+# a 16 GiB machine, and the old file remains recoverable from the snapshot.
+if [[ -f $swapfile ]] &&
+    awk -v file="$swapfile" '$1 == file && $2 == "file" { found = 1 } END { exit !found }' \
+        /proc/swaps; then
+    swapfile_size=$(stat -c %s "$swapfile")
+    swapfile_kib=$(((swapfile_size + 1023) / 1024))
+    swapfile_active=true
+    echo "Temporarily disabling $swapfile for the Btrfs snapshot..."
+    if systemctl cat swap-swapfile.swap >/dev/null 2>&1; then
+        systemctl stop swap-swapfile.swap
+    else
+        swapoff "$swapfile"
+    fi
+fi
+
 btrfs subvolume snapshot -r / "$snapshot_root/$stamp"
+
+if $swapfile_active; then
+    rm -f -- "$swapfile"
+    btrfs filesystem mkswapfile --size "${swapfile_kib}K" "$swapfile"
+    chmod 600 "$swapfile"
+    systemctl reset-failed swap-swapfile.swap 2>/dev/null || true
+    systemctl start swap-swapfile.swap || swapon "$swapfile"
+    swapfile_active=false
+    echo "Swapfile recreated independently of the snapshot and enabled."
+fi
 
 [[ ! -e /boot/efi/m1n1/boot.bin ]] ||
     cp -a /boot/efi/m1n1/boot.bin "$backup/boot.bin"

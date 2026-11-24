@@ -23,16 +23,16 @@ replace components responsible for display, GPU or speaker-safety regressions.
 ```text
 Board:           apple,j613
 Hardware:        MacBook Air 13-inch M3
-Kernel:          7.3.0-1-43-ARCH
-Aurora kernel:   linux-aurora 7.3.0.aurora1-43
-Bootloader:      aura 1.0.0b14.1-3
+Kernel:          7.3.0-1-44-ARCH
+Aurora kernel:   linux-aurora 7.3.0.aurora1-44
+Bootloader:      aura 1.0.0b17-1
 U-Boot:          uboot-aurora 2026.07.aurora11-1
 Display:         2560x1600 internal panel
 GPU:             Apple M3 G15G
 Render node:     /dev/dri/renderD128
 OpenGL:          Apple M3 (G15G C0)
 Audio:           speakersafetyd active
-Stage 2 SHA-256: aa3cf66524f3e76f50e3a70223a1484eac3b2caa7fe375f3f6ede07d1004baab
+Stage 2 SHA-256: 58e3a6da8f48e66bc97a862b891c66522c8587a5946a2ce2e123b32c391fa102
 ```
 
 The verified diagnostics, package set and recovery procedures currently live
@@ -94,14 +94,15 @@ update guard and initial local test packages now exist.
 
 The signed package feed is public:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/stable-20261122.9
+https://github.com/adrgu372/ROM3-j613/releases/tag/stable-20261124.1
 
-The snapshot contains all 27 direct sensitive dependencies of the meta-package.
-Its J613 kernel samples speaker V/I sense on the corrected MCA clock edge and
-ships the matching `speakersafetyd` probe-rate fix. Five PipeWire restarts,
-44.1 kHz and 48 kHz playback, GPU acceleration and the J613 panel were verified
-on the reference laptop. Its keyring package repopulates and locally trusts the
-ROM3 signing key after Aurora creates the machine's pacman master key.
+The snapshot contains the complete direct dependency closure of the
+meta-package. Kernel 44 carries the SIO protocol-10 tables required by Aura b17,
+and both the 47 Aura audio scenarios and the live J613 audio/display checks
+pass. Aura's external-DCP default is explicitly disabled on this board because
+it crashes the primary DCP with the current 14.7 firmware. Its keyring package
+repopulates and locally trusts the ROM3 signing key after Aurora creates the
+machine's pacman master key.
 
 The source filesystem image is public:
 

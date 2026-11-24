@@ -6,7 +6,7 @@
 
 _auroraver=7.3.0
 _aurorarel=1
-pkgrel=43
+pkgrel=44
 
 # Immutable pin on aurora-silicon/linux integration/aurora. Every bump is a
 # PR that moves _commit; its cold-boot qualification is recorded in
@@ -60,7 +60,8 @@ source=(validate-config.py "linux-${_commit}.tar.gz::https://codeload.github.com
         dtb-abi
         linux-t8122-pmp-fix.patch
         linux-t8122-map-fix.patch
-        linux-t8122-j613-mca-sense-edge.patch)
+        linux-t8122-j613-mca-sense-edge.patch
+        linux-apple-sio-protocol10.patch)
 sha256sums=('534214d07ad388822b3d7ca2b63efce988c1424131329775479ebbd7552715b0'
             '9a3969b52c6f41017b36e8bc805b63b0215fddf31b91fc5d45dd7854ab3c4f7b'
             '76cef34049e1e22be3abc0c9a457c381f8cdcf7ac419322c928555d269f0be08'
@@ -71,7 +72,8 @@ sha256sums=('534214d07ad388822b3d7ca2b63efce988c1424131329775479ebbd7552715b0'
             '4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865'
             '5243ba504b4e5824ef7395878c62beb4300ac205818c1614cc99082c77c617dc'
             'b5b84bc6acc012602fb4bedb4c21843bf8cc77a6ced979b752568749922cf5b4'
-            '097788d07bbe6a6b94fe49972da36b64b86f1e4f9e4f08d311a5868c03c37f1c')
+            '097788d07bbe6a6b94fe49972da36b64b86f1e4f9e4f08d311a5868c03c37f1c'
+            '3272fd2e51b228a34c3a88adf73b520ba713cc352ea330ccd03d38ef668788ff')
 
 
 # Kbuild takes ARCH literally and knows arm64, not aarch64.

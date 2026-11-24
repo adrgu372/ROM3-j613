@@ -1,0 +1,28 @@
+rom3_j613_safe_stage2_options() {
+    local config=/etc/m1n1.conf
+    local option='chosen.asahi,t8122-dcpext=0'
+    local backup
+
+    if [[ ! -e $config ]]; then
+        install -Dm644 /dev/null "$config"
+    fi
+
+    # Keep an explicit owner choice. The default is unsafe on J613 with the
+    # current 14.7 DCP firmware: Aura b17 starts dcpext automatically and the
+    # internal DCP then crashes with an axi_rd_err.
+    grep -Eq '^[[:space:]]*chosen\.asahi,t8122-dcpext=' "$config" && return 0
+
+    backup="${config}.before-rom3-j613-$(date +%Y%m%d-%H%M%S)"
+    cp -a "$config" "$backup"
+    printf '\n# ROM3-j613: keep the external DCP closed until it is qualified here.\n%s\n' \
+        "$option" >> "$config"
+    echo "ROM3-j613: added $option to $config (backup: $backup)"
+}
+
+post_install() {
+    rom3_j613_safe_stage2_options
+}
+
+post_upgrade() {
+    rom3_j613_safe_stage2_options
+}

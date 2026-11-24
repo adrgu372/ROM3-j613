@@ -33,7 +33,7 @@ for patch_file in \
     git -C "$source_repo" apply "$patch_file"
 done
 
-export ROM3_FEED=https://github.com/adrgu372/ROM3-j613/releases/download/stable-20261122.9
+export ROM3_FEED=https://github.com/adrgu372/ROM3-j613/releases/download/stable-20261124.1
 export ROM3_OVERRIDE_FEED=${ROM3_OVERRIDE_FEED:-}
 export ROM3_OVERRIDE_MANIFEST_URL=${ROM3_OVERRIDE_MANIFEST_URL:-}
 export ROM3_OVERRIDE_FINGERPRINT=${ROM3_OVERRIDE_FINGERPRINT:-FA80FF234BCDF36211649321EB9845C8BAA89A4A}

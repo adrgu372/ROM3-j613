@@ -22,6 +22,7 @@ text = pkgbuild.read_text()
 files = [
     "rom3-j613-check",
     "rom3-j613-update",
+    "rom3-j613-override",
     "verify-live-system.sh",
     "verified-stack.json",
     "quarantine.packages",

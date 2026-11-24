@@ -22,9 +22,9 @@
     },
     {
       "package": "aura",
-      "version": "1.0.0b14.1-3",
-      "file": "aura-1.0.0b14.1-3-aarch64.pkg.tar.xz",
-      "sha256": "9909b341809652edd33b8fbe1d3af5602a488617d4832ebdfb90abd27ec8f164"
+      "version": "1.0.0b17-1",
+      "file": "aura-1.0.0b17-1-aarch64.pkg.tar.xz",
+      "sha256": "0b9abad7394422787a6b35cdb2bd4ab0e902635fe4c8fec07227d5239292ef19"
     },
     {
       "package": "aurora-audio",
@@ -34,9 +34,9 @@
     },
     {
       "package": "aurora-userpages",
-      "version": "7.3.0.aurora1-42",
-      "file": "aurora-userpages-7.3.0.aurora1-42-aarch64.pkg.tar.xz",
-      "sha256": "57f27a482725d35e58efa8023d57a9984fb28794c85db323d3fcc4d82f70905a"
+      "version": "7.3.0.aurora1-44",
+      "file": "aurora-userpages-7.3.0.aurora1-44-aarch64.pkg.tar.xz",
+      "sha256": "31e5836d34531bc4d1440cab103c8847d329f2edd6980d82b7150a81348251b6"
     },
     {
       "package": "avd-fw",
@@ -70,15 +70,15 @@
     },
     {
       "package": "linux-aurora",
-      "version": "7.3.0.aurora1-43",
-      "file": "linux-aurora-7.3.0.aurora1-43-aarch64.pkg.tar.xz",
-      "sha256": "c70d8d676ced31537ba37dccc7e2336e2a16003242f98014ad1ea849c94e66b4"
+      "version": "7.3.0.aurora1-44",
+      "file": "linux-aurora-7.3.0.aurora1-44-aarch64.pkg.tar.xz",
+      "sha256": "50c93c41b254210ac8cfae132355c9e200bdb2a4b59034c5714edf5e055e0da1"
     },
     {
       "package": "linux-aurora-headers",
-      "version": "7.3.0.aurora1-43",
-      "file": "linux-aurora-headers-7.3.0.aurora1-43-aarch64.pkg.tar.xz",
-      "sha256": "496e99e01e94f8c9f705abeda1a8fc89e0059138291390216d7d4fd026e83595"
+      "version": "7.3.0.aurora1-44",
+      "file": "linux-aurora-headers-7.3.0.aurora1-44-aarch64.pkg.tar.xz",
+      "sha256": "7980ee2cf80c587f85cd1406e7c5dd0ff4fe883d3992caf17b9ef450b1a7ef06"
     },
     {
       "package": "lsp-plugins-lv2",
@@ -118,9 +118,9 @@
     },
     {
       "package": "rom3-j613-guard",
-      "version": "1-6",
-      "file": "rom3-j613-guard-1-6-any.pkg.tar.xz",
-      "sha256": "0ca55053c394f66e6b85ce41ca30d987b58f79919fc97c771f7b244269a60dbf"
+      "version": "1-7",
+      "file": "rom3-j613-guard-1-7-any.pkg.tar.xz",
+      "sha256": "2354e1d414f63fec5e5c411617e5485e05f01726fa9f1aed05abd31b5456098a"
     },
     {
       "package": "rom3-j613-keyring",
@@ -130,9 +130,9 @@
     },
     {
       "package": "rom3-j613-meta",
-      "version": "1-5",
-      "file": "rom3-j613-meta-1-5-any.pkg.tar.xz",
-      "sha256": "064939cdf19ab12a96366496ab1fe5fa14d27e81b30eb40e4f4e00b47cd022b8"
+      "version": "1-7",
+      "file": "rom3-j613-meta-1-7-any.pkg.tar.xz",
+      "sha256": "9e8bb730df9dd732979bdce4da59c93b5d4c48bb2ab7da4b5c71b7b9d2d4f257"
     },
     {
       "package": "rom3-j613-release",

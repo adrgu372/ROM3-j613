@@ -1,13 +1,13 @@
 # Aurora bootloader; ordinary updates refresh ESP Stage 2, never enroll Stage 1.
 pkgname=aura
-pkgver=1.0.0b14.1
-pkgrel=3
+pkgver=1.0.0b17
+pkgrel=1
 pkgdesc='Aurora Silicon bootloader for Apple Silicon'
 arch=('aarch64')
 groups=('aurora-platform-apple-silicon')
 url='https://github.com/aurora-silicon/aura'
 license=('MIT' 'GPL-2.0-only')
-_commit=3ff77894567239362a116e7fcbb214c55dccf5a4
+_commit=5a244b5bcbaf4a2751abea18dc0dd8e71c325e46
 # 1 once the pinned source has no monitor (aura#77); prepare() checks it. Such an
 # aura moves the kernel into the CTXR window, so it requires a kernel built with
 # CONFIG_ARM64_CTXR_EXECMEM, which linux-aurora provides as aurora-ctxr-execmem.
@@ -21,13 +21,14 @@ replaces=('m1n1-neo')
 makedepends=('git' 'clang' 'lld' 'llvm' 'rustup' 'make' 'python')
 options=('!strip' '!debug')
 source=("aura::git+$url.git#commit=$_commit" build-qualification.json validate-qualification.py
-        0001-kboot-audio-t8122-zd-config.patch)
-sha256sums=('SKIP' '1037bc5fa98ad11b93ed4c0366706862c4de1491f3f740a69c843a52746ccbb9' 'd89f89a68105e4663bdf14bf9d4d70f3fad79538a4c566e8fae73c0b40a9be26'
-            '8ad0d3972672c4ed59bddc938f3cb291384c475befe238c4363c07eeea4a91b2')
+        0001-kboot-audio-card-idle-mask.patch)
+sha256sums=('SKIP' '666fc8adaaec5708ce433d8dafc684a75376df90c1fcaf1d393cc41f3676b03b' 'd89f89a68105e4663bdf14bf9d4d70f3fad79538a4c566e8fae73c0b40a9be26'
+            '42ef14cebc0d06bb09781a297799fe30830953ecd14cf1e5164cf048ed45f0c2')
 prepare() {
   rustup toolchain install 1.99.0 --profile minimal --target aarch64-unknown-none-softfloat
   [[ $(git -C aura rev-parse HEAD) == "$_commit" ]]
-  patch -Np1 -d aura < "../0001-kboot-audio-t8122-zd-config.patch" || { echo "0001-kboot-audio-t8122-zd-config.patch did not apply" >&2; return 1; }
+  python3 ../validate-qualification.py --build-only ../build-qualification.json "$_commit"
+  patch -Np1 -d aura < "../0001-kboot-audio-card-idle-mask.patch" || { echo "0001-kboot-audio-card-idle-mask.patch did not apply" >&2; return 1; }
   local found=0
   if [[ -f aura/src/ctxr_exec.c || ! -f aura/src/monitor.c ]]; then found=1; fi
   if (( found != _monitor_free )); then
@@ -39,7 +40,7 @@ check() {
   cd aura
   output=$(RUSTUP_TOOLCHAIN=1.99.0 sh tests/run-kboot-audio.sh)
   printf '%s\n' "$output"
-  grep -q 'kboot audio: 36 scenarios pass' <<<"$output"
+  grep -q 'kboot audio: 47 scenarios pass' <<<"$output"
 }
 
 build() {

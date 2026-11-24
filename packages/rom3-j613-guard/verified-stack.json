@@ -2,7 +2,7 @@
   "schema_version": 1,
   "distribution": "ROM3-j613",
   "channel": "stable",
-  "verified_at": "2026-11-22T15:14:18+02:00",
+  "verified_at": "2026-11-24T21:50:29+02:00",
   "source_baseline": {
     "repository": "https://github.com/adrgu372/aurora-m3-j613-fixes",
     "commit": "50f0898d03b22cff65ee2095fea6781da80b93f5"
@@ -17,12 +17,12 @@
       "audio_verified": true
     }
   ],
-  "kernel_release": "7.3.0-1-43-ARCH",
-  "stage2_sha256": "aa3cf66524f3e76f50e3a70223a1484eac3b2caa7fe375f3f6ede07d1004baab",
+  "kernel_release": "7.3.0-1-44-ARCH",
+  "stage2_sha256": "58e3a6da8f48e66bc97a862b891c66522c8587a5946a2ce2e123b32c391fa102",
   "packages": {
-    "linux-aurora": "7.3.0.aurora1-43",
-    "linux-aurora-headers": "7.3.0.aurora1-43",
-    "aura": "1.0.0b14.1-3",
+    "linux-aurora": "7.3.0.aurora1-44",
+    "linux-aurora-headers": "7.3.0.aurora1-44",
+    "aura": "1.0.0b17-1",
     "uboot-aurora": "2026.07.aurora11-1",
     "asahi-scripts": "20261023-10",
     "mesa-aurora": "1:26.3.0_devel.202611150611.d4ad4a4dce6-1",
@@ -46,7 +46,7 @@
     "libwireplumber": "0.5.18-1",
     "wireplumber": "0.5.18-1",
     "kwin": "6.8.2-2",
-    "aurora-userpages": "7.3.0.aurora1-42"
+    "aurora-userpages": "7.3.0.aurora1-44"
   },
   "required_outputs": {
     "drm": [

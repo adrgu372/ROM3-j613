@@ -1,67 +1,5 @@
-From 436058c5ce3f339c7f36746b3e1b2a8d339471a0 Mon Sep 17 00:00:00 2001
-From: Scott Jones <scottajones@gmail.com>
-Date: Fri, 20 Nov 2026 00:31:14 -0500
-Subject: [PATCH] kboot_audio: pass amp-tx-zd-config on only where the card's
- idle masks agree
-
-On the 13" M3 Air (J613) the speakers stay silent and speakersafetyd
-stops with "Left Tweeter: Negative power, bad ivsense data?".
-
-The cause is the amp-tx-zd-config row aura passes on. The SN012776
-driver takes the row as the amp's SDOUT slots to drive zeros on when idle
-(its first four bytes, slot 0 in bit 0), in place of the sound card's
-idle mask for that amp. On the J613 each woofer's row is the complement
-of the card mask its speakers worked with on 7.2:
- - left woofer: row f0 f0 f0 ff, mask 0x0f0f;
- - right woofer: row 0f 0f 0f ff, mask 0xf0f0.
-With the rows, SDOUT_HIZ_1..4 read back f0 f0 f0 ff and 0f 0f 0f ff, and
-speakersafetyd reports bad IV sense and stops.
-
-Decide by the data instead of by the SoC. For each amp, look up the
-card's idle mask: dai-tdm-slot-tx-idle-mask-<n>, in idle mode "zero", of
-each dai-link that lists the amp as its n-th codec, which is the mask
-macaudio applies. Where the card has one and the row's slots contradict
-it on the bytes up to the mask's highest slot, the row is not passed on,
-the log says why, and the card's mask stays in charge. The amp is then
-set up as before aura passed the rows on. The row also stays back when
-two dai-links give the amp different masks. Where the card has no mask
-for the amp, or its codec list is not one phandle per amp, the row goes
-on as before.
-
-Why compare, rather than drop the row whenever the card has a mask: on
-the Pros whose masks span three bytes, the rows (f0 f0 f0 ff as on the
-J414c) also zero slots 24-31, and dropping them there would change those
-Macs. Their
-trees describe their masks as the ADT rows; where that holds, nothing
-changes. Where a row contradicts a mask, that amp goes back to its
-card's mask.
-
-tests/run-kboot-audio.sh gains these scenarios:
- - card masks that agree, including on a T8122 tree;
- - a contradicting mask, on a T8122 tree and on another;
- - two dai-links that disagree;
- - a mask without the zero idle mode;
- - a codec list with a non-phandle entry;
- - short rows beside a mask;
- - the J613's real woofer rows and masks.
-All 36 scenarios pass. Restoring the T8122 check, dropping the check,
-comparing whole words, ignoring the idle mode, or dropping either of the
-consistency rules each fails a scenario.
-
-On the J613 with a 7.3 kernel and the row dropped (the earlier T8122
-version): SDOUT_HIZ as on 7.2, speakersafetyd running, speakers audible.
-This version has not run on hardware.
-
-Assisted-by: Claude:claude-opus-5-5
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
----
- src/kboot_audio.c        | 115 ++++++++++++++++++++++++++++++++++++++-
- tests/kboot_audio_adt.py |  81 +++++++++++++++++++++++++--
- tests/run-kboot-audio.sh |  15 +++++
- 3 files changed, 204 insertions(+), 7 deletions(-)
-
 diff --git a/src/kboot_audio.c b/src/kboot_audio.c
-index 1e802cfbc..7ab820a99 100644
+index 977e7ff..ad5d1bf 100644
 --- a/src/kboot_audio.c
 +++ b/src/kboot_audio.c
 @@ -18,6 +18,16 @@
@@ -81,7 +19,7 @@ index 1e802cfbc..7ab820a99 100644
   * A property the group does not have (or one without a row for every amp) is
   * removed from its amps, so the kernel never sees a value that did not come from this Mac. Amps
   * are matched to the DT's ti,sn012776 nodes by I2C address, which must name exactly one node. A
-@@ -108,6 +118,95 @@ static int dt_amp_by_addr(const void *dt, u32 addr)
+@@ -109,6 +119,95 @@ static int dt_amp_by_addr(const void *dt, u32 addr)
      return found;
  }
  
@@ -177,7 +115,7 @@ index 1e802cfbc..7ab820a99 100644
  /* Set @name on the DT amp at @addr to @val (remove it when @val is NULL) */
  static int dt_amp_setprop(void *dt, u32 addr, const char *name, const void *val, u32 len)
  {
-@@ -185,6 +284,16 @@ static int setup_amp_group(void *dt, const void *adt, int arm_io, int group)
+@@ -186,6 +285,16 @@ static int setup_amp_group(void *dt, const void *adt, int arm_io, int group)
          }
      }
  
@@ -194,7 +132,7 @@ index 1e802cfbc..7ab820a99 100644
      /* One row per amp, in the group's order */
      for (size_t p = 0; p < ARRAY_SIZE(amp_row_props); p++) {
          u32 len = 0;
-@@ -196,9 +305,11 @@ static int setup_amp_group(void *dt, const void *adt, int arm_io, int group)
+@@ -197,9 +306,11 @@ static int setup_amp_group(void *dt, const void *adt, int arm_io, int group)
                     amp_row_props[p].adt, len, n);
              rows = NULL;
          }
@@ -209,7 +147,7 @@ index 1e802cfbc..7ab820a99 100644
          }
      }
 diff --git a/tests/kboot_audio_adt.py b/tests/kboot_audio_adt.py
-index 7b010b338..48d374649 100644
+index ce606ce..0348eed 100644
 --- a/tests/kboot_audio_adt.py
 +++ b/tests/kboot_audio_adt.py
 @@ -86,10 +86,25 @@ def adt(buses, extra=None):
@@ -252,7 +190,7 @@ index 7b010b338..48d374649 100644
              for k, v in (stale or {}).get((b, a), {}).items():
                  out.append("\t\t\t%s = [%s];" % (k, " ".join("%02x" % x for x in v)))
              out.append("\t\t};")
-@@ -173,6 +189,60 @@ def scenario(name):
+@@ -199,6 +215,60 @@ def scenario(name):
               Node("i2c1", {}, [amp("audio-speaker-a", 0x41, 0x11)])]
      if name == "group":
          return adt(group), dts(three, {(1, 0x41): STALE})
@@ -313,18 +251,24 @@ index 7b010b338..48d374649 100644
      if name == "no-dcblocker":
          g = dict(GROUP3)
          del g["amp-dcblocker-config"]
-@@ -220,7 +290,8 @@ def scenario(name):
+@@ -246,8 +316,13 @@ def scenario(name):
      raise SystemExit("unknown scenario %s" % name)
  
  
 -SCENARIOS = ["group", "no-dcblocker", "six-amps", "short-speaker-config", "single-amp", "amp-missing-in-dt", "amp-not-unique-in-dt",
-+SCENARIOS = ["group", "card-masks-agree", "card-mask-contradicts", "card-mask-contradicts-t8122",
-+             "card-masks-agree-t8122", "card-masks-two-links-disagree", "card-codecs-not-bare", "card-mask-not-zero-mode", "card-mask-short-rows", "j613", "no-dcblocker", "six-amps", "short-speaker-config", "single-amp", "amp-missing-in-dt", "amp-not-unique-in-dt",
-              "dangling-phandle", "no-amps"] + list(SPEAKER_ID_SCENARIOS)
+-             "dangling-phandle", "no-amps"] + list(SPEAKER_ID_SCENARIOS) + list(HPD_SCENARIOS)
++SCENARIOS = ["group", "card-masks-agree", "card-mask-contradicts",
++             "card-mask-contradicts-t8122", "card-masks-agree-t8122",
++             "card-masks-two-links-disagree", "card-codecs-not-bare",
++             "card-mask-not-zero-mode", "card-mask-short-rows", "j613",
++             "no-dcblocker", "six-amps", "short-speaker-config", "single-amp",
++             "amp-missing-in-dt", "amp-not-unique-in-dt", "dangling-phandle",
++             "no-amps"] + list(SPEAKER_ID_SCENARIOS) + list(HPD_SCENARIOS)
  
  
+ def from_ioreg(path):
 diff --git a/tests/run-kboot-audio.sh b/tests/run-kboot-audio.sh
-index 379c8a27b..ebdf3acaa 100644
+index dfe1f0d..f32d9c4 100644
 --- a/tests/run-kboot-audio.sh
 +++ b/tests/run-kboot-audio.sh
 @@ -80,6 +80,21 @@ expect() { # expect <scenario>: the amp lines that scenario must give (tree orde

@@ -1,0 +1,127 @@
+--- a/drivers/dma/apple-sio.c
++++ b/drivers/dma/apple-sio.c
+@@ -187,6 +187,8 @@
+ 	/* The firmware is stopped for a system sleep. */
+ 	bool asleep;
+ 	bool firmware_only;
++	/* Protocol 10 firmware given the earlier boot tables: no DMA, which would crash it */
++	bool tables_mismatch;
+ 	bool commit_registered;
+ 	bool commit_used;
+ 	u32 protocol;
+@@ -365,16 +367,16 @@
+ 	return err == -ENOENT ? n : err;
+ }
+ 
+-/* 0 when the node's boot tables are protocol-10 tables inside its mapped windows */
+-static int sio_t6030_check_node(struct device_node *np)
++/* 0 when the node's boot tables in propname are protocol-10 tables inside its mapped windows */
++static int sio_t6030_check_node(struct device_node *np, const char *propname)
+ {
+ 	struct sio_t6030_window windows[SIO_T6030_WINDOWS_MAX];
+ 	u32 params[2 * SIO_T6030_PARAMS_MAX];
+ 	int nparams, nwindows;
+ 
+-	nparams = of_property_count_u32_elems(np, "apple,sio-firmware-params");
++	nparams = of_property_count_u32_elems(np, propname);
+ 	if (nparams <= 0 || nparams > ARRAY_SIZE(params) ||
+-	    of_property_read_u32_array(np, "apple,sio-firmware-params", params, nparams))
++	    of_property_read_u32_array(np, propname, params, nparams))
+ 		return -EINVAL;
+ 	nwindows = sio_t6030_windows(np, windows, ARRAY_SIZE(windows));
+ 	if (nwindows < 0)
+@@ -384,7 +386,7 @@
+ 
+ static int sio_t6030_check_boot_tables(struct device *dev)
+ {
+-	if (sio_t6030_check_node(dev->of_node)) {
++	if (sio_t6030_check_node(dev->of_node, "apple,sio-firmware-params")) {
+ 		dev_err(dev, "boot tables are not for SIO protocol 10; leaving the SIO stopped\n");
+ 		return -ENODEV;
+ 	}
+@@ -836,7 +838,8 @@
+ 	struct sio_chan *siochan = to_sio_chan(chan);
+ 	struct sio_tx *siotx;
+ 
+-	if (direction != sio_chan_direction(siochan->no))
++	if (siochan->host->tables_mismatch ||
++	    direction != sio_chan_direction(siochan->no))
+ 		return NULL;
+ 
+ 	siotx = sio_alloc_tx(siochan, buf_addr, buf_len, period_len, GFP_NOWAIT);
+@@ -1645,6 +1648,9 @@
+ 	struct sio_shmem_chan_config cfg;
+ 	int ret;
+ 
++	if (sio->tables_mismatch)
++		return -ENODEV;
++
+ 	if (config->peripheral_config) {
+ 		if (config->peripheral_size != sizeof(struct apple_sio_idle))
+ 			return -EINVAL;
+@@ -1893,15 +1899,43 @@
+ 	return err;
+ }
+ 
++/*
++ * A low-window SIO (M1, M2) takes the earlier boot tables when its firmware
++ * reports protocol 9 and T6030's when it reports protocol 10. The boot
++ * loader passes the protocol-10 tables as a second list. Validate both
++ * candidates before sending one; if neither works, keep firmware available
++ * for sleep but expose no DMA service.
++ */
++static const char *sio_dt_params_name(struct sio_data *sio)
++{
++	struct device_node *np = sio->dev->of_node;
++
++	if (sio->protocol != 10)
++		return "apple,sio-firmware-params";
++	if (!sio_t6030_check_node(np, "apple,sio-firmware-params-v10"))
++		return "apple,sio-firmware-params-v10";
++	if (!sio_t6030_check_node(np, "apple,sio-firmware-params"))
++		return "apple,sio-firmware-params";
++
++	sio->tables_mismatch = true;
++	return NULL;
++}
++
+ static int sio_send_dt_params(struct sio_data *sio)
+ {
+ 	struct device_node *np = sio->dev->of_node;
+-	const char *propname = "apple,sio-firmware-params";
++	const char *propname;
+ 	int nparams, err, i;
+ 
+ 	if (sio->hw->send_dt_params)
+ 		return sio->hw->send_dt_params(sio);
+ 
++	propname = sio_dt_params_name(sio);
++	if (!propname) {
++		dev_err(sio->dev, "boot tables are not for SIO protocol 10; no DMA\n");
++		return 0;
++	}
++
+ 	nparams = of_property_count_u32_elems(np, propname);
+ 	if (nparams < 0) {
+ 		err = nparams;
+@@ -2075,6 +2109,10 @@
+ 	err = sio_send_dt_params(sio);
+ 	if (err < 0)
+ 		return dev_err_probe(&pdev->dev, err, "failed to send boot-up parameters\n");
++	if (sio->tables_mismatch) {
++		sio->firmware_only = true;
++		goto rpm_put;
++	}
+ 
+ 	err = sio_alloc_shmem(sio);
+ 	if (err < 0)
+--- a/drivers/dma/apple-sio-test.c
++++ b/drivers/dma/apple-sio-test.c
+@@ -273,7 +273,7 @@
+ 		int ret;
+ 
+ 		KUNIT_ASSERT_NOT_NULL_MSG(test, np, "%s", nodes[i][0]);
+-		ret = sio_t6030_check_node(np);
++		ret = sio_t6030_check_node(np, "apple,sio-firmware-params");
+ 		if (!strcmp(nodes[i][1], "admitted"))
+ 			KUNIT_EXPECT_EQ_MSG(test, ret, 0, "%s", nodes[i][0]);

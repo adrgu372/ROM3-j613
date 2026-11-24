@@ -4,11 +4,12 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import subprocess
 
 ROOT = Path(__file__).resolve().parent.parent
-ARTIFACTS = ROOT / "artifacts"
+ARTIFACTS = Path(os.environ.get("ROM3_ARTIFACT_DIR", ROOT / "artifacts"))
 OUTPUT = ROOT / "stack" / "package-builds.json"
 
 

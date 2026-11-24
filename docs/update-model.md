@@ -79,3 +79,8 @@ Only `stable` should be configured for normal users.
 
 The root filesystem must be Btrfs. A failed snapshot aborts the update.
 
+When `/swap/swapfile` is active in the root subvolume, `--apply` stops it for
+the snapshot, recreates it as a new independent swapfile and enables it again.
+This avoids both the Btrfs snapshot refusal and leaving a 16 GiB machine
+without disk swap until an old snapshot is deleted.
+

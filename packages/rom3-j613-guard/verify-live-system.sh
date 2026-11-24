@@ -50,6 +50,14 @@ for property in \
     fi
 done
 
+dcpext=/sys/firmware/devicetree/base/chosen/asahi,t8122-dcpext
+if [[ -r $dcpext ]] && [[ $(tr -d '\0' < "$dcpext") == 0 ]]; then
+    printf 'ok      chosen/asahi,t8122-dcpext=0\n'
+else
+    printf 'missing chosen/asahi,t8122-dcpext=0\n'
+    failures=$((failures + 1))
+fi
+
 section "audio"
 cat /proc/asound/cards
 audio_state=$(systemctl is-active speakersafetyd || true)
