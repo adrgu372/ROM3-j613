@@ -27,7 +27,7 @@ Kernel:          7.3.0-1-44-ARCH
 Aurora kernel:   linux-aurora 7.3.0.aurora1-44
 Bootloader:      aura 1.0.0b17-1
 U-Boot:          uboot-aurora 2026.07.aurora11-1
-Display:         2560x1600 internal panel
+Display:         2560x1664 internal panel, 64-row notch exposed
 GPU:             Apple M3 G15G
 Render node:     /dev/dri/renderD128
 OpenGL:          Apple M3 (G15G C0)
@@ -103,6 +103,13 @@ pass. Aura's external-DCP default is explicitly disabled on this board because
 it crashes the primary DCP with the current 14.7 firmware. Its keyring package
 repopulates and locally trusts the ROM3 signing key after Aurora creates the
 machine's pacman master key.
+
+The Aura b14.1-to-b17 delta also exposes the full notch-aware panel geometry,
+reads panel brightness metadata from the ADT, selects the matching SIO
+protocol-9/10 layout from kernel 44 and hardens live-DCP, AOP, video-encoder,
+PCIe and NVMe handoff. Firmware-27.2 display/GPU support is included but
+inactive on the current 14.7 component firmware. External USB-C displays remain
+disabled until that handoff is qualified on J613.
 
 The source filesystem image is public:
 
