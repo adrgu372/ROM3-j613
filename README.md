@@ -172,11 +172,11 @@ after the transaction. A kernel update requires a reboot followed by:
 sudo /usr/share/rom3-j613/verify-live-system.sh
 ```
 
-Systems still on `stable-20261122.9` should install
+Systems still on `stable-20261122.9` or `stable-20261124.2` should install
 `rom3-j613-guard` and `rom3-j613-release` first, then authenticate
-[`override-20261124.2`](https://github.com/adrgu372/ROM3-j613/releases/tag/override-20261124.2)
+[`override-20261126.2`](https://github.com/adrgu372/ROM3-j613/releases/tag/override-20261126.2)
 with `rom3-j613-override configure`. The release notes contain the exact signed
-commands for the Aura b17 and kernel 44 transition.
+commands for the Aura b17 and kernel 45 transition.
 
 Running `pacman -Syu` directly is not the supported update path for the
 protected ROM3 stack. See [docs/update-model.md](docs/update-model.md).
