@@ -23,8 +23,8 @@ replace components responsible for display, GPU or speaker-safety regressions.
 ```text
 Board:           apple,j613
 Hardware:        MacBook Air 13-inch M3
-Kernel:          7.3.0-1-44-ARCH
-Aurora kernel:   linux-aurora 7.3.0.aurora1-44
+Kernel:          7.3.0-1-45-ARCH
+Aurora kernel:   linux-aurora 7.3.0.aurora1-45
 Bootloader:      aura 1.0.0b17-1
 U-Boot:          uboot-aurora 2026.07.aurora11-1
 Display:         2560x1664 internal panel, 64-row notch exposed
@@ -32,7 +32,7 @@ GPU:             Apple M3 G15G
 Render node:     /dev/dri/renderD128
 OpenGL:          Apple M3 (G15G C0)
 Audio:           speakersafetyd active
-Stage 2 SHA-256: 58e3a6da8f48e66bc97a862b891c66522c8587a5946a2ce2e123b32c391fa102
+Stage 2 SHA-256: 2e74c732cc62a56aa6b236e9ba673780b6f77261664d9d93de878b50cc7957d9
 ```
 
 The verified diagnostics, package set and recovery procedures currently live
@@ -94,7 +94,7 @@ update guard and initial local test packages now exist.
 
 The signed package feed is public:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/stable-20261124.2
+https://github.com/adrgu372/ROM3-j613/releases/tag/stable-20261126.1
 
 The snapshot contains the complete direct dependency closure of the
 meta-package. Kernel 44 carries the SIO protocol-10 tables required by Aura b17,
