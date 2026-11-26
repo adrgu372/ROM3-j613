@@ -1,16 +1,16 @@
 # Corresponding source
 
-The binary releases for `stable-20261124.2` are accompanied by the exact
-sources used to build the ROM3-specific packages.
+Binary releases are accompanied by the exact sources used to build the
+ROM3-specific packages.
 
 ## Source bundles
 
-- `linux-7.3.0.aurora1-44-source.tar.zst` contains the pinned upstream Linux
+- `linux-<pkgver>-source.tar.zst` contains the pinned upstream Linux
   archive, the ROM3 kernel recipe, configuration, DTB ABI and every patch used
   for the kernel and headers packages.
-- `aura-1.0.0b17-1-source.tar.zst` contains Aura at tag `v1.0.0b17` with the
-  ROM3 J613 card-idle-mask patch applied, plus the ROM3 recipe and
-  qualification file.
+- `aura-<pkgver>-<pkgrel>-source.tar.zst` contains Aura at the source tag
+  selected by the package recipe, with the ROM3 J613 card-idle-mask patch
+  applied, plus the ROM3 recipe and qualification file.
 - `rom3-j613-source-<commit>.tar.gz` contains the complete ROM3 Git tree used
   for the repository metadata, update guard, keyring, meta-package, release
   package and build scripts.

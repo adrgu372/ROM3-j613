@@ -10,7 +10,15 @@ output=${ROM3_SOURCE_OUTPUT_DIR:-"$root/artifacts/source-$tag"}
 aura_repo=${AURA_SOURCE_REPO:-/home/adi/aura-b17-work}
 aura_patch=$root/packages/aura/0001-kboot-audio-card-idle-mask.patch
 kernel_dir=${KERNEL_SOURCE_DIR:-/home/adi/aurora-kernel-build/alarm-aurora/packages/linux-aurora}
-kernel_commit=9125b31475836ce0a6634df45b539c6d604f36a5
+kernel_pkgbuild=$root/packages/linux-aurora/PKGBUILD
+aura_pkgbuild=$root/packages/aura/PKGBUILD
+kernel_commit=$(sed -n 's/^_commit=//p' "$kernel_pkgbuild")
+kernel_auroraver=$(sed -n 's/^_auroraver=//p' "$kernel_pkgbuild")
+kernel_aurorarel=$(sed -n 's/^_aurorarel=//p' "$kernel_pkgbuild")
+kernel_pkgrel=$(sed -n 's/^pkgrel=//p' "$kernel_pkgbuild")
+kernel_pkgver=${kernel_auroraver}.aurora${kernel_aurorarel}-${kernel_pkgrel}
+aura_pkgver=$(sed -n 's/^pkgver=//p' "$aura_pkgbuild")
+aura_pkgrel=$(sed -n 's/^pkgrel=//p' "$aura_pkgbuild")
 kernel_tar=$kernel_dir/linux-${kernel_commit}.tar.gz
 
 [[ -n $tag ]] || {
@@ -49,7 +57,7 @@ patch -d "$temporary/aura" -Np1 < "$aura_patch"
 cp "$root/packages/aura/PKGBUILD" "$root/packages/aura/build-qualification.json" \
     "$aura_patch" "$temporary/aura/"
 cp "$root/docs/source.md" "$temporary/aura/SOURCE.md"
-tar --zstd -cf "$output/aura-1.0.0b17-1-source.tar.zst" \
+tar --zstd -cf "$output/aura-${aura_pkgver}-${aura_pkgrel}-source.tar.zst" \
     -C "$temporary" aura
 
 mkdir -p "$temporary/linux/upstream"
@@ -61,7 +69,7 @@ cp "$kernel_dir/PKGBUILD" "$kernel_dir/config" "$kernel_dir/dtb-abi" \
     "$temporary/linux/"
 printf '%s\n' "$kernel_commit" > "$temporary/linux/KERNEL_COMMIT"
 cp "$root/docs/source.md" "$temporary/linux/SOURCE.md"
-tar --zstd -cf "$output/linux-7.3.0.aurora1-44-source.tar.zst" \
+tar --zstd -cf "$output/linux-${kernel_pkgver}-source.tar.zst" \
     -C "$temporary" linux
 
 cp "$root/docs/source.md" "$output/SOURCE.md"
