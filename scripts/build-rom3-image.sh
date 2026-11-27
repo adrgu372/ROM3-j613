@@ -39,6 +39,7 @@ export ROM3_OVERRIDE_MANIFEST_URL=${ROM3_OVERRIDE_MANIFEST_URL:-}
 export ROM3_OVERRIDE_FINGERPRINT=${ROM3_OVERRIDE_FINGERPRINT:-FA80FF234BCDF36211649321EB9845C8BAA89A4A}
 export ROM3_KEY_URL=https://raw.githubusercontent.com/adrgu372/ROM3-j613/main/repo/keys/rom3-j613-packages.pub
 export ROM3_FINGERPRINT=FA80FF234BCDF36211649321EB9845C8BAA89A4A
+export ROM3_SOURCE_ROOT="$root"
 
 cd "$source_repo"
 bash scripts/build-image arch-kde "$tag" "$channel"
