@@ -1,0 +1,56 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: ROM3-j613 <packages@rom3-j613.invalid>
+Date: Fri, 27 Nov 2026 19:10:00 +0200
+Subject: [PATCH] HID: magicmouse: retry busy click waveforms after resume
+
+The MTP actuator can briefly report EBUSY when the first click arrives
+during resume. Retry that transient error for a short bounded period. If
+the actuator is still busy, return it to firmware control but keep
+host-driven feedback enabled so the next click can take it again.
+---
+ drivers/hid/hid-magicmouse.c | 27 ++++++++++++++++++++++++---
+ 1 file changed, 24 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/hid/hid-magicmouse.c b/drivers/hid/hid-magicmouse.c
+index 000000000000..111111111111 100644
+--- a/drivers/hid/hid-magicmouse.c
++++ b/drivers/hid/hid-magicmouse.c
+@@ -1828,6 +1828,6 @@ static void magicmouse_haptic_pulses(struct magicmouse_sc *msc, u16 usage,
+ 	struct hid_device *actuator;
+ 	u8 strength, softness, gap;
+-	unsigned int i;
++	unsigned int i, retries;
+ 	int ret;
+ 
+ 	if (!pulses)
+@@ -1862,11 +1862,27 @@ static void magicmouse_haptic_pulses(struct magicmouse_sc *msc, u16 usage,
+ 
+ 	for (i = 0; i < pulses; i++) {
+ 		ret = apple_taptic_send(actuator, usage, strength, softness);
++		/*
++		 * The actuator may still be resuming when the first click
++		 * arrives. Give the transport a short bounded window instead
++		 * of disabling host feedback for the rest of the boot.
++		 */
++		for (retries = 0; ret == -EBUSY && retries < 5; retries++) {
++			msleep(20);
++			ret = apple_taptic_send(actuator, usage, strength,
++						softness);
++		}
+ 		if (ret) {
+ 			hid_warn(msc->hdev,
+ 				 "click waveform failed (%d); returning click feedback to the firmware\n",
+ 				 ret);
+-			haptic_press = false;
++			/*
++			 * EBUSY is a resume race, not a reason to disable the
++			 * feature permanently. The next press reacquires host
++			 * mode and tries again.
++			 */
++			if (ret != -EBUSY)
++				haptic_press = false;
+ 			magicmouse_haptic_release_mode_locked(msc);
+ 			return;
+ 		}
+-- 
+2.51.0

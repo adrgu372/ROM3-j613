@@ -33,8 +33,8 @@
     "speakersafetyd-aurora-profiles": "speakersafetyd-rom3-profiles"
   },
   "packages": {
-    "linux-rom3": "7.3.0.aurora1-45",
-    "linux-rom3-headers": "7.3.0.aurora1-45",
+    "linux-rom3": "7.3.0.aurora1-46",
+    "linux-rom3-headers": "7.3.0.aurora1-46",
     "rom3": "1.0.0b17-2",
     "uboot-rom3": "2026.07.aurora11-1",
     "asahi-scripts": "20261023-10",
@@ -59,7 +59,7 @@
     "libwireplumber": "0.5.18-1",
     "wireplumber": "0.5.18-1",
     "kwin": "6.8.2-2",
-    "rom3-userpages": "7.3.0.aurora1-45"
+    "rom3-userpages": "7.3.0.aurora1-46"
   },
   "required_outputs": {
     "drm": [

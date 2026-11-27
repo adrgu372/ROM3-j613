@@ -90,8 +90,6 @@ if (
 for name, version in sorted(manifest["packages"].items()):
     if not re.fullmatch(r"[a-z0-9@._+:-]+", name):
         raise SystemExit(f"invalid package name in override: {name!r}")
-    if re.search(r"aura|aurora", name, re.IGNORECASE):
-        continue
     if not isinstance(version, str) or not re.fullmatch(
         r"[A-Za-z0-9@._+~:-]+", version
     ):

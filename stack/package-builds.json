@@ -70,15 +70,15 @@
     },
     {
       "package": "linux-rom3",
-      "version": "7.3.0.aurora1-45",
-      "file": "linux-rom3-7.3.0.aurora1-45-aarch64.pkg.tar.xz",
-      "sha256": "c8a9693bf8f12a311cf36fa0598fb0af9ef6034e09329a1908c1db5f6ee47a87"
+      "version": "7.3.0.aurora1-46",
+      "file": "linux-rom3-7.3.0.aurora1-46-aarch64.pkg.tar.xz",
+      "sha256": "a6f15e4a3fac0091f3a117be45a2952f3eabf590ad54bd3eab74441f46134609"
     },
     {
       "package": "linux-rom3-headers",
-      "version": "7.3.0.aurora1-45",
-      "file": "linux-rom3-headers-7.3.0.aurora1-45-aarch64.pkg.tar.xz",
-      "sha256": "0ad4453a9809ac11691bc12f6b0b92767d7b394d96b8a382f02fcb5e8be7f012"
+      "version": "7.3.0.aurora1-46",
+      "file": "linux-rom3-headers-7.3.0.aurora1-46-aarch64.pkg.tar.xz",
+      "sha256": "65c26c99c3a2754f63dda4674a49e0973979304140d6156bd5825e73a7de441a"
     },
     {
       "package": "lsp-plugins-lv2",
@@ -196,9 +196,9 @@
     },
     {
       "package": "rom3-j613-guard",
-      "version": "1-11",
-      "file": "rom3-j613-guard-1-11-any.pkg.tar.xz",
-      "sha256": "a4046d7bca9e033a1af8cb890ecf5303726a5dc13176c117af88578664e306ff"
+      "version": "1-12",
+      "file": "rom3-j613-guard-1-12-any.pkg.tar.xz",
+      "sha256": "71672d63b59b58a69c8d3955e64a39e649d7b924922a3d7f8ac337700ae2b918"
     },
     {
       "package": "rom3-j613-keyring",
@@ -208,15 +208,15 @@
     },
     {
       "package": "rom3-j613-meta",
-      "version": "1-12",
-      "file": "rom3-j613-meta-1-12-any.pkg.tar.xz",
-      "sha256": "9c3da7ca023e3635689c7b0be40f007786559d755e2241fd43fa379d9a077247"
+      "version": "1-13",
+      "file": "rom3-j613-meta-1-13-any.pkg.tar.xz",
+      "sha256": "fae74bcee95b49c1067a2c29672c1a0ff26ef912793142ba2062153e9c65971b"
     },
     {
       "package": "rom3-j613-release",
-      "version": "1-8",
-      "file": "rom3-j613-release-1-8-any.pkg.tar.xz",
-      "sha256": "16416b25a5205dcdebfc46f141a45b70c7d00fdcce2f3bdf4a14167885a95b6a"
+      "version": "1-9",
+      "file": "rom3-j613-release-1-9-any.pkg.tar.xz",
+      "sha256": "036dd619e167882c36a2175a1633d11aaaed2c8644e7ec1ee80f248d4eb97d02"
     },
     {
       "package": "rom3-kbd-light",
@@ -316,9 +316,9 @@
     },
     {
       "package": "rom3-userpages",
-      "version": "7.3.0.aurora1-45",
-      "file": "rom3-userpages-7.3.0.aurora1-45-aarch64.pkg.tar.xz",
-      "sha256": "8c4f898ab5fe092e45cd953860cb06e56f7ac3f4de9ba608f492ebaebde9c2b5"
+      "version": "7.3.0.aurora1-46",
+      "file": "rom3-userpages-7.3.0.aurora1-46-aarch64.pkg.tar.xz",
+      "sha256": "0f59cccf894755c523c6c9017c588c7a01bc7841afc9227f6efa1c90e29521d2"
     },
     {
       "package": "rom3-wifi-firmware",

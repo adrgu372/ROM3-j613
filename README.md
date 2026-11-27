@@ -25,7 +25,7 @@ Board:           apple,j613
 Hardware:        MacBook Air 13-inch M3
 Distribution:    ROM3 (VARIANT_ID=j613)
 Kernel:          7.3.0-1-45-ARCH
-ROM3 kernel:     linux-rom3 7.3.0.aurora1-45
+ROM3 kernel:     linux-rom3 7.3.0.aurora1-46
 Bootloader:      rom3 1.0.0b17-2
 U-Boot:          uboot-rom3 2026.07.aurora11-1
 Display:         2560x1664 internal panel, 64-row notch exposed
@@ -103,15 +103,17 @@ update guard and initial local test packages now exist.
 
 The signed package feed is public:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/stable-20261127.4
+https://github.com/adrgu372/ROM3-j613/releases/tag/stable-20261127.5
 
 The snapshot contains the complete direct dependency closure of the
-meta-package. Kernel 45 carries the SIO protocol-10 tables required by the b17 bootloader,
-and both the 47 bootloader audio scenarios and the live J613 audio/display checks
-pass. The bootloader's external-DCP default is explicitly disabled on this board because
-it crashes the primary DCP with the current 14.7 firmware. Its keyring package
-repopulates and locally trusts the ROM3 signing key after Aurora creates the
-machine's pacman master key.
+meta-package. Kernel 46 retains the SIO protocol-10 tables required by the b17
+bootloader and adds bounded retries for the transient resume-time `EBUSY`
+response from the trackpad actuator, so host-driven click feedback remains
+enabled. Both the 47 bootloader audio scenarios and the live J613
+audio/display checks pass. The bootloader's external-DCP default is explicitly
+disabled on this board because it crashes the primary DCP with the current
+14.7 firmware. Its keyring package repopulates and locally trusts the ROM3
+signing key after Aurora creates the machine's pacman master key.
 
 The b14.1-to-b17 bootloader delta also exposes the full notch-aware panel geometry,
 reads panel brightness metadata from the ADT, selects the matching SIO
