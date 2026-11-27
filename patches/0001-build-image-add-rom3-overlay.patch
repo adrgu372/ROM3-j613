@@ -70,7 +70,7 @@ index df8224a..0029860 100755
 +  [[ $pkg == *.sig ]] && continue
 +  pinned+=("/${pkg#"$mountroot"/}")
 +done
-+chroot "$mountroot" pacman -U --noconfirm --nodeps "${pinned[@]}"
++chroot "$mountroot" pacman -U --noconfirm -dd "${pinned[@]}"
 +sed -i '\|^Include = /tmp/rom3-j613-bootstrap.conf$|d' "$mountroot/etc/pacman.conf"
 +rm -f "$mountroot/tmp/rom3-j613-bootstrap.conf"
 +# Switch from the temporary bootstrap to the package-owned configuration.
