@@ -1,5 +1,5 @@
 diff --git a/scripts/build-image b/scripts/build-image
-index df8224a..4850787 100755
+index df8224a..0029860 100755
 --- a/scripts/build-image
 +++ b/scripts/build-image
 @@ -4,8 +4,13 @@ trap 'status=$?; echo "Aurora image failed ($status) at line $LINENO: $BASH_COMM
@@ -59,7 +59,7 @@ index df8224a..4850787 100755
 +pathlib.Path(ignore_file).write_text("IgnorePkg = " + " ".join(names) + "\n")
 +pathlib.Path(names_file).write_text("\n".join(names) + "\n")
 +PY
-+chroot "$mountroot" pacman -S --noconfirm --needed openssl openssl-3 plymouth asahi-alarm-keyring
++chroot "$mountroot" pacman -S --noconfirm --needed openssl openssl-3 plymouth
 +# The tested kernel and bootloader form an intentional mutual dependency:
 +# linux-rom3 provides the CTXR window and rom3 requires a CTXR kernel. Pacman
 +# cannot partially solve that cycle while all pinned packages are still file
