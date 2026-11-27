@@ -113,7 +113,7 @@ index df8224a..0029860 100755
 +  [[ -v rom3_pinned[$package] ]] || filtered+=("$package")
 +done
 +packages=("${filtered[@]}")
-+if chroot "$mountroot" pacman -Q upower >/dev/null 2>&1; then
++if [[ $(chroot "$mountroot" pacman -Qq upower 2>/dev/null || true) == upower ]]; then
 +  chroot "$mountroot" pacman -Rdd --noconfirm upower
 +fi
  # GitHub release downloads sometimes stall; finished packages stay cached.
