@@ -89,7 +89,7 @@
     {
       "package": "mesa-rom3",
       "version": "1:26.3.0_devel.202611150611.d4ad4a4dce6-1",
-      "file": "mesa-rom3-1:26.3.0_devel.202611150611.d4ad4a4dce6-1-aarch64.pkg.tar.xz",
+      "file": "mesa-rom3-1.26.3.0_devel.202611150611.d4ad4a4dce6-1-aarch64.pkg.tar.xz",
       "sha256": "eddd5f72d2dbe36b6cb2856ab919cc2e4d1edf342ebec573624ed51e0dd1635d"
     },
     {
@@ -214,9 +214,9 @@
     },
     {
       "package": "rom3-j613-release",
-      "version": "1-6",
-      "file": "rom3-j613-release-1-6-any.pkg.tar.xz",
-      "sha256": "c9ec35d6bd066a568f889358c72a61ea5213ff1217e350d9b904ec38efffb425"
+      "version": "1-7",
+      "file": "rom3-j613-release-1-7-any.pkg.tar.xz",
+      "sha256": "79edaf3170b50cf5016c03d4081630efc01bb83ae6e2d9f116b642cdfc42fb5a"
     },
     {
       "package": "rom3-kbd-light",
@@ -377,7 +377,7 @@
     {
       "package": "vulkan-rom3",
       "version": "1:26.3.0_devel.202611150611.d4ad4a4dce6-1",
-      "file": "vulkan-rom3-1:26.3.0_devel.202611150611.d4ad4a4dce6-1-aarch64.pkg.tar.xz",
+      "file": "vulkan-rom3-1.26.3.0_devel.202611150611.d4ad4a4dce6-1-aarch64.pkg.tar.xz",
       "sha256": "aaa1a493bf2136066a1af225a57c3d0efa2888d25e4692655bfe445ef415c69b"
     },
     {

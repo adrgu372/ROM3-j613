@@ -29,11 +29,15 @@ def main() -> int:
         if package.name.endswith(".sig"):
             continue
         info = subprocess.check_output(["pacman", "-Qip", package], text=True)
+        # GitHub rewrites the epoch separator ":" to "." in release assets.
+        # The package version still carries the epoch; only the downloadable
+        # filename is normalized.
+        asset_name = package.name.replace(":", ".")
         artifacts.append(
             {
                 "package": field(info, "Name"),
                 "version": field(info, "Version"),
-                "file": package.name,
+                "file": asset_name,
                 "sha256": subprocess.check_output(
                     ["sha256sum", package], text=True
                 ).split()[0],

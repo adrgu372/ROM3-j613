@@ -41,7 +41,10 @@ for package in "${packages[@]}"; do
     case $package in
         *.sig) continue ;;
     esac
-    staged="$destination/$(basename "$package")"
+    # GitHub rewrites the epoch separator ":" to "." in release asset names.
+    # Stage that same portable name so the database and manifest agree with
+    # the URLs the image builder will download.
+    staged="$destination/$(basename "$package" | tr ':' '.')"
     cp "$package" "$staged"
     package_files+=("$staged")
     GNUPGHOME="$gnupg" gpg --batch --yes --local-user "$key" --detach-sign "$staged"
