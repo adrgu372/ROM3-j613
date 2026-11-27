@@ -199,3 +199,21 @@ index df8224a..090ed5d 100755
  p.write_text(edgelib.seal(p.read_text(), sys.argv[3], sys.argv[4] or None, sys.argv[5]))
  PY
  if [[ -n $edge_tag ]]; then
+diff --git a/scripts/check-basics.py b/scripts/check-basics.py
+--- a/scripts/check-basics.py
++++ b/scripts/check-basics.py
+@@ -1145,11 +1145,11 @@
+     # Catch an absent or corrupt payload before publishing an image. Resolve
+     # Nix store/profile symlinks inside the finished root, as for other basics.
+     for size in (16, 22, 24, 32, 48, 64, 96, 128, 256, 512):
+-        for directory, name in (('apps', 'aurora-logo-icon'), ('places', 'start-here')):
++        for directory, name in (('apps', 'rom3-logo-icon'), ('places', 'start-here')):
+             path = root.path(f'{root.usr}/share/icons/hicolor/{size}x{size}/{directory}/{name}.png')
+             if not path.is_file() or path.read_bytes()[:8] != b'\x89PNG\r\n\x1a\n':
+-                return f'missing or invalid Aurora icon: {name} ({size}px)'
++                return f'missing or invalid ROM3 icon: {name} ({size}px)'
+     path = root.path(f'{root.usr}/share/pixmaps/system-logo-white.png')
+     if not path.is_file() or path.read_bytes()[:8] != b'\x89PNG\r\n\x1a\n':
+-        return 'missing or invalid Aurora About logo'
++        return 'missing or invalid ROM3 About logo'
+     return None
