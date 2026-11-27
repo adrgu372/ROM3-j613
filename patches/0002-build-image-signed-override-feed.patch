@@ -1,5 +1,5 @@
 diff --git a/scripts/build-image b/scripts/build-image
-index 0029860..6a97c71 100755
+index cd508e2..c4a6dad 100755
 --- a/scripts/build-image
 +++ b/scripts/build-image
 @@ -8,6 +8,16 @@ rom3_feed=${ROM3_FEED:-https://github.com/adrgu372/ROM3-j613/releases/download/s
@@ -130,7 +130,7 @@ index 0029860..6a97c71 100755
 +)
 +PY
 +fi
- chroot "$mountroot" pacman -S --noconfirm --needed openssl openssl-3 plymouth
+ chroot "$mountroot" pacman -S --noconfirm --needed openssl openssl-3 plymouth python
  # The tested kernel and bootloader form an intentional mutual dependency:
  # linux-rom3 provides the CTXR window and rom3 requires a CTXR kernel. Pacman
 @@ -138,7 +224,48 @@ sed -i "s|^Server = .*|Server = $rom3_feed|" "$mountroot/etc/pacman.d/rom3-j613-

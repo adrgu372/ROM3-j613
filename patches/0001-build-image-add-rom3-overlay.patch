@@ -1,5 +1,5 @@
 diff --git a/scripts/build-image b/scripts/build-image
-index df8224a..0029860 100755
+index df8224a..cd508e2 100755
 --- a/scripts/build-image
 +++ b/scripts/build-image
 @@ -4,8 +4,13 @@ trap 'status=$?; echo "Aurora image failed ($status) at line $LINENO: $BASH_COMM
@@ -59,7 +59,7 @@ index df8224a..0029860 100755
 +pathlib.Path(ignore_file).write_text("IgnorePkg = " + " ".join(names) + "\n")
 +pathlib.Path(names_file).write_text("\n".join(names) + "\n")
 +PY
-+chroot "$mountroot" pacman -S --noconfirm --needed openssl openssl-3 plymouth
++chroot "$mountroot" pacman -S --noconfirm --needed openssl openssl-3 plymouth python
 +# The tested kernel and bootloader form an intentional mutual dependency:
 +# linux-rom3 provides the CTXR window and rom3 requires a CTXR kernel. Pacman
 +# cannot partially solve that cycle while all pinned packages are still file
@@ -82,7 +82,7 @@ index df8224a..0029860 100755
  python3 - "$root/scripts" "$mountroot/etc/pacman.conf" "$tag" "$edge_tag" <<'PY'
  from pathlib import Path
  import sys
-@@ -84,23 +147,46 @@ import edgelib
+@@ -84,23 +147,50 @@ import edgelib
  p=Path(sys.argv[2])
  p.write_text(edgelib.add_sections(p.read_text(), sys.argv[3], sys.argv[4] or None))
  PY
@@ -122,7 +122,11 @@ index df8224a..0029860 100755
    (( attempt++ < 3 ))
    sleep 30
  done
-+chroot "$mountroot" pacman -Dk
++mapfile -t missing_dependencies < <(chroot "$mountroot" pacman -T || true)
++if (( ${#missing_dependencies[@]} )); then
++  chroot "$mountroot" pacman -S --noconfirm --asdeps "${missing_dependencies[@]}"
++fi
++[[ -z $(chroot "$mountroot" pacman -T) ]]
 +chroot "$mountroot" rom3-j613-check
 +chroot "$mountroot" /usr/libexec/rom3-j613/set-os-identity
 +grep -qx 'NAME="ROM3"' "$mountroot/etc/os-release"
@@ -134,7 +138,7 @@ index df8224a..0029860 100755
  # A fresh Arch root generates no locale, so sessions ran in the C locale and
  # gnome-terminal refused to start. Generate a UTF-8 default; first-boot
  # setup may change the language afterwards.
-@@ -113,8 +199,8 @@ if chroot "$mountroot" pacman -Q linux-aarch64 >/dev/null 2>&1; then
+@@ -113,8 +203,8 @@ if chroot "$mountroot" pacman -Q linux-aarch64 >/dev/null 2>&1; then
    chroot "$mountroot" pacman -R --noconfirm linux-aarch64
  fi
  [[ ! -e $mountroot/etc/mkinitcpio.d/linux-aarch64.preset ]]
@@ -145,7 +149,7 @@ index df8224a..0029860 100755
  # The camera filter is on for every user; its install script applies the
  # package's user preset.
  [[ -L $mountroot/etc/systemd/user/pipewire.service.wants/aurora-camera-denoise.service ]]
-@@ -125,16 +211,13 @@ chroot "$mountroot" pacman -Q alsa-utils-aurora aurora-system-fixes aurora-flatp
+@@ -125,16 +215,13 @@ chroot "$mountroot" pacman -Q alsa-utils-aurora aurora-system-fixes aurora-flatp
  # the package's system preset.
  [[ -L $mountroot/etc/systemd/system/multi-user.target.wants/aurora-wifi-firmware.service ]]
  # The Touch ID security key is opt in: installed, never enabled by the image.
@@ -165,7 +169,7 @@ index df8224a..0029860 100755
  # Stock upower is gone; upower-aurora (which provides upower) replaced it.
  refute installed "$mountroot" upower
  chroot "$mountroot" userdel -r alarm
-@@ -144,7 +227,8 @@ printf 'uninitialized\n' > "$mountroot/etc/machine-id"
+@@ -144,7 +231,8 @@ printf 'uninitialized\n' > "$mountroot/etc/machine-id"
  # An install's first boot applies every preset (enable-only, as Arch builds
  # systemd). Apply them here, so the image already has what they enable.
  chroot "$mountroot" systemctl preset-all --preset-mode=enable-only
@@ -175,7 +179,7 @@ index df8224a..0029860 100755
  # asahi-scripts' generic first-boot rewrites fstab to its @/@home layout and
  # randomizes the ESP ID. Aurora seals both filesystem layout and EFI identity.
  chroot "$mountroot" systemctl mask first-boot.service
-@@ -248,6 +332,7 @@ import sys
+@@ -248,6 +336,7 @@ import sys
  sys.path.insert(0, sys.argv[1])
  import edgelib
  p=Path(sys.argv[2])
