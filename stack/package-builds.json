@@ -172,9 +172,9 @@
     },
     {
       "package": "rom3-firmware",
-      "version": "20261018-6",
-      "file": "rom3-firmware-20261018-6-any.pkg.tar.xz",
-      "sha256": "76e0a8164e89373c5f6f66cf7942f78b680965eddc057ee841cdce73511a60e6"
+      "version": "20261018-7",
+      "file": "rom3-firmware-20261018-7-any.pkg.tar.xz",
+      "sha256": "627dd8ac866ec5f0f52831df7a0e6dcd7e22992ddb26deea04f040c0ee5bf925"
     },
     {
       "package": "rom3-firstboot",
@@ -214,9 +214,9 @@
     },
     {
       "package": "rom3-j613-release",
-      "version": "1-7",
-      "file": "rom3-j613-release-1-7-any.pkg.tar.xz",
-      "sha256": "79edaf3170b50cf5016c03d4081630efc01bb83ae6e2d9f116b642cdfc42fb5a"
+      "version": "1-8",
+      "file": "rom3-j613-release-1-8-any.pkg.tar.xz",
+      "sha256": "16416b25a5205dcdebfc46f141a45b70c7d00fdcce2f3bdf4a14167885a95b6a"
     },
     {
       "package": "rom3-kbd-light",

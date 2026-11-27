@@ -8,7 +8,10 @@ build() {
   add_module vfat
   add_file /usr/lib/modprobe.d/aurora-firmware-order.conf
   for binary in bash mount umount mkdir tr cpio grep modprobe udevadm; do
-    add_binary "$(command -v "$binary")"
+    local path
+    path=$(command -v "$binary" || true)
+    [[ -n $path ]] || path="/usr/bin/$binary"
+    add_binary "$path"
   done
   add_file /usr/libexec/aurora/peripheral-firmware
   add_file /usr/libexec/aurora/load-vendor-firmware
