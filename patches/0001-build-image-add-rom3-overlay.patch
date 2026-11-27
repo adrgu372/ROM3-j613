@@ -59,7 +59,7 @@ index df8224a..cd508e2 100755
 +pathlib.Path(ignore_file).write_text("IgnorePkg = " + " ".join(names) + "\n")
 +pathlib.Path(names_file).write_text("\n".join(names) + "\n")
 +PY
-+chroot "$mountroot" pacman -S --noconfirm --needed openssl openssl-3 plymouth python
++chroot "$mountroot" pacman -S --noconfirm --needed openssl openssl-3 plymouth python cpio
 +# The tested kernel and bootloader form an intentional mutual dependency:
 +# linux-rom3 provides the CTXR window and rom3 requires a CTXR kernel. Pacman
 +# cannot partially solve that cycle while all pinned packages are still file
