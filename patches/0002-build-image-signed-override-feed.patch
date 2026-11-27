@@ -1,5 +1,5 @@
 diff --git a/scripts/build-image b/scripts/build-image
-index cd508e2..c4a6dad 100755
+index 6590626..03ff608 100755
 --- a/scripts/build-image
 +++ b/scripts/build-image
 @@ -8,6 +8,16 @@ rom3_feed=${ROM3_FEED:-https://github.com/adrgu372/ROM3-j613/releases/download/s
@@ -86,7 +86,7 @@ index cd508e2..c4a6dad 100755
 +all_names = sorted(set(names) | set(override_packages))
 +pathlib.Path(ignore_file).write_text("IgnorePkg = " + " ".join(all_names) + "\n")
 +pathlib.Path(names_file).write_text("\n".join(all_names) + "\n")
- PY
++PY
 +if [[ -n $rom3_override_feed ]]; then
 +  python3 - "$mountroot/tmp/rom3-overrides.json" "$rom3_override_feed" "$mountroot/var/cache/pacman/pkg" "$mountroot/tmp/rom3-override-versions.tsv" <<'PY'
 +import hashlib
@@ -128,7 +128,7 @@ index cd508e2..c4a6dad 100755
 +pathlib.Path(versions_file).write_text(
 +    "".join(f"{name}\t{version}\n" for name, version in sorted(packages.items()))
 +)
-+PY
+ PY
 +fi
  chroot "$mountroot" pacman -S --noconfirm --needed openssl openssl-3 plymouth python cpio
  # The tested kernel and bootloader form an intentional mutual dependency:
