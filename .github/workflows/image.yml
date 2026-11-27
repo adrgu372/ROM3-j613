@@ -60,7 +60,7 @@ jobs:
           ROM3_OVERRIDE_FINGERPRINT: FA80FF234BCDF36211649321EB9845C8BAA89A4A
           ROM3_KEY_URL: https://raw.githubusercontent.com/adrgu372/ROM3-j613/main/repo/keys/rom3-j613-packages.pub
           ROM3_FINGERPRINT: FA80FF234BCDF36211649321EB9845C8BAA89A4A
-          ROM3_SOURCE_ROOT: ${{ github.workspace }}/rom3
+          ROM3_SOURCE_ROOT: /src/rom3
         run: |
           set -euo pipefail
           docker run --rm --privileged --ipc=host \
