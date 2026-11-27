@@ -1,12 +1,8 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: ROM3-j613 <packages@rom3-j613.invalid>
-Date: Mon, 23 Nov 2026 12:15:00 +0200
-Subject: [PATCH] build-image: admit a signed ROM3 override feed
-
----
+diff --git a/scripts/build-image b/scripts/build-image
+index 4850787..37f5010 100755
 --- a/scripts/build-image
 +++ b/scripts/build-image
-@@ -8,6 +8,16 @@
+@@ -8,6 +8,16 @@ rom3_feed=${ROM3_FEED:-https://github.com/adrgu372/ROM3-j613/releases/download/s
  rom3_manifest_url=${ROM3_MANIFEST_URL:-$rom3_feed/rom3-package-builds.json}
  rom3_key_url=${ROM3_KEY_URL:-https://raw.githubusercontent.com/adrgu372/ROM3-j613/main/repo/keys/rom3-j613-packages.pub}
  rom3_fingerprint=${ROM3_FINGERPRINT:-FA80FF234BCDF36211649321EB9845C8BAA89A4A}
@@ -23,7 +19,7 @@ Subject: [PATCH] build-image: admit a signed ROM3 override feed
  export AURORA_DEVICE_TREE_COMPATIBLE=/nonexistent
  profile=${1:?arch-kde required}
  [[ $profile == arch-kde ]] || { echo 'ROM3-j613 supports only arch-kde' >&2; exit 1; }
-@@ -88,6 +98,25 @@
+@@ -88,6 +98,25 @@ urllib.request.urlretrieve(sys.argv[1], sys.argv[2])
  PY
  chroot "$mountroot" pacman-key --add /tmp/rom3-j613-packages.pub
  chroot "$mountroot" pacman-key --lsign-key "$rom3_fingerprint"
@@ -49,7 +45,7 @@ Subject: [PATCH] build-image: admit a signed ROM3 override feed
  # Bootstrap the repository from a temporary include. The release package owns
  # the persistent files and installs them later in this transaction.
  install -Dm644 /dev/stdin "$mountroot/tmp/rom3-j613-bootstrap.conf" <<EOF
-@@ -99,26 +128,83 @@
+@@ -99,26 +128,83 @@ if ! grep -q '^Include = /tmp/rom3-j613-bootstrap.conf$' "$mountroot/etc/pacman.
    printf '\nInclude = /tmp/rom3-j613-bootstrap.conf\n' >> "$mountroot/etc/pacman.conf"
  fi
  chroot "$mountroot" pacman -Sy --noconfirm
@@ -90,7 +86,7 @@ Subject: [PATCH] build-image: admit a signed ROM3 override feed
 +all_names = sorted(set(names) | set(override_packages))
 +pathlib.Path(ignore_file).write_text("IgnorePkg = " + " ".join(all_names) + "\n")
 +pathlib.Path(names_file).write_text("\n".join(all_names) + "\n")
-+PY
+ PY
 +if [[ -n $rom3_override_feed ]]; then
 +  python3 - "$mountroot/tmp/rom3-overrides.json" "$rom3_override_feed" "$mountroot/var/cache/pacman/pkg" "$mountroot/tmp/rom3-override-versions.tsv" <<'PY'
 +import hashlib
@@ -132,12 +128,12 @@ Subject: [PATCH] build-image: admit a signed ROM3 override feed
 +pathlib.Path(versions_file).write_text(
 +    "".join(f"{name}\t{version}\n" for name, version in sorted(packages.items()))
 +)
- PY
++PY
 +fi
- chroot "$mountroot" pacman -S --noconfirm --needed openssl openssl-3
- pinned=()
- for pkg in "$mountroot"/var/cache/pacman/pkg/*.pkg.tar.*; do
-@@ -133,7 +219,48 @@
+ chroot "$mountroot" pacman -S --noconfirm --needed openssl openssl-3 plymouth asahi-alarm-keyring
+ # The tested kernel and bootloader form an intentional mutual dependency:
+ # linux-rom3 provides the CTXR window and rom3 requires a CTXR kernel. Pacman
+@@ -138,7 +224,48 @@ sed -i "s|^Server = .*|Server = $rom3_feed|" "$mountroot/etc/pacman.d/rom3-j613-
  if ! grep -q '^Include = /etc/pacman.d/rom3-j613.conf$' "$mountroot/etc/pacman.conf"; then
    printf '\nInclude = /etc/pacman.d/rom3-j613.conf\n' >> "$mountroot/etc/pacman.conf"
  fi
