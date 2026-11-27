@@ -4,6 +4,18 @@ image-candidates/
 rollback/
 pkg/
 src/
+packages/rom3/aura/
+packages/mesa-rom3/mesa/
+packages/uboot-rom3/u-boot/
+packages/alsa-ucm-conf-rom3/ucm/
+packages/iio-sensor-proxy-rom3/iio-sensor-proxy/
+packages/rom3-bless/aurora-bless/
+packages/*/src/
+packages/*/pkg/
+packages/*/*.tar.gz
+packages/*/*.tar.xz
+packages/*/*.tar.zst
+packages/*/*.tar.bz2
 repo/aarch64/*.pkg.tar.*
 repo/aarch64/*.sig
 repo/aarch64/*.db*
@@ -13,6 +25,7 @@ repo/overrides/
 *.img
 *.raw
 *.bin
+!packages/rom3/rom3_*.bin
 *.macho
 *.log
 __pycache__/

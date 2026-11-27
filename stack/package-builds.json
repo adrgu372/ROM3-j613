@@ -3,40 +3,22 @@
   "distribution": "ROM3-j613",
   "artifacts": [
     {
-      "package": "alsa-ucm-conf-aurora",
+      "package": "alsa-ucm-conf-rom3",
       "version": "10.aurora2-5",
-      "file": "alsa-ucm-conf-aurora-10.aurora2-5-any.pkg.tar.xz",
-      "sha256": "1b44e6e3e68e4fc91fc2a6366f9d2012d5c3aa93db8df22ee0df7cc2ad86363a"
+      "file": "alsa-ucm-conf-rom3-10.aurora2-5-any.pkg.tar.xz",
+      "sha256": "27e3e18c3867e435a9197f0c121a8d9e4765bfff692a09260e3e2716c3c27f00"
     },
     {
-      "package": "alsa-utils-aurora",
+      "package": "alsa-utils-rom3",
       "version": "1.2.16-1",
-      "file": "alsa-utils-aurora-1.2.16-1-aarch64.pkg.tar.xz",
-      "sha256": "cb45a689f8709aefc2e2e8ff8d46308db1f3762baf1b8301f5a82996a2fb17e9"
+      "file": "alsa-utils-rom3-1.2.16-1-aarch64.pkg.tar.xz",
+      "sha256": "19bef812fbc3cd0e8c1d661299a6129507f14876c124738450eae545a7e81dee"
     },
     {
       "package": "asahi-scripts",
       "version": "20261023-10",
       "file": "asahi-scripts-20261023-10-any.pkg.tar.xz",
       "sha256": "010d89983d7e0a0b144d4615576ea75bd6a28d76b4d1a9f8491c3c4a4f68fcb3"
-    },
-    {
-      "package": "aura",
-      "version": "1.0.0b17-1",
-      "file": "aura-1.0.0b17-1-aarch64.pkg.tar.xz",
-      "sha256": "0b9abad7394422787a6b35cdb2bd4ab0e902635fe4c8fec07227d5239292ef19"
-    },
-    {
-      "package": "aurora-audio",
-      "version": "4.1.aurora2-12",
-      "file": "aurora-audio-4.1.aurora2-12-any.pkg.tar.xz",
-      "sha256": "482805f9c6fa9e3b0033e354e460dd53906a1202c702cd47f5436190d4ff4ed4"
-    },
-    {
-      "package": "aurora-userpages",
-      "version": "7.3.0.aurora1-45",
-      "file": "aurora-userpages-7.3.0.aurora1-45-aarch64.pkg.tar.xz",
-      "sha256": "cab8419e63ebc8b5208148f3a177c571d5d987d5b5645fe98f70e73ae845e5ad"
     },
     {
       "package": "avd-fw",
@@ -51,10 +33,28 @@
       "sha256": "35486360bc6863240b17031dd22dea3db73acffbedbefde0af4afc0f0cc7fe4b"
     },
     {
+      "package": "fprintd-rom3",
+      "version": "1.94.5-5",
+      "file": "fprintd-rom3-1.94.5-5-aarch64.pkg.tar.xz",
+      "sha256": "c56abd6e7de7497b5a34e93db0fc2b1cb3a26c7a326c887c3233fec9afccf00d"
+    },
+    {
+      "package": "iio-sensor-proxy-rom3",
+      "version": "3.9.aurora1-1",
+      "file": "iio-sensor-proxy-rom3-3.9.aurora1-1-aarch64.pkg.tar.xz",
+      "sha256": "7aa2d6b8951d24c844cd35a003edbbe72289bc903d6b88f853486fb96a955dc4"
+    },
+    {
       "package": "kwin",
       "version": "6.8.2-2",
       "file": "kwin-6.8.2-2-aarch64.pkg.tar.xz",
       "sha256": "74876e5adbdc7d2c6dc718013abeba44c018d0d6b629959bd2a33b49dd093d12"
+    },
+    {
+      "package": "libfprint-rom3",
+      "version": "1.94.100-10",
+      "file": "libfprint-rom3-1.94.100-10-aarch64.pkg.tar.xz",
+      "sha256": "767a2f0841d361b3b37663840292d0120506d7bf5e659273f4f6cfdca58bc9d2"
     },
     {
       "package": "libpipewire",
@@ -69,16 +69,16 @@
       "sha256": "9fc7aedc4079fadbef1fd7079076b781bee45431d9e534b7c45b82c39ad17d9c"
     },
     {
-      "package": "linux-aurora",
+      "package": "linux-rom3",
       "version": "7.3.0.aurora1-45",
-      "file": "linux-aurora-7.3.0.aurora1-45-aarch64.pkg.tar.xz",
-      "sha256": "4aaa8d672d5712e71b4f2789c946cfe8239bdba52648ad54dd4e443d359b201d"
+      "file": "linux-rom3-7.3.0.aurora1-45-aarch64.pkg.tar.xz",
+      "sha256": "c8a9693bf8f12a311cf36fa0598fb0af9ef6034e09329a1908c1db5f6ee47a87"
     },
     {
-      "package": "linux-aurora-headers",
+      "package": "linux-rom3-headers",
       "version": "7.3.0.aurora1-45",
-      "file": "linux-aurora-headers-7.3.0.aurora1-45-aarch64.pkg.tar.xz",
-      "sha256": "93211ba8082aeaac88457898db78ff3e620078f2013cdb45ae7b78e816e9c7cc"
+      "file": "linux-rom3-headers-7.3.0.aurora1-45-aarch64.pkg.tar.xz",
+      "sha256": "0ad4453a9809ac11691bc12f6b0b92767d7b394d96b8a382f02fcb5e8be7f012"
     },
     {
       "package": "lsp-plugins-lv2",
@@ -87,10 +87,16 @@
       "sha256": "b2efbd447b668f6bbc40ceeb3d9a9b3bcd026394e47389264310b1384a887e42"
     },
     {
-      "package": "mesa-aurora",
+      "package": "mesa-rom3",
       "version": "1:26.3.0_devel.202611150611.d4ad4a4dce6-1",
-      "file": "mesa-aurora-1_26.3.0_devel.202611150611.d4ad4a4dce6-1-aarch64.pkg.tar.xz",
-      "sha256": "e057bd3d1e0fdefb43384b0612f0a4c0b6509c3d776df508eda2905247431442"
+      "file": "mesa-rom3-1:26.3.0_devel.202611150611.d4ad4a4dce6-1-aarch64.pkg.tar.xz",
+      "sha256": "eddd5f72d2dbe36b6cb2856ab919cc2e4d1edf342ebec573624ed51e0dd1635d"
+    },
+    {
+      "package": "networkmanager-rom3",
+      "version": "1.58.1-5",
+      "file": "networkmanager-rom3-1.58.1-5-aarch64.pkg.tar.xz",
+      "sha256": "66e56d9af74f5e8f458fba080524e85376abf25f7b3ddb1eb36b59fac93e41c8"
     },
     {
       "package": "pipewire",
@@ -117,10 +123,82 @@
       "sha256": "1a7d104d478342a8c9dee7f86b7f6a1c1b1a974b178b08fcf1f57e91d01c3d26"
     },
     {
+      "package": "plymouth-theme-rom3",
+      "version": "1-5",
+      "file": "plymouth-theme-rom3-1-5-any.pkg.tar.xz",
+      "sha256": "f39cdc1a70ee8e7b5e2423add71b0d14ad5c6de0b90fbf36a804e9a6eb74a5b1"
+    },
+    {
+      "package": "rom3",
+      "version": "1.0.0b17-2",
+      "file": "rom3-1.0.0b17-2-aarch64.pkg.tar.xz",
+      "sha256": "b56a1956315c14150560e3db705c7981b261029810cb406ef19e89dfcda8e1f3"
+    },
+    {
+      "package": "rom3-audio",
+      "version": "4.1.aurora2-12",
+      "file": "rom3-audio-4.1.aurora2-12-any.pkg.tar.xz",
+      "sha256": "a30ccd86ace666c37ab858fbd3a3b9ac605e11525df47f6ac9e47002d63c45c3"
+    },
+    {
+      "package": "rom3-bless",
+      "version": "0.4.4.aurora5-1",
+      "file": "rom3-bless-0.4.4.aurora5-1-aarch64.pkg.tar.xz",
+      "sha256": "8e5ffabee9f60c14a666705dd3baae5852a6b052009fa9ba9a6c4cfb1939a596"
+    },
+    {
+      "package": "rom3-boot",
+      "version": "20261018-21",
+      "file": "rom3-boot-20261018-21-any.pkg.tar.xz",
+      "sha256": "c5912aa63d1480eb2da6529673c0f985e32fd468665e7cf7b3f12c44d7bd7971"
+    },
+    {
+      "package": "rom3-btsync",
+      "version": "0.4.4.aurora5-1",
+      "file": "rom3-btsync-0.4.4.aurora5-1-aarch64.pkg.tar.xz",
+      "sha256": "642e01454fd13264c7798674c13bd1dc4c89d36342c03bbb0eab286d4545ba28"
+    },
+    {
+      "package": "rom3-camera-denoise",
+      "version": "0.1.0-9",
+      "file": "rom3-camera-denoise-0.1.0-9-aarch64.pkg.tar.xz",
+      "sha256": "d96c23d975a4c06da17488c78da07559672ef02be7b3d44b101353e620405ea4"
+    },
+    {
+      "package": "rom3-fido",
+      "version": "0.2.0-2",
+      "file": "rom3-fido-0.2.0-2-aarch64.pkg.tar.xz",
+      "sha256": "3eb0952c6f52fdd43da7359f3b09212126f144201d40246e7d20e40169546773"
+    },
+    {
+      "package": "rom3-firmware",
+      "version": "20261018-6",
+      "file": "rom3-firmware-20261018-6-any.pkg.tar.xz",
+      "sha256": "76e0a8164e89373c5f6f66cf7942f78b680965eddc057ee841cdce73511a60e6"
+    },
+    {
+      "package": "rom3-firstboot",
+      "version": "0.1.13-6",
+      "file": "rom3-firstboot-0.1.13-6-any.pkg.tar.xz",
+      "sha256": "3c2dfa7728dc7023324545fecc87fd4e84895d271e0ec5a671f8054a4c0c56d2"
+    },
+    {
+      "package": "rom3-gamemode",
+      "version": "0.1.13-6",
+      "file": "rom3-gamemode-0.1.13-6-any.pkg.tar.xz",
+      "sha256": "0dda3893049bba020215c759ecf04487f8b3a9c2bcd27562ad1394138c002690"
+    },
+    {
+      "package": "rom3-j613-control",
+      "version": "1-2",
+      "file": "rom3-j613-control-1-2-aarch64.pkg.tar.xz",
+      "sha256": "7d2e80a56b663caed6288ad5fffc13c7840832dd7fb5cc16834b690d82007f43"
+    },
+    {
       "package": "rom3-j613-guard",
-      "version": "1-8",
-      "file": "rom3-j613-guard-1-8-any.pkg.tar.xz",
-      "sha256": "868783c17579d9e7e62a68fd7afec8ca1bfa682187233d5793717fad2a160847"
+      "version": "1-11",
+      "file": "rom3-j613-guard-1-11-any.pkg.tar.xz",
+      "sha256": "a4046d7bca9e033a1af8cb890ecf5303726a5dc13176c117af88578664e306ff"
     },
     {
       "package": "rom3-j613-keyring",
@@ -130,15 +208,129 @@
     },
     {
       "package": "rom3-j613-meta",
-      "version": "1-8",
-      "file": "rom3-j613-meta-1-8-any.pkg.tar.xz",
-      "sha256": "1792e6cd84fd17cc458c72acfad009588ca95bc380596f4b1b836ce2381b3072"
+      "version": "1-12",
+      "file": "rom3-j613-meta-1-12-any.pkg.tar.xz",
+      "sha256": "9c3da7ca023e3635689c7b0be40f007786559d755e2241fd43fa379d9a077247"
     },
     {
       "package": "rom3-j613-release",
-      "version": "1-3",
-      "file": "rom3-j613-release-1-3-any.pkg.tar.xz",
-      "sha256": "98296ee6d7dc2eb7e12b1f5de0a2d7d6fe8ca570288ca5f329fe75f0115c28db"
+      "version": "1-6",
+      "file": "rom3-j613-release-1-6-any.pkg.tar.xz",
+      "sha256": "c9ec35d6bd066a568f889358c72a61ea5213ff1217e350d9b904ec38efffb425"
+    },
+    {
+      "package": "rom3-kbd-light",
+      "version": "0.1.0-4",
+      "file": "rom3-kbd-light-0.1.0-4-aarch64.pkg.tar.xz",
+      "sha256": "a331222869f9aacef1558f627a3f0e4fb460932765907d71a2f402ac636935e9"
+    },
+    {
+      "package": "rom3-keep-config",
+      "version": "1-2",
+      "file": "rom3-keep-config-1-2-any.pkg.tar.xz",
+      "sha256": "c2c4c6305c4d2573031923ff8bed5d4a0703fe5be9bcd1430e7100e6a545685f"
+    },
+    {
+      "package": "rom3-keyring",
+      "version": "20261018-3",
+      "file": "rom3-keyring-20261018-3-any.pkg.tar.xz",
+      "sha256": "0be427d54d64fabe23d453a2dd330d1db4d013221ab297eb26b979951c88a819"
+    },
+    {
+      "package": "rom3-logos",
+      "version": "1-2",
+      "file": "rom3-logos-1-2-any.pkg.tar.xz",
+      "sha256": "c3a334d5dad31af84ee480245d6c04da0372ee5cea7b4af7129754cdf18408d0"
+    },
+    {
+      "package": "rom3-m5-platform-config",
+      "version": "1-1",
+      "file": "rom3-m5-platform-config-1-1-any.pkg.tar.xz",
+      "sha256": "4acda56a22dec8af4c49f82610cefcc8db953f6f550ae75139abe92ff4542161"
+    },
+    {
+      "package": "rom3-neo-platform-config",
+      "version": "0.1.0-2",
+      "file": "rom3-neo-platform-config-0.1.0-2-any.pkg.tar.xz",
+      "sha256": "083928dc2adb43d122cec70c40c885cc157d9a67640fe54851fd5aa472862743"
+    },
+    {
+      "package": "rom3-nvram",
+      "version": "0.4.4.aurora5-1",
+      "file": "rom3-nvram-0.4.4.aurora5-1-aarch64.pkg.tar.xz",
+      "sha256": "eb160d47aaa3b2ff30b1927871ce2c6f122d9eb18348032ccda7f566145200e9"
+    },
+    {
+      "package": "rom3-panel-nits",
+      "version": "0.4.4.aurora5-1",
+      "file": "rom3-panel-nits-0.4.4.aurora5-1-aarch64.pkg.tar.xz",
+      "sha256": "377e3a1700e3661b5297b89e067b826a49c9e4bd044687bd4056803ca520fcde"
+    },
+    {
+      "package": "rom3-power-budget",
+      "version": "0.1.13-6",
+      "file": "rom3-power-budget-0.1.13-6-any.pkg.tar.xz",
+      "sha256": "e8f520eb2135a57b0b31cc8dd8545b18df433590701a0b3a89bba137f8cd6b5f"
+    },
+    {
+      "package": "rom3-secboot",
+      "version": "0.1.13-6",
+      "file": "rom3-secboot-0.1.13-6-any.pkg.tar.xz",
+      "sha256": "996cef9d5abeaf46ced3e5adaecac97cff590e763ec4b35edf688f454e33b419"
+    },
+    {
+      "package": "rom3-sep",
+      "version": "1-29",
+      "file": "rom3-sep-1-29-any.pkg.tar.xz",
+      "sha256": "772b22bb8122fbd99635f21e739ffe4aef94f7711a8dc17343063f2e0fa27a44"
+    },
+    {
+      "package": "rom3-sep-host-state",
+      "version": "1-1",
+      "file": "rom3-sep-host-state-1-1-any.pkg.tar.xz",
+      "sha256": "4e91831c654785cdc587378b0775dc030aa74dbb1deb9013c7c597aef31a3f3e"
+    },
+    {
+      "package": "rom3-sep-luks",
+      "version": "0.3.0-1",
+      "file": "rom3-sep-luks-0.3.0-1-aarch64.pkg.tar.xz",
+      "sha256": "e8e9901422d9fc4ae096816748206cd99939a2dea9ef90e7df0c77ac07af3798"
+    },
+    {
+      "package": "rom3-sep-sk",
+      "version": "0.1.0-1",
+      "file": "rom3-sep-sk-0.1.0-1-aarch64.pkg.tar.xz",
+      "sha256": "6b920a59764ba4de761592620090366518cc23387501e71682e1414b59047541"
+    },
+    {
+      "package": "rom3-system-fixes",
+      "version": "1-16",
+      "file": "rom3-system-fixes-1-16-any.pkg.tar.xz",
+      "sha256": "8385e1efe7ffc6ecf12ce70b89c3b2e15290323aa0acec0fa97838dc083489d0"
+    },
+    {
+      "package": "rom3-touchid-rearm",
+      "version": "1-5",
+      "file": "rom3-touchid-rearm-1-5-aarch64.pkg.tar.xz",
+      "sha256": "309ba0c2f89c2d58c28941ab4af28403b10ddf531b35fe8bdfc38a333b37e538"
+    },
+    {
+      "package": "rom3-userpages",
+      "version": "7.3.0.aurora1-45",
+      "file": "rom3-userpages-7.3.0.aurora1-45-aarch64.pkg.tar.xz",
+      "sha256": "8c4f898ab5fe092e45cd953860cb06e56f7ac3f4de9ba608f492ebaebde9c2b5"
+    },
+    {
+      "package": "rom3-wifi-firmware",
+      "version": "0.2-1",
+      "file": "rom3-wifi-firmware-0.2-1-any.pkg.tar.xz",
+      "sha256": "2e74c6089262f881c29e728850fc713bf0ceb656542dc9b51cde6af7e2b1e54d"
+    },
+    {
+      "package": "rom3-xart",
+      "version": "0.2.0-1",
+      "file": "rom3-xart-0.2.0-1-any.pkg.tar.xz",
+      "sha256": "65bc1848b108e565a1f64fc535f081e556cddbe438560cb2ad36d808696c0fee"
     },
     {
       "package": "spandsp",
@@ -159,10 +351,10 @@
       "sha256": "5b6b3065266d106fb9db13709b504959e3cf974893d9a38a83341538811f5c2f"
     },
     {
-      "package": "speakersafetyd-aurora-profiles",
+      "package": "speakersafetyd-rom3-profiles",
       "version": "1-1",
-      "file": "speakersafetyd-aurora-profiles-1-1-any.pkg.tar.xz",
-      "sha256": "75965845eb22ebb123c075c68e9c58d5431e02700a1da84f98dc6629aeabf9fd"
+      "file": "speakersafetyd-rom3-profiles-1-1-any.pkg.tar.xz",
+      "sha256": "1d95ec87be66b69118a137defc0c0cb3939ec45d4dd784acb49629ed8870f208"
     },
     {
       "package": "triforce-lv2",
@@ -171,16 +363,22 @@
       "sha256": "d35ff8e3a9d4eee650b20d2933ef095d89f752002a95c0aefdd3f5a49e26d683"
     },
     {
-      "package": "uboot-aurora",
+      "package": "uboot-rom3",
       "version": "2026.07.aurora11-1",
-      "file": "uboot-aurora-2026.07.aurora11-1-aarch64.pkg.tar.xz",
-      "sha256": "26cf66e0a89bc43e10212e45500a63f1c674253df626ba62c8d621a442c3cb49"
+      "file": "uboot-rom3-2026.07.aurora11-1-aarch64.pkg.tar.xz",
+      "sha256": "b253e16d6c16bb0069f8c17c196be23f5ef675b94b7958a7af579f764ff3c834"
     },
     {
-      "package": "vulkan-aurora",
+      "package": "upower-rom3",
+      "version": "1.91.5.aurora1-5",
+      "file": "upower-rom3-1.91.5.aurora1-5-aarch64.pkg.tar.xz",
+      "sha256": "8f14aa28a9775169b647e5ef79f64123dd84e4430c57440499e29847c818b159"
+    },
+    {
+      "package": "vulkan-rom3",
       "version": "1:26.3.0_devel.202611150611.d4ad4a4dce6-1",
-      "file": "vulkan-aurora-1_26.3.0_devel.202611150611.d4ad4a4dce6-1-aarch64.pkg.tar.xz",
-      "sha256": "cc1e9af6ff394ee5254fc1c7b8bcd1270d610d059542969d2502b4e2ff8ccc56"
+      "file": "vulkan-rom3-1:26.3.0_devel.202611150611.d4ad4a4dce6-1-aarch64.pkg.tar.xz",
+      "sha256": "aaa1a493bf2136066a1af225a57c3d0efa2888d25e4692655bfe445ef415c69b"
     },
     {
       "package": "wireplumber",

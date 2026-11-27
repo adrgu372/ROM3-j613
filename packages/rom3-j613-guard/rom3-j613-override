@@ -93,6 +93,8 @@ def validate_manifest(document: object) -> dict[str, object]:
     for name, version in packages.items():
         if not isinstance(name, str) or not PACKAGE_RE.fullmatch(name):
             fail(f"invalid package name in manifest: {name!r}")
+        if re.search(r"aura|aurora", name, re.IGNORECASE):
+            fail(f"legacy package name in manifest: {name!r}")
         if not isinstance(version, str) or not VERSION_RE.fullmatch(version):
             fail(f"invalid version for {name}: {version!r}")
 

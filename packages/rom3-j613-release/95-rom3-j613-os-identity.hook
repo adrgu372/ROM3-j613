@@ -1,0 +1,13 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Path
+Target = usr/lib/os-release
+Target = etc/os-release
+Target = etc/lsb-release
+Target = etc/issue
+
+[Action]
+Description = Restoring the ROM3 operating-system identity...
+When = PostTransaction
+Exec = /usr/libexec/rom3-j613/set-os-identity

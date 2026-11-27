@@ -1,0 +1,19 @@
+{
+  "asset": "ROM3 penguin emblem",
+  "source": "User-provided ROM3-j613 artwork",
+  "license": "Project asset",
+  "master": "ROM3Logo-source.png",
+  "master_sha256": "6ccdbad376038dcd2db2f45683fa7ef7e61a381d7e56c99c6053bc2224b1c93a",
+  "files_sha256": {
+    "ROM3Logo-16.png": "cc1c1062dbd0e59794ce3d9c3069dda73e24e2a4b788ffdee1a60e0ebe7f5373",
+    "ROM3Logo-22.png": "38bbdc33635e6593d5b3ed1b3ca58e943d3656ea1f209ef024550560bb94a0af",
+    "ROM3Logo-24.png": "dbe3da057564e55e1ee2641a165f34a67177da03f9b042acc3d14d504f989aab",
+    "ROM3Logo-32.png": "9acb173b45d72089b87cd576619e32ffc08d24a0e5c6ba4c41ad59a8bc720732",
+    "ROM3Logo-48.png": "ba74848f876517cfa29cf787172314b004da201f7496e0444a344353e3efda9e",
+    "ROM3Logo-64.png": "4c3747c91663be46161fd12a6bdd4c8ec630eb8ab11099cdc775fb2f1ff99368",
+    "ROM3Logo-96.png": "4a4c3227c6e7bfb8d7c547e52db2b6d92fb1f4f78244804c8243137c00843c36",
+    "ROM3Logo-128.png": "86e5d1c8d03660b1c66209e02a00d9063a84c92d6850f103317319ce026b6471",
+    "ROM3Logo-256.png": "5ea141240e3a8cbacad1e10ba0250ae0276adcb4f14e1edff96170645f3ee3ef",
+    "ROM3Logo-512.png": "1ffb10d7bca5f1f47506c3a5d028cacd82d078408638a29d939864d6347e0151"
+  }
+}

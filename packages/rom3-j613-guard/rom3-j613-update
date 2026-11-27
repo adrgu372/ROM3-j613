@@ -5,6 +5,9 @@ quarantine=${ROM3_QUARANTINE:-/usr/share/rom3-j613/quarantine.packages}
 override_manifest=${ROM3_OVERRIDE_MANIFEST:-/var/lib/rom3-j613/override/manifest.json}
 pacman_conf=${ROM3_PACMAN_CONF:-/etc/pacman.conf}
 mode=${1:---check}
+apply_mode=false
+safe_mode=false
+approved_mode=false
 
 if (( EUID != 0 )); then
     echo "rom3-j613-update must run as root" >&2
@@ -13,11 +16,15 @@ fi
 
 case $mode in
     --check|--apply) ;;
+    --check-safe|--apply-safe) safe_mode=true ;;
+    --check-approved|--apply-approved) approved_mode=true ;;
     *)
-        echo "usage: rom3-j613-update [--check|--apply]" >&2
+        echo "usage: rom3-j613-update [--check|--apply|--check-safe|--apply-safe|--check-approved|--apply-approved]" >&2
         exit 2
         ;;
 esac
+[[ $mode != --apply && $mode != --apply-safe && $mode != --apply-approved ]] ||
+    apply_mode=true
 
 [[ -r $quarantine ]] || {
     echo "missing quarantine list: $quarantine" >&2
@@ -32,6 +39,7 @@ blocked=$(mktemp)
 approved=$(mktemp)
 approved_pending=$(mktemp)
 quarantine_sorted=$(mktemp)
+ordinary_pending=$(mktemp)
 pacman_config=
 swapfile=${ROM3_SWAPFILE:-/swap/swapfile}
 swapfile_kib=
@@ -55,17 +63,18 @@ restore_swapfile() {
 cleanup() {
     restore_swapfile || true
     rm -f "$pending" "$pending_details" "$blocked" "$approved" \
-        "$approved_pending" "$quarantine_sorted"
+        "$approved_pending" "$quarantine_sorted" "$ordinary_pending"
     [[ -z $pacman_config ]] || rm -f "$pacman_config"
 }
 trap cleanup EXIT
 
 pacman -Qu 2>/dev/null |
     awk 'NF {print $1 "\t" $NF}' > "$pending_details" || true
-cut -f1 "$pending_details" | sort -u > "$pending"
-sort -u "$quarantine" > "$quarantine_sorted"
+cut -f1 "$pending_details" | LC_ALL=C sort -u > "$pending"
+LC_ALL=C sort -u "$quarantine" > "$quarantine_sorted"
+LC_ALL=C comm -23 "$pending" "$quarantine_sorted" > "$ordinary_pending"
 
-if [[ -f $override_manifest ]]; then
+if ! $safe_mode && [[ -f $override_manifest ]]; then
     python3 - "$override_manifest" > "$approved" <<'PY'
 import json
 import re
@@ -81,6 +90,8 @@ if (
 for name, version in sorted(manifest["packages"].items()):
     if not re.fullmatch(r"[a-z0-9@._+:-]+", name):
         raise SystemExit(f"invalid package name in override: {name!r}")
+    if re.search(r"aura|aurora", name, re.IGNORECASE):
+        continue
     if not isinstance(version, str) or not re.fullmatch(
         r"[A-Za-z0-9@._+~:-]+", version
     ):
@@ -101,7 +112,7 @@ while IFS=$'\t' read -r package available_version; do
     fi
 done < "$pending_details"
 
-if [[ -s $blocked ]]; then
+if [[ -s $blocked ]] && ! $safe_mode && ! $approved_mode; then
     echo "ROM3-j613: unqualified updates blocked:" >&2
     sed 's/^/  - /' "$blocked" >&2
     echo >&2
@@ -111,6 +122,22 @@ fi
 
 if [[ ! -s $pending ]]; then
     echo "ROM3-j613: no pending package updates."
+    exit 0
+fi
+
+if { $safe_mode || $approved_mode; } && [[ -s $blocked ]]; then
+    echo "ROM3-j613: protected packages held at their tested versions:"
+    sed 's/^/  - /' "$blocked"
+    echo
+fi
+
+if $safe_mode && [[ ! -s $ordinary_pending ]]; then
+    echo "ROM3-j613: no non-protected package updates are available."
+    exit 0
+fi
+
+if $approved_mode && [[ ! -s $ordinary_pending && ! -s $approved_pending ]]; then
+    echo "ROM3-j613: no safe or signed-override package updates are available."
     exit 0
 fi
 
@@ -126,9 +153,13 @@ while IFS= read -r package; do
     fi
 done < "$pending"
 
-if [[ $mode == --check ]]; then
+if ! $apply_mode; then
     echo
-    if [[ -s $approved_pending ]]; then
+    if $safe_mode; then
+        echo "ROM3-j613: safe check complete; protected packages will not be changed."
+    elif $approved_mode; then
+        echo "ROM3-j613: approved check complete; only signed override packages and ordinary packages will change."
+    elif [[ -s $approved_pending ]]; then
         echo "ROM3-j613: all quarantined changes are approved by the active override."
     else
         echo "ROM3-j613: no quarantined package would change."
@@ -191,11 +222,17 @@ sha256sum "$backup"/boot.bin > "$backup/boot.bin.sha256" 2>/dev/null || true
 
 echo "Backup: $backup"
 echo "Btrfs snapshot: $snapshot_root/$stamp"
-echo "Starting full upgrade with only signed override versions admitted..."
+if $safe_mode; then
+    echo "Starting safe upgrade; protected ROM3 packages remain pinned..."
+elif $approved_mode; then
+    echo "Starting signed update; only override-approved protected packages may change..."
+else
+    echo "Starting full upgrade with only signed override versions admitted..."
+fi
 
 pacman_config=$(mktemp)
 cp -a "$pacman_conf" "$pacman_config"
-python3 - "$pacman_config" "$approved" <<'PY'
+python3 - "$pacman_config" "$approved" "$quarantine_sorted" <<'PY'
 from pathlib import Path
 import sys
 
@@ -205,8 +242,15 @@ approved = {
     for line in Path(sys.argv[2]).read_text().splitlines()
     if line
 }
+quarantine = {
+    line.strip()
+    for line in Path(sys.argv[3]).read_text().splitlines()
+    if line.strip()
+}
+held = quarantine - approved
 lines = path.read_text().splitlines()
 in_options = False
+ignore_at = None
 for index, line in enumerate(lines):
     stripped = line.strip()
     if stripped == "[options]":
@@ -215,13 +259,15 @@ for index, line in enumerate(lines):
     if in_options and stripped.startswith("[") and stripped.endswith("]"):
         break
     if in_options and stripped.startswith("IgnorePkg"):
-        names = [
-            name
-            for name in line.partition("=")[2].split()
-            if name not in approved
-        ]
-        lines[index] = "IgnorePkg = " + " ".join(names) if names else ""
+        ignore_at = index
+        held.update(line.partition("=")[2].split())
         break
+replacement = ["IgnorePkg = " + " ".join(sorted(held))] if held else []
+if ignore_at is None:
+    options_at = lines.index("[options]")
+    lines[options_at + 1:options_at + 1] = replacement
+else:
+    lines[ignore_at:ignore_at + 1] = replacement
 path.write_text("\n".join(line for line in lines if line != "") + "\n")
 PY
 

@@ -1,0 +1,50 @@
+pkgname=upower-rom3
+pkgver=1.91.5.aurora1
+pkgrel=5
+_commit=d8a24ffc5b9a49f71a28517f7c8b92b16701597a
+pkgdesc='UPower with ROM3 macsmc battery time reporting'
+arch=('aarch64')
+groups=('rom3-platform-apple-silicon')
+url='https://github.com/aurora-silicon/upower'
+license=('GPL-2.0-or-later')
+provides=('upower=1.91.5' 'libupower-glib.so')
+conflicts=('upower')
+backup=('etc/UPower/UPower.conf')
+depends=('dbus' 'glib2' 'glibc' 'libgcc' 'libgudev' 'libimobiledevice' 'libplist' 'polkit')
+makedepends=('meson' 'ninja' 'glib2-devel' 'gobject-introspection' 'systemd')
+checkdepends=('python-dbusmock' 'python-gobject' 'python-packaging' 'umockdev')
+# upower-charge-limit-migrate is fedora-aurora's byte for byte: it hands a
+# charge limit saved by the old macsmc-battery units to UPower once, before
+# upowerd starts, so UPower is the only writer of the limit.
+source=("upower-$_commit.tar.gz::https://codeload.github.com/aurora-silicon/upower/tar.gz/$_commit"
+        upower-charge-limit-migrate
+        upower-charge-limit-migrate.service)
+sha256sums=('ad2fa2023b551f851b50957800679d2b5399cc4707fdcb3c4870d3a9c2f9e292'
+            'a01273aab1e644f8ff2c65acf7fd9fbab7f16ad4b83180a16db80ce6276ffb1e'
+            'cd2967af1b5ae0b80caf5c9b26f13fb1190c8459c0276135a9d4ffa4e47072b5')
+
+build() {
+  arch-meson "upower-$_commit" build \
+    --libexecdir=/usr/lib \
+    -Dgtk-doc=false -Dman=false -Dinstalled_tests=false \
+    -Dintrospection=disabled -Didevice=enabled -Dpolkit=enabled
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --list > registered-tests.txt
+  grep -q test_macsmc_kernel_time_at_zero_rate registered-tests.txt
+  grep -q test_other_supply_ignores_kernel_time registered-tests.txt
+  grep -q test_macsmc_kernel_time_charge_units registered-tests.txt
+  meson test -C build --print-errorlogs
+}
+
+package() {
+  # A swap from or back to stock upower keeps an edited UPower.conf in place.
+  depends+=('rom3-keep-config')
+  meson install -C build --destdir "$pkgdir"
+  install -Dm755 upower-charge-limit-migrate "$pkgdir/usr/libexec/aurora/upower-charge-limit-migrate"
+  install -Dm644 -t "$pkgdir/usr/lib/systemd/system" upower-charge-limit-migrate.service
+  install -d "$pkgdir/usr/lib/systemd/system/upower.service.wants"
+  ln -s ../upower-charge-limit-migrate.service "$pkgdir/usr/lib/systemd/system/upower.service.wants/"
+}

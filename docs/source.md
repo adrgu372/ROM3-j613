@@ -5,10 +5,10 @@ ROM3-specific packages.
 
 ## Source bundles
 
-- `linux-<pkgver>-source.tar.zst` contains the pinned upstream Linux
+- `linux-rom3-<pkgver>-source.tar.zst` contains the pinned upstream Linux
   archive, the ROM3 kernel recipe, configuration, DTB ABI and every patch used
   for the kernel and headers packages.
-- `aura-<pkgver>-<pkgrel>-source.tar.zst` contains Aura at the source tag
+- `rom3-<pkgver>-<pkgrel>-source.tar.zst` contains the Aura-derived bootloader at the source tag
   selected by the package recipe, with the ROM3 J613 card-idle-mask patch
   applied, plus the ROM3 recipe and qualification file.
 - `rom3-j613-source-<commit>.tar.gz` contains the complete ROM3 Git tree used
@@ -34,9 +34,10 @@ and Aura bundles and in `rom3-package-builds.json`.
 
 ## Upstream-only packages
 
-Packages copied unchanged from Aurora Silicon and Arch Linux ARM retain their
-upstream licenses. Their exact versions are listed in
-`rom3-package-builds.json`; corresponding source is available from:
+ROM3-named downstream variants and packages copied unchanged from Aurora
+Silicon and Arch Linux ARM retain their upstream licenses. Their exact
+versions are listed in `rom3-package-builds.json`; corresponding source is
+available from:
 
 - Aurora packages:
   <https://github.com/aurora-silicon/alarm-aurora/tree/main/packages>

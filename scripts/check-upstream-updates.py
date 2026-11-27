@@ -150,7 +150,7 @@ def classify(source: dict, files: list[str], messages: list[str]) -> tuple[str, 
             decision = "REVIEW"
         else:
             decision = "WAIT"
-    elif role in {"aura", "audio"}:
+    elif role in {"boot", "audio"}:
         decision = "REVIEW MATCHED STACK" if critical else "WAIT"
     elif role in {"image", "installer"}:
         decision = "REVIEW REBUILD" if has_changes else "WAIT"

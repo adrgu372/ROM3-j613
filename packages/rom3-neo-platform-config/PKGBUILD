@@ -1,0 +1,17 @@
+pkgname=rom3-neo-platform-config
+pkgver=0.1.0
+pkgrel=2
+pkgdesc='Driver-scoped ROM3 Neo NetworkManager and trackpad configuration'
+arch=('any')
+license=('MIT')
+url='https://github.com/aurora-silicon/aurora-neo-platform-config'
+_commit=8f18039e37ccdec03049d04844d59de2909f680c
+makedepends=('make')
+source=("$pkgname-$_commit.tar.gz::https://codeload.github.com/aurora-silicon/aurora-neo-platform-config/tar.gz/$_commit")
+sha256sums=('5496dc8d28688b30ec4d5e3007a4c911a751663c1d7c2a937bb6ae397d3d4314')
+check() { cd "aurora-neo-platform-config-$_commit"; sh tests/run.sh; }
+package() {
+  cd "aurora-neo-platform-config-$_commit"
+  make install DESTDIR="$pkgdir" PREFIX=/usr
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: MIT
+pkgname=rom3-logos
+pkgver=1
+pkgrel=2
+pkgdesc='ROM3 desktop icons and Plasma distribution artwork'
+arch=('any')
+url='https://github.com/aurora-silicon/alarm-aurora'
+license=('MIT')
+depends=('hicolor-icon-theme')
+provides=('aurora-logos')
+conflicts=('aurora-logos')
+replaces=('aurora-logos')
+backup=('etc/xdg/kcm-about-distrorc')
+source=(ROM3Logo-source.png ROM3Logo-16.png ROM3Logo-22.png ROM3Logo-24.png ROM3Logo-32.png
+        ROM3Logo-48.png ROM3Logo-64.png ROM3Logo-96.png ROM3Logo-128.png
+        ROM3Logo-256.png ROM3Logo-512.png kcm-about-distrorc LICENSE provenance.json)
+sha256sums=('6ccdbad376038dcd2db2f45683fa7ef7e61a381d7e56c99c6053bc2224b1c93a'
+            'cc1c1062dbd0e59794ce3d9c3069dda73e24e2a4b788ffdee1a60e0ebe7f5373'
+            '38bbdc33635e6593d5b3ed1b3ca58e943d3656ea1f209ef024550560bb94a0af'
+            'dbe3da057564e55e1ee2641a165f34a67177da03f9b042acc3d14d504f989aab'
+            '9acb173b45d72089b87cd576619e32ffc08d24a0e5c6ba4c41ad59a8bc720732'
+            'ba74848f876517cfa29cf787172314b004da201f7496e0444a344353e3efda9e'
+            '4c3747c91663be46161fd12a6bdd4c8ec630eb8ab11099cdc775fb2f1ff99368'
+            '4a4c3227c6e7bfb8d7c547e52db2b6d92fb1f4f78244804c8243137c00843c36'
+            '86e5d1c8d03660b1c66209e02a00d9063a84c92d6850f103317319ce026b6471'
+            '5ea141240e3a8cbacad1e10ba0250ae0276adcb4f14e1edff96170645f3ee3ef'
+            '1ffb10d7bca5f1f47506c3a5d028cacd82d078408638a29d939864d6347e0151'
+            '1690c49ef77f7f7de06677f30d57fdd43cafc3fea3c0881e5d1e39fbf76a2db3'
+            '811207d92b81da5b5e97cdfa52542769d8783325da5b422262ccecfa2d23c5a9'
+            '195d1a28e14590a307e6cf6b2fcc5841fb3c8c7909a545060babfca48f2df7eb')
+
+package() {
+  local size
+  for size in 16 22 24 32 48 64 96 128 256 512; do
+    install -Dm644 "ROM3Logo-$size.png" \
+      "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/rom3-logo-icon.png"
+    install -Dm644 "ROM3Logo-$size.png" \
+      "$pkgdir/usr/share/icons/hicolor/${size}x${size}/places/start-here.png"
+  done
+  install -Dm644 ROM3Logo-256.png "$pkgdir/usr/share/pixmaps/rom3-logo.png"
+  install -Dm644 ROM3Logo-256.png "$pkgdir/usr/share/pixmaps/system-logo-white.png"
+  install -Dm644 kcm-about-distrorc "$pkgdir/etc/xdg/kcm-about-distrorc"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 provenance.json "$pkgdir/usr/share/doc/$pkgname/provenance.json"
+}

@@ -1,0 +1,29 @@
+#!/bin/bash
+set -euo pipefail
+
+root=${ROM3_IDENTITY_ROOT:-}
+templates=${ROM3_IDENTITY_TEMPLATE_DIR:-/usr/share/rom3-j613}
+
+[[ -d $templates ]] || {
+    echo "missing ROM3 identity templates: $templates" >&2
+    exit 1
+}
+
+install_identity_file() {
+    local source=$1
+    local target=$2
+    local directory temporary
+
+    directory="$root/$(dirname "$target")"
+    install -d -m755 "$directory"
+    temporary=$(mktemp "$directory/.${target##*/}.rom3.XXXXXX")
+    install -m644 "$templates/$source" "$temporary"
+    mv -fT "$temporary" "$root/$target"
+}
+
+# Keep both locations authoritative. The pacman hook reapplies these files if
+# a base `filesystem` upgrade restores Arch's copies.
+install_identity_file os-release etc/os-release
+install_identity_file os-release usr/lib/os-release
+install_identity_file lsb-release etc/lsb-release
+install_identity_file issue etc/issue

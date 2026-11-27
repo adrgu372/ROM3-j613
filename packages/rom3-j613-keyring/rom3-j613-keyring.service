@@ -4,7 +4,7 @@ Documentation=https://github.com/adrgu372/ROM3-j613
 ConditionPathExists=/usr/share/pacman/keyrings/rom3-j613.gpg
 Wants=aurora-alarm-keyring.service
 After=local-fs.target aurora-alarm-keyring.service
-Before=aurora-firstboot.service
+Before=rom3-firstboot.service
 
 [Service]
 Type=oneshot

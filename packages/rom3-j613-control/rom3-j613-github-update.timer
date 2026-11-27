@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily signed ROM3-j613 GitHub update check
+
+[Timer]
+OnBootSec=20min
+OnUnitActiveSec=24h
+RandomizedDelaySec=30min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

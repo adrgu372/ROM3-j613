@@ -19,6 +19,17 @@ section "system"
 printf 'kernel: %s\n' "$(uname -r)"
 cat /proc/cmdline
 
+section "identity"
+os_name=$(sed -n 's/^NAME="\(.*\)"$/\1/p' /etc/os-release)
+os_id=$(sed -n 's/^ID=//p' /etc/os-release)
+variant_id=$(sed -n 's/^VARIANT_ID="\(.*\)"$/\1/p' /etc/os-release)
+printf 'name: %s\n' "$os_name"
+printf 'id: %s\n' "$os_id"
+printf 'variant: %s\n' "$variant_id"
+[[ $os_name == ROM3 ]] || failures=$((failures + 1))
+[[ $os_id == rom3 ]] || failures=$((failures + 1))
+[[ $variant_id == j613 ]] || failures=$((failures + 1))
+
 section "GPU"
 for path in /dev/dri/card0 /dev/dri/card1 /dev/dri/renderD128; do
     if [[ -e $path ]]; then

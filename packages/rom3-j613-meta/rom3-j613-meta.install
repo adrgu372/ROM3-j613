@@ -8,7 +8,7 @@ rom3_j613_safe_stage2_options() {
     fi
 
     # Keep an explicit owner choice. The default is unsafe on J613 with the
-    # current 14.7 DCP firmware: Aura b17 starts dcpext automatically and the
+    # current 14.7 DCP firmware: the ROM3 bootloader starts dcpext automatically and the
     # internal DCP then crashes with an axi_rd_err.
     grep -Eq '^[[:space:]]*chosen\.asahi,t8122-dcpext=' "$config" && return 0
 

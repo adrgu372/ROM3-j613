@@ -7,8 +7,8 @@ package manager.
 
 1. **Arch Linux ARM base**
    - rolling `core`, `extra` and `alarm`.
-2. **Aurora Silicon stack**
-   - kernel, Aura, U-Boot, Mesa, Vulkan and hardware services.
+2. **Aurora Silicon stack, rebranded as ROM3**
+   - kernel, bootloader, U-Boot, Mesa, Vulkan and hardware services.
 3. **ROM3-j613 compatibility overlay**
    - replaces only packages that require board-specific fixes or version
      coordination.

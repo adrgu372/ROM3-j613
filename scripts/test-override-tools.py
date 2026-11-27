@@ -26,12 +26,12 @@ def sample_manifest() -> dict[str, object]:
         "schema_version": 1,
         "distribution": "ROM3-j613",
         "base_snapshot": "stable-20261122.9",
-        "packages": {"linux-aurora": "7.3.0.aurora1-44"},
+        "packages": {"linux-rom3": "7.3.0.aurora1-44"},
         "artifacts": [
             {
-                "package": "linux-aurora",
+                "package": "linux-rom3",
                 "version": "7.3.0.aurora1-44",
-                "file": "linux-aurora-7.3.0.aurora1-44-aarch64.pkg.tar.xz",
+                "file": "linux-rom3-7.3.0.aurora1-44-aarch64.pkg.tar.xz",
                 "sha256": digest,
             }
         ],
@@ -40,10 +40,10 @@ def sample_manifest() -> dict[str, object]:
 
 def main() -> int:
     manifest = validate_manifest(sample_manifest())
-    assert manifest["packages"] == {"linux-aurora": "7.3.0.aurora1-44"}
+    assert manifest["packages"] == {"linux-rom3": "7.3.0.aurora1-44"}
 
     invalid = sample_manifest()
-    invalid["artifacts"][0]["file"] = "../linux-aurora.pkg.tar.xz"
+    invalid["artifacts"][0]["file"] = "../linux-rom3.pkg.tar.xz"
     with contextlib.redirect_stderr(io.StringIO()):
         try:
             validate_manifest(invalid)
@@ -52,17 +52,33 @@ def main() -> int:
         else:
             raise AssertionError("unsafe artifact path was accepted")
 
+    legacy = sample_manifest()
+    legacy["packages"] = {"linux-aurora": "7.3.0.aurora1-44"}
+    legacy["artifacts"][0].update(
+        {
+            "package": "linux-aurora",
+            "file": "linux-aurora-7.3.0.aurora1-44-aarch64.pkg.tar.xz",
+        }
+    )
+    with contextlib.redirect_stderr(io.StringIO()):
+        try:
+            validate_manifest(legacy)
+        except SystemExit:
+            pass
+        else:
+            raise AssertionError("legacy Aurora package name was accepted")
+
     with tempfile.TemporaryDirectory(prefix="rom3-override-test-") as temporary:
         path = Path(temporary) / "pacman.conf"
         path.write_text(
             "[options]\n"
-            "IgnorePkg = kwin linux-aurora\n\n"
+            "IgnorePkg = kwin linux-rom3\n\n"
             "[rom3-j613]\n"
             "Include = /etc/pacman.d/rom3-j613.conf\n"
         )
-        update_ignore_pkg(path, {"linux-aurora"}, remove=False)
-        assert "IgnorePkg = kwin linux-aurora" in path.read_text()
-        update_ignore_pkg(path, {"linux-aurora"}, remove=True)
+        update_ignore_pkg(path, {"linux-rom3"}, remove=False)
+        assert "IgnorePkg = kwin linux-rom3" in path.read_text()
+        update_ignore_pkg(path, {"linux-rom3"}, remove=True)
         assert "IgnorePkg = kwin" in path.read_text()
         update_include(path, add=True)
         assert path.read_text().index("rom3-j613-overrides.conf") < path.read_text().index(

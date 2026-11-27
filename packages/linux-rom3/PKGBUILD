@@ -1,0 +1,354 @@
+# AArch64 Apple Silicon (ROM3, downstream of Aurora Silicon)
+# Based on the asahi-alarm linux-asahi package by Jos Dehaes and Matthias Kurz.
+#
+# This repository pins the downstream ROM3 kernel, configuration and DTBs.
+# Source/build validation is separate from device installation qualification.
+
+_auroraver=7.3.0
+_aurorarel=1
+pkgrel=45
+
+# Immutable pin on aurora-silicon/linux release/7.3.0-41. Every bump is a
+# PR that moves _commit; its cold-boot qualification is recorded in
+# the PR's attached qualification evidence before channel publication.
+_commit=87a5f8f0e6e8e037a32aa0dc51a4a3bb06c29dd6
+_sha256=85bf0bc0f0e9ae2351dfc2fd09f45fdda85380078a59739543ab8814785b23a4
+
+# 1 with a kernel pin whose configuration resolves CONFIG_ARM64_CTXR_EXECMEM=y
+# (aurora-silicon/linux#985), which keeps every kernel code page inside the
+# CTXR window a monitor-free bootloader moves the kernel into. The package
+# provides both ROM3 and legacy compatibility capability names. prepare() checks it.
+_ctxr_execmem=1
+_ctxr_provides=()
+if (( _ctxr_execmem )); then
+  _ctxr_provides=('rom3-ctxr-execmem' 'aurora-ctxr-execmem')
+fi
+
+# This image pairs the kernel with the pinned Aura implementation. The legacy
+# m1n1 compatibility version alone does not establish display-handoff support.
+# SN012776 amp settings come from the DT that aura 1.0.0b5 fills in
+# (https://github.com/aurora-silicon/linux/pull/981,
+# https://github.com/aurora-silicon/aura/pull/75); under an older Stage 2
+# the speakers stay off. 1.0.0b11: this kernel's MacBook Neo DT leaves the
+# video encoder for aura to enable from the ADT (aura/pull/167), and its
+# DisplayPort audio needs the T8140 SIO tables (aura/pull/122). 1.0.0b12:
+# with the T8140 fabric power states (linux#1298) only aura/pull/190 enables
+# the encoder's whole power-domain chain.
+_aura_version=1.0.0b12
+
+# The DT ABI generation this kernel's trees use and need (dtb-abi, installed as
+# /usr/lib/modules/<release>/dtb-abi). update-m1n1 refuses to put newer-
+# generation trees in Stage 2 while a kernel that needs an older one is still
+# installed. Bump it, in step with fedora-aurora's packages/kernel-aurora/dtb-abi,
+# only when the trees stop working with older kernels.
+
+pkgbase=linux-rom3
+_srcname=linux-${_commit}
+_kernelname=${pkgbase#linux}
+_desc="AArch64 Apple Silicon (ROM3 kernel)"
+pkgver="${_auroraver}.aurora${_aurorarel}"
+arch=('aarch64')
+groups=('rom3-platform-apple-silicon')
+url="https://github.com/aurora-silicon/linux"
+license=('GPL2')
+
+makedepends=(
+  base-devel bc dtc kmod libelf pahole cpio perl rustup clang llvm lld 
+  tar xz xmlto python git patch
+)
+options=('!strip')
+source=(validate-config.py "linux-${_commit}.tar.gz::https://codeload.github.com/aurora-silicon/linux/tar.gz/${_commit}"
+        rust-toolchain.toml bindgen-kernel.py config 50-rom3-user4k.cfg rom3-userpages.hook
+        dtb-abi
+        linux-t8122-pmp-fix.patch
+        linux-t8122-map-fix.patch
+        linux-t8122-j613-mca-sense-edge.patch
+        linux-apple-sio-protocol10.patch)
+sha256sums=('534214d07ad388822b3d7ca2b63efce988c1424131329775479ebbd7552715b0'
+            '85bf0bc0f0e9ae2351dfc2fd09f45fdda85380078a59739543ab8814785b23a4'
+            '76cef34049e1e22be3abc0c9a457c381f8cdcf7ac419322c928555d269f0be08'
+            '84a03d5fea19cae243c89f50c1736c639622d25d4d1de8d7d53ebd8f603c0f62'
+            '12a712faddcd8d624b28641b63187796e29732d34fb18d0b3a037443b74c3dcc'
+            '26293576b6b9091cc8a725a85326b945f32fc87127878c8704d2f3927d58bd69'
+            '85455ba75cdbb6ffbe90871154100f1d2bc271ec18071b5b98acf5bc7b1ec6b6'
+            '4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865'
+            '5243ba504b4e5824ef7395878c62beb4300ac205818c1614cc99082c77c617dc'
+            'b5b84bc6acc012602fb4bedb4c21843bf8cc77a6ced979b752568749922cf5b4'
+            '097788d07bbe6a6b94fe49972da36b64b86f1e4f9e4f08d311a5868c03c37f1c'
+            '3272fd2e51b228a34c3a88adf73b520ba713cc352ea330ccd03d38ef668788ff')
+
+
+# Kbuild takes ARCH literally and knows arm64, not aarch64.
+export ARCH=arm64
+export KBUILD_BUILD_HOST=archlinux
+export KBUILD_BUILD_USER=$pkgbase
+export KBUILD_BUILD_TIMESTAMP="$(date -Ru${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EPOCH})"
+
+# Kbuild assigns BINDGEN itself, so an environment-only value is ignored.
+# Supply the wrapper and its real tool in every makepkg phase, not just prepare.
+_make() {
+  AURORA_BINDGEN_REAL="$srcdir/private-bindgen/rust-bindgen-0.73.2/target/release/bindgen" \
+    RUSTFMT="$(rustup which --toolchain 1.99.0 rustfmt)" \
+    LIBCLANG_PATH="${AURORA_LIBCLANG_PATH:-/usr/lib}" \
+    RUSTUP_TOOLCHAIN=1.99.0 make LLVM="${AURORA_LLVM:-1}" \
+    BINDGEN="$srcdir/bindgen-kernel.py" LOCALVERSION= "$@"
+}
+
+_check_kernelrelease() {
+  [[ $1 == *-ARCH ]] || {
+    echo "Kernel release must end in -ARCH for boot-bundle DTB discovery: $1" >&2
+    return 1
+  }
+}
+
+prepare() {
+  cd $_srcname
+
+  echo "Setting version..."
+  echo "-$_aurorarel-$pkgrel" > localversion.10-pkgrel
+
+  local src
+  for src in "${source[@]}"; do
+    src="${src%%::*}"
+    src="${src##*/}"
+    [[ $src = *.patch ]] || continue
+    echo "Applying patch $src..."
+    patch -Np1 < "../$src"
+  done
+
+  echo "Pinning the Rust toolchain..."
+  cp ../rust-toolchain.toml .
+
+  export LLVM="${AURORA_LLVM:-1}"
+  rustup toolchain install 1.99.0 --profile minimal --component rustfmt
+  RUSTUP_TOOLCHAIN=1.99.0 RUSTFMT="$(rustup which --toolchain 1.99.0 rustfmt)" \
+    python3 tools/aurora-bindgen/build.py --output-dir "$srcdir/private-bindgen"
+  export AURORA_BINDGEN_REAL="$srcdir/private-bindgen/rust-bindgen-0.73.2/target/release/bindgen"
+  export RUSTUP_TOOLCHAIN=1.99.0
+  rustup toolchain install 1.99.0 --profile minimal --component rust-src
+  mkdir -p build/base
+  # The full distribution configuration (resolved against this pin) is the
+  # base; the source-pinned asahi.config owns shared Apple hardware settings.
+  cp ../config build/base/.config
+  scripts/kconfig/merge_config.sh -m -O "$PWD/build/base" build/base/.config arch/arm64/configs/asahi.config
+  # Keep shared kexec support: apple_piodma_lock_transition() in
+  # pcie-apple-piodma-diag.c acquires the kernel kexec blocker before Neo radio
+  # admission retains DMA/firmware ownership. Both kexec
+  # load APIs and execution reject while that blocker is held.
+  # Keep config's -ARCH suffix: omarchy-mac-boot and update-m1n1 discover
+  # device trees under /lib/modules/*-ARCH.
+  scripts/config --file build/base/.config --set-str LOCALVERSION '-ARCH' --disable LOCALVERSION_AUTO
+  _make O="$PWD/build/base" olddefconfig
+  python3 ../validate-config.py arch/arm64/configs/asahi.config build/base/.config
+  local ctxr=0
+  if grep -qx 'CONFIG_ARM64_CTXR_EXECMEM=y' build/base/.config; then ctxr=1; fi
+  if (( ctxr != _ctxr_execmem )); then
+    echo "linux-rom3: set _ctxr_execmem=$ctxr, which this pin's configuration resolves to" >&2
+    return 1
+  fi
+  grep -qx 'CONFIG_RUST=y' build/base/.config || {
+    echo 'linux-rom3 requires Rust drivers; toolchain/configuration disabled CONFIG_RUST' >&2; return 1;
+  }
+  # Desktop images need LUKS root unlock, Bluetooth, a firewall, removable
+  # exFAT media and generic HID input.
+  local option
+  for option in DM_CRYPT DM_INTEGRITY BT NF_TABLES EXFAT_FS HID_GENERIC; do
+    grep -Eqx "CONFIG_${option}=[ym]" build/base/.config || {
+      echo "linux-rom3 requires CONFIG_${option} (y or m)" >&2; return 1;
+    }
+  done
+  _make O="$PWD/build/base" prepare
+  _make -s O="$PWD/build/base" kernelrelease > build/base/version
+
+  _check_kernelrelease "$(<build/base/version)"
+  echo "Prepared $pkgbase version $(<build/base/version)"
+}
+
+build() {
+  cd $_srcname
+  echo "Building base..."
+  export LLVM="${AURORA_LLVM:-1}" RUSTUP_TOOLCHAIN=1.99.0
+  export AURORA_BINDGEN_REAL="$srcdir/private-bindgen/rust-bindgen-0.73.2/target/release/bindgen"
+  _make O="$PWD/build/base" -j"${OMARCHY_BUILD_JOBS:-10}" Image modules dtbs
+  # The launcher includes this tree's prctl.h, so its numbers match the kernel.
+  make -C tools/rom3-userpages
+}
+
+_package_kernel() {
+  pkgdesc="The $pkgdesc kernel and modules"
+  # rom3-userpages: an ordinary upgrade brings the launcher and user4k=on.
+  # aurora-stage2-trial: the update-m1n1 that trials these trees before
+  # committing them and checks the DT ABI generation.
+  # The restored legacy interface needs the matching Asahi speaker graphs.
+  # avd-fw: apple-avd loads apple/avd-fw-v*.bin and its queued transport needs
+  # queue ABI 2 with per-image codec VP pools (avd-fw 6756ca99). The T8122 (M3)
+  # device tree maps the CM3 SRAM at +0x90000 (linux#2586), which only the
+  # 64 KiB v4 image of avd-fw ea8ae7c8 (0.1.aurora4) fits: the older
+  # 0x12000-byte image fails the probe with -EINVAL.
+  depends=(coreutils kmod initramfs $2 "rom3>=$_aura_version" 'rom3-audio>=4.1.aurora2-12' 'avd-fw>=0.1.aurora4' aurora-stage2-trial rom3-userpages)
+  optdepends=('crda: to set the correct wireless channels of your country'
+              'linux-firmware: firmware images needed for some devices')
+  # No generic linux provide: on a shared aarch64 repository it would compete
+  # with linux-aarch64 for any dependency on linux.
+  provides=(WIREGUARD-MODULE linux-asahi=${pkgver} "${_ctxr_provides[@]}"
+            "linux-rom3=$pkgver-$pkgrel")
+  # sep-key interfaces 3 and 4 (linux#1506, #1544): aurora-fido before 0.2.0-2
+  # speaks only 1 and 2 and crash-loops against this kernel.
+  conflicts=(linux-asahi linux-rom3 'rom3-fido<0.2.0-2')
+  replaces=(linux-rom3)
+
+  local kernver="$(<$O/version)"
+  local modulesdir="$pkgdir/usr/lib/modules/$kernver"
+
+  echo "Installing boot image..."
+  # systemd expects to find the kernel here to allow hibernation
+  # https://github.com/systemd/systemd/commit/edda44605f06a41fb86b7ab8128dcf99161d2344
+  install -Dm644 "$O"/arch/arm64/boot/Image "$modulesdir/vmlinuz"
+  install -m644 "$O/.config" "$modulesdir/config"
+
+  # Used by mkinitcpio to name the kernel
+  echo "$1" | install -Dm644 /dev/stdin "$modulesdir/pkgbase"
+
+  echo "Installing modules..."
+  _make O="$O" INSTALL_MOD_PATH="$pkgdir/usr" INSTALL_MOD_STRIP=1 modules_install
+
+  echo "Installing device trees..."
+  install -Dt "$modulesdir/dtbs" "$O"/arch/arm64/boot/dts/apple/*.dtb
+  install -m644 "$srcdir/dtb-abi" "$modulesdir/dtb-abi"
+
+  # remove build and source links
+  rm -f "$modulesdir"/{source,build}
+}
+
+_package() {
+  cd $_srcname
+  export O="$PWD/build/base"
+  _package_kernel "$pkgbase"
+}
+
+_package-headers() {
+  pkgdesc="Headers and scripts for building modules for the $pkgdesc kernel"
+  depends=(pahole)
+  provides=(linux-asahi-headers=${pkgver})
+  conflicts=(linux-asahi-headers)
+
+  KARCH=arm64
+
+  cd $_srcname
+  O=build/base
+  local builddir="$pkgdir/usr/lib/modules/$(<${O}/version)/build"
+
+  echo "Installing build files..."
+  install -Dt "$builddir" -m644 $O/.config Makefile $O/Module.symvers $O/System.map \
+    localversion.* $O/version $O/vmlinux
+  install -Dt "$builddir/kernel" -m644 kernel/Makefile
+  cp -t "$builddir" -a scripts $O/scripts
+
+  # required when STACK_VALIDATION is enabled
+  #install -Dt "$builddir/tools/objtool" tools/objtool/objtool
+
+  # required when DEBUG_INFO_BTF_MODULES is enabled
+  if grep -qx 'CONFIG_DEBUG_INFO_BTF=y' "$O/.config"; then
+    [[ -x $O/tools/bpf/resolve_btfids/resolve_btfids ]] || {
+      echo 'BTF is enabled but resolve_btfids was not built' >&2; return 1;
+    }
+    install -Dt "$builddir/tools/bpf/resolve_btfids" "$O/tools/bpf/resolve_btfids/resolve_btfids"
+  fi
+
+  echo "Installing headers..."
+  cp -t "$builddir" -a include $O/include
+
+  install -Dt "${builddir}/arch/${KARCH}" -m644 arch/${KARCH}/Makefile
+  install -Dt "${builddir}/arch/${KARCH}/kernel" -m644 $O/arch/${KARCH}/kernel/asm-offsets.s
+  cp -t "${builddir}/arch/${KARCH}" -a arch/${KARCH}/include $O/arch/${KARCH}/include
+
+  install -Dt "$builddir/drivers/md" -m644 drivers/md/*.h
+  install -Dt "$builddir/net/mac80211" -m644 net/mac80211/*.h
+
+  # https://bugs.archlinux.org/task/13146
+  install -Dt "$builddir/drivers/media/i2c" -m644 drivers/media/i2c/msp3400-driver.h
+
+  # https://bugs.archlinux.org/task/20402
+  install -Dt "$builddir/drivers/media/usb/dvb-usb" -m644 drivers/media/usb/dvb-usb/*.h
+  install -Dt "$builddir/drivers/media/dvb-frontends" -m644 drivers/media/dvb-frontends/*.h
+  install -Dt "$builddir/drivers/media/tuners" -m644 drivers/media/tuners/*.h
+
+  # https://bugs.archlinux.org/task/71392
+  install -Dt "$builddir/drivers/iio/common/hid-sensors" -m644 drivers/iio/common/hid-sensors/*.h
+
+  echo "Installing KConfig files..."
+  find . -name 'Kconfig*' -exec install -Dm644 {} "$builddir/{}" \;
+
+  echo "Installing unstripped VDSO..."
+  _make O="$O" INSTALL_MOD_PATH="$pkgdir/usr" vdso_install link=
+
+  echo "Removing unneeded architectures..."
+  local arch
+  for arch in "$builddir"/arch/*/; do
+    [[ $arch = */${KARCH}/ ]] && continue
+    echo "Removing $(basename "$arch")"
+    rm -r "$arch"
+  done
+
+  echo "Removing documentation..."
+  rm -r "$builddir/Documentation"
+
+  echo "Removing broken symlinks..."
+  find -L "$builddir" -type l -printf 'Removing %P\n' -delete
+
+  echo "Removing loose objects..."
+  find "$builddir" -type f -name '*.o' -printf 'Removing %P\n' -delete
+
+  echo "Removing cmd files..."
+  find "$builddir" -type f -name '*.cmd' -printf 'Removing %P\n' -delete
+
+  echo "Stripping build tools..."
+  local file
+  while read -rd '' file; do
+    case "$(file --no-sandbox -bi "$file")" in
+      application/x-sharedlib\;*)      # Libraries (.so)
+        strip -v $STRIP_SHARED "$file" ;;
+      application/x-archive\;*)        # Libraries (.a)
+        strip -v $STRIP_STATIC "$file" ;;
+      application/x-executable\;*)     # Binaries
+        strip -v $STRIP_BINARIES "$file" ;;
+      application/x-pie-executable\;*) # Relocatable binaries
+        strip -v $STRIP_SHARED "$file" ;;
+    esac
+  done < <(find "$builddir" -type f -perm -u+x ! -name vmlinux -print0)
+
+  echo "Stripping vmlinux..."
+  strip -v $STRIP_STATIC "$builddir/vmlinux"
+
+  echo "Adding symlink..."
+  mkdir -p "$pkgdir/usr/src"
+  ln -sr "$builddir" "$pkgdir/usr/src/$pkgbase"
+
+}
+
+package_rom3-userpages() {
+  pkgdesc='Run programs with 4K userspace pages on the ROM3 kernel'
+  depends=(glibc)
+  options=(strip)
+  provides=("rom3-userpages=$pkgver-$pkgrel")
+  conflicts=('rom3-userpages')
+  replaces=('rom3-userpages')
+
+  cd $_srcname
+  install -Dm755 tools/rom3-userpages/userpages "$pkgdir/usr/bin/userpages"
+  install -Dm644 tools/rom3-userpages/README.rst "$pkgdir/usr/share/doc/rom3-userpages/README.rst"
+  # Arch's GRUB reads /etc/default/grub.d after /etc/default/grub; the hook
+  # regenerates grub.cfg so an installed system boots with user4k=on.
+  install -Dm644 "$srcdir/50-rom3-user4k.cfg" "$pkgdir/etc/default/grub.d/50-rom3-user4k.cfg"
+  install -Dm644 "$srcdir/rom3-userpages.hook" "$pkgdir/usr/share/libalpm/hooks/90-rom3-userpages.hook"
+}
+
+pkgname=("$pkgbase" "$pkgbase-headers" rom3-userpages)
+for _p in "$pkgbase" "$pkgbase-headers"; do
+  eval "package_$_p() {
+    $(declare -f "_package${_p#$pkgbase}")
+    _package${_p#$pkgbase}
+  }"
+done
+
+# vim:set ts=8 sts=2 sw=2 et:

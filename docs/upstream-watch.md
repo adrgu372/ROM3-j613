@@ -20,7 +20,7 @@ entire upstream history.
 - **BUILD CANDIDATE**: a new kernel change touches a J613-critical device tree
   or display, GPU, camera, audio, power or firmware path, or appears to fix a
   relevant crash, regression or security problem.
-- **REVIEW MATCHED STACK**: Aura or the matched audio package changed.
+- **REVIEW MATCHED STACK**: The Aura-derived ROM3 bootloader or the matched audio package changed.
 - **REVIEW REBUILD**: image-builder or installer code changed.
 - **REVIEW**: upstream changed, but no high-priority J613 path was detected.
 - **WAIT**: nothing changed since the previous check.

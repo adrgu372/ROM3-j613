@@ -21,6 +21,9 @@ OVERRIDE_MANIFEST = Path(
         "/var/lib/rom3-j613/override/manifest.json",
     )
 )
+OS_RELEASE = Path(
+    os.environ.get("ROM3_OS_RELEASE", "/etc/os-release")
+)
 
 
 def installed() -> dict[str, str]:
@@ -28,8 +31,20 @@ def installed() -> dict[str, str]:
     return dict(line.split(maxsplit=1) for line in output.splitlines())
 
 
+def identity() -> dict[str, str]:
+    result = {}
+    for line in OS_RELEASE.read_text().splitlines():
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        result[key] = value.strip().strip('"')
+    return result
+
+
 def main() -> int:
-    expected = json.loads(STACK.read_text())["packages"]
+    stack = json.loads(STACK.read_text())
+    expected = stack["packages"]
+    legacy = set(stack.get("legacy_packages", {}))
     if OVERRIDE_MANIFEST.is_file():
         override = json.loads(OVERRIDE_MANIFEST.read_text())
         if (
@@ -42,10 +57,36 @@ def main() -> int:
                 file=sys.stderr,
             )
             return 1
-        expected.update(override["packages"])
+        ignored = sorted(legacy & override["packages"].keys())
+        expected.update(
+            {
+                name: version
+                for name, version in override["packages"].items()
+                if name not in legacy
+            }
+        )
         print(f"using override feed based on {override.get('base_snapshot')}")
+        if ignored:
+            print("ignoring legacy override entries: " + " ".join(ignored))
     current = installed()
     failures = 0
+    current_identity = identity()
+
+    for key, expected_value in {
+        "NAME": "ROM3",
+        "ID": "rom3",
+        "ID_LIKE": "arch",
+        "VARIANT_ID": "j613",
+    }.items():
+        actual_value = current_identity.get(key)
+        if actual_value == expected_value:
+            print(f"ok       os-release {key}={expected_value}")
+        else:
+            failures += 1
+            print(
+                f"MISMATCH os-release {key}: expected {expected_value}, "
+                f"found {actual_value or 'missing'}"
+            )
 
     for name, version in expected.items():
         actual = current.get(name)

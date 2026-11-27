@@ -1,16 +1,48 @@
 pkgname=rom3-j613-release
 pkgver=1
-pkgrel=3
+pkgrel=6
 pkgdesc='ROM3-j613 pacman repository configuration and release identity'
 arch=('any')
 url='https://github.com/adrgu372/ROM3-j613'
 license=('custom')
-source=('rom3-j613.conf' 'rom3-j613-mirrorlist')
+install=rom3-j613-release.install
+source=(
+  'rom3-j613.conf'
+  'rom3-j613-mirrorlist'
+  'os-release'
+  'lsb-release'
+  'issue'
+  'set-os-identity'
+  '95-rom3-j613-os-identity.hook'
+)
 sha256sums=(
   '89dc56a4ce6e9f02cab3a493c6c1eb6b2a0ee37457a2465614dbe21c330aa15d'
-  '961b64129d9dd3aa45bd38bd1cad934ef17ccc173529c09d32d47b3aad7e7cb6'
+  '4ac62504652eeda92b7bad18626859fe0990e965c3c8563ae18dcb9f969eac0e'
+  '27519f01be102090607672b4d21149226a28daf137c932a58edd06454372390e'
+  'f0ea679c2f2c500ebec35c59b7651516f6619e25d7b57613923d9700910dbd69'
+  '13a48382cde0a82ab9426d57757080aeba178e7ed9a8d6875a2a6ff983a71ef3'
+  'ef473597d2aeac6103f3dd8f322834f60fd1f9106195efa4153f30db73583e36'
+  'aba0c5813c6eb21823364071241519d6a00bfaeecce9cb7395bee7003a375b71'
 )
 options=('!strip')
+
+check() {
+  local root
+  root=$(mktemp -d)
+  trap 'rm -rf "$root"' EXIT
+
+  ROM3_IDENTITY_ROOT="$root" ROM3_IDENTITY_TEMPLATE_DIR="$srcdir" \
+    bash "$srcdir/set-os-identity"
+
+  grep -qx 'NAME="ROM3"' "$root/etc/os-release"
+  grep -qx 'PRETTY_NAME="ROM3"' "$root/etc/os-release"
+  grep -qx 'ID=rom3' "$root/etc/os-release"
+  grep -qx 'VARIANT_ID="j613"' "$root/etc/os-release"
+  grep -qx 'NAME="ROM3"' "$root/usr/lib/os-release"
+  grep -qx 'ID=rom3' "$root/usr/lib/os-release"
+  grep -qx 'DISTRIB_ID=ROM3' "$root/etc/lsb-release"
+  grep -qxF 'ROM3 \r (\l)' "$root/etc/issue"
+}
 
 package() {
   # Runtime-only dependencies: the local release package is built before the
@@ -20,6 +52,16 @@ package() {
     "$pkgdir/etc/pacman.d/rom3-j613.conf"
   install -Dm644 rom3-j613-mirrorlist \
     "$pkgdir/etc/pacman.d/rom3-j613-mirrorlist"
+  install -Dm644 os-release \
+    "$pkgdir/usr/share/rom3-j613/os-release"
+  install -Dm644 lsb-release \
+    "$pkgdir/usr/share/rom3-j613/lsb-release"
+  install -Dm644 issue \
+    "$pkgdir/usr/share/rom3-j613/issue"
+  install -Dm755 set-os-identity \
+    "$pkgdir/usr/libexec/rom3-j613/set-os-identity"
+  install -Dm644 95-rom3-j613-os-identity.hook \
+    "$pkgdir/usr/share/libalpm/hooks/95-rom3-j613-os-identity.hook"
   install -Dm644 /dev/null \
     "$pkgdir/usr/share/rom3-j613/release-package"
 }

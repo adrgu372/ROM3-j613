@@ -1,0 +1,63 @@
+pkgname=rom3-sep-luks
+pkgver=0.3.0
+pkgrel=1
+pkgdesc='Unlock LUKS2 volumes with the Apple Secure Enclave (aurora-sep-cryptenroll, aurora-sep-fde, cryptsetup token, PAM)'
+arch=('aarch64')
+url='https://github.com/aurora-silicon/aurora-sep-userspace'
+license=('MIT')
+_commit=96f5aa45e6209cf94632d885a5b7c4c1bcc68209
+makedepends=('gcc' 'make' 'pkgconf' 'cryptsetup' 'json-c' 'pam')
+optdepends=('mkinitcpio: open SEP-sealed volumes, root included, in a systemd-based initramfs (rom3-sep hook)')
+install=aurora-sep-luks.install
+# Volume owners and the recovery mode are the owner's settings.
+backup=('etc/aurora-sep/fde.conf')
+source=("aurora-sep-userspace-$_commit.tar.gz::https://codeload.github.com/aurora-silicon/aurora-sep-userspace/tar.gz/$_commit"
+        'sep-fde-pam' 'aurora-sep-fde-pam.hook')
+sha256sums=('d4f8f57c940d9d0fd8ea285cc49528e9559434b9ba7a64cff0b23dc992b8224f'
+            '7a16323a650506a74bbaa4159bdb136e14a24c058c03e26cf40185f0ea0d2802'
+            'f555e8358efc2acb9a52a463f78f29e26d3cd53c508c3fdccc2f004a6008342e')
+
+build() {
+  make -C "aurora-sep-userspace-$_commit/luks" CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS"
+}
+
+check() {
+  # Kernel "user" keys stand in for the SEP. 77: the build root blocks the
+  # kernel keyring (seccomp), skipped. Kernels with af_alg_restrict refuse an
+  # unprivileged ccm(aes) bind with ENOENT, which stops the test at its seal
+  # step after the encoding checks have passed; that alone is not a failure
+  # here. The LUKS2 file-image tests need root and run in
+  # aurora-sep-userspace's CI. Any other failure fails the build.
+  local log="$srcdir/test-seal.log" status=0
+  make -C "aurora-sep-userspace-$_commit/luks" test/test-seal CFLAGS="$CFLAGS"
+  "aurora-sep-userspace-$_commit/luks/test/test-seal" >"$log" 2>&1 || status=$?
+  cat "$log"
+  if [[ $status == 1 && $(grep -c '^FAIL' "$log") == 1 ]] &&
+     grep -qx 'seal failed: No such file or directory' "$log"; then
+    echo "AF_ALG ccm(aes) is restricted in this build root; seal round trip not run"
+  elif [[ $status != 0 && $status != 77 ]]; then
+    return 1
+  fi
+}
+
+package() {
+  # Runtime dependencies here, as in aurora-fido: aurora-sep comes from the
+  # Aurora repository, which the build root does not have.
+  depends=('cryptsetup' 'json-c' 'pam' 'rom3-sep')
+  # Nothing is enrolled by installing: aurora-sep-cryptenroll and
+  # aurora-sep-fde are run per volume. /usr/libexec as in aurora-sep and
+  # aurora-touchid-rearm; the PAM module's default helper is
+  # /usr/libexec/aurora-sep-fde-passwd.
+  make -C "aurora-sep-userspace-$_commit/luks" install install-mkinitcpio DESTDIR="$pkgdir" PREFIX=/usr \
+    TOKENDIR=/usr/lib/cryptsetup LIBEXECDIR=/usr/libexec PAMDIR=/usr/lib/security SYSCONFDIR=/etc
+  test -x "$pkgdir/usr/lib/security/pam_aurora_sep_fde.so"
+  test -x "$pkgdir/usr/libexec/aurora-sep-fde-passwd"
+  # passwd and every other password change through system-auth also change
+  # the user's disk password (sep-fde-pam, run by a pacman hook).
+  install -Dm755 sep-fde-pam "$pkgdir/usr/libexec/aurora/sep-fde-pam"
+  install -Dm644 aurora-sep-fde-pam.hook "$pkgdir/usr/share/libalpm/hooks/aurora-sep-fde-pam.hook"
+  for doc in luks-sep.md luks-sep-initrd.md luks-sep-owners.md; do
+    install -Dm644 "aurora-sep-userspace-$_commit/docs/$doc" "$pkgdir/usr/share/doc/$pkgname/$doc"
+  done
+  install -Dm644 "aurora-sep-userspace-$_commit/LICENSES/MIT.txt" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

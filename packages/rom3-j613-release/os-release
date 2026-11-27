@@ -1,0 +1,15 @@
+NAME="ROM3"
+PRETTY_NAME="ROM3"
+VERSION="1 (J613)"
+VERSION_ID="1"
+VERSION_CODENAME="j613"
+VARIANT="J613"
+VARIANT_ID="j613"
+ID=rom3
+ID_LIKE=arch
+ANSI_COLOR="38;2;0;180;255"
+HOME_URL="https://github.com/adrgu372/ROM3-j613"
+DOCUMENTATION_URL="https://github.com/adrgu372/ROM3-j613/tree/main/docs"
+SUPPORT_URL="https://github.com/adrgu372/ROM3-j613/issues"
+BUG_REPORT_URL="https://github.com/adrgu372/ROM3-j613/issues"
+LOGO=rom3-logo

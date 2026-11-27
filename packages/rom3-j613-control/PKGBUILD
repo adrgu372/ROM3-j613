@@ -1,0 +1,47 @@
+pkgname=rom3-j613-control
+pkgver=1
+pkgrel=2
+pkgdesc='Graphical control center for the tested ROM3-j613 hardware stack'
+arch=('aarch64')
+url='https://github.com/adrgu372/ROM3-j613'
+license=('GPL-2.0-only')
+depends=('qt6-base' 'polkit' 'python' 'rom3-j613-guard')
+makedepends=('cmake' 'qt6-base')
+backup=('etc/rom3-j613/auto-update.conf')
+source=(
+  'CMakeLists.txt'
+  'main.cpp'
+  'rom3-j613-control.desktop'
+  'rom3-j613-github-update'
+  'rom3-j613-github-update.service'
+  'rom3-j613-github-update.timer'
+  'auto-update.conf'
+)
+sha256sums=(
+  '0e88e6d0d950b49dfa71457c2dbd40dd550ecda3a19b61fbed62d283166a2e9b'
+  'a215a4d447f14656a76fad8c814c25675cbbb3b009cb0225bf70b8026af5e195'
+  'd2e71f655d10a90c9bc216e9b453c7bfd481b17c242dbdf7e73a99189e51d7d2'
+  'f5e64eae3f80146e50aa0ade4e4d702c346fca073f279939a2d2463ce9389dd7'
+  'c291a7e42575e1790ddcdbff2a5b421b6a7ef83e84389df2c93d4dbdc34d228e'
+  'fed0bc1bad6995f9a28c879bcc32bfb299d732a1a3d20f21440995a8ad5362c9'
+  '05d47bebadfaabfc321afafa403b41b024a7391dea607e0f3b5c9bde3f2d1f83'
+)
+
+build() {
+  cmake -S "$srcdir" -B build \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build --parallel
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm755 "$srcdir/rom3-j613-github-update" \
+    "$pkgdir/usr/bin/rom3-j613-github-update"
+  install -Dm644 "$srcdir/rom3-j613-github-update.service" \
+    "$pkgdir/usr/lib/systemd/system/rom3-j613-github-update.service"
+  install -Dm644 "$srcdir/rom3-j613-github-update.timer" \
+    "$pkgdir/usr/lib/systemd/system/rom3-j613-github-update.timer"
+  install -Dm644 "$srcdir/auto-update.conf" \
+    "$pkgdir/etc/rom3-j613/auto-update.conf"
+}

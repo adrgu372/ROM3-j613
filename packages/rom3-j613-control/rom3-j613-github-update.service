@@ -1,0 +1,10 @@
+[Unit]
+Description=Install the latest signed ROM3-j613 GitHub update
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/rom3-j613-github-update --auto
+Nice=10
+IOSchedulingClass=idle

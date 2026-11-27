@@ -22,6 +22,7 @@ REQUIRED_KEYS = {
     "hardware",
     "kernel_release",
     "stage2_sha256",
+    "legacy_packages",
     "packages",
     "required_outputs",
 }
@@ -57,9 +58,15 @@ def main() -> int:
     }
     if not quarantine:
         fail("quarantine list is empty")
-    missing = quarantine - packages.keys()
+    legacy = data["legacy_packages"]
+    missing = quarantine - packages.keys() - legacy.keys()
     if missing:
         fail(f"quarantine packages lack verified versions: {sorted(missing)}")
+    for old, new in legacy.items():
+        if old not in quarantine:
+            fail(f"legacy package {old} is not quarantined")
+        if new not in packages:
+            fail(f"legacy package {old} points at unknown replacement {new}")
 
     for name, version in packages.items():
         if not name or not version:

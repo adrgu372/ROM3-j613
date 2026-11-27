@@ -1,0 +1,134 @@
+pkgname=rom3-j613-package-migration
+pkgver=1
+pkgrel=1
+pkgdesc='Atomic migration from ROM3-named packages to the ROM3 package namespace'
+arch=('any')
+url='https://github.com/adrgu372/ROM3-j613'
+license=('custom')
+groups=('rom3-platform-apple-silicon')
+
+# Install every ROM3 replacement in the same transaction that removes the
+# legacy package owners. This prevents both variants from claiming files.
+depends=(
+  alsa-ucm-conf-rom3
+  alsa-utils-rom3
+  rom3
+  rom3-audio
+  rom3-bless
+  rom3-boot
+  rom3-camera-denoise
+  rom3-diag
+  rom3-fido
+  rom3-firmware
+  rom3-firstboot
+  rom3-flatpak-gl
+  rom3-kbd-light
+  rom3-keep-config
+  rom3-keyring
+  rom3-logos
+  rom3-m5-platform-config
+  rom3-neo-platform-config
+  rom3-nvram
+  rom3-omarchy-polkit
+  rom3-panel-nits
+  rom3-power-budget
+  rom3-secboot
+  rom3-sep
+  rom3-sep-host-state
+  rom3-sep-luks
+  rom3-sep-sk
+  rom3-speaker-upgrade
+  rom3-steam-native
+  rom3-system-fixes
+  rom3-touchid-rearm
+  rom3-wifi-firmware
+  rom3-xart
+  fprintd-rom3
+  gnome-settings-daemon-rom3
+  iio-sensor-proxy-rom3
+  iwd-rom3
+  kwin-rom3
+  libfprint-rom3
+  linux-rom3
+  linux-rom3-headers
+  mesa-rom3
+  mesa-rom3-fex-guest
+  mutter-rom3
+  networkmanager-rom3
+  opencl-rusticl-rom3
+  plymouth-theme-rom3
+  speakersafetyd-rom3-profiles
+  uboot-rom3
+  upower-rom3
+  vulkan-lavapipe-rom3
+  vulkan-rom3
+  rom3-userpages
+)
+
+# Upstream packages that still depend on an Aurora package name can resolve it
+# through this provider while the actual payload is owned by the ROM3 package.
+provides=(
+  alsa-ucm-conf-aurora
+  alsa-utils-aurora
+  aura
+  aurora-audio
+  aurora-bless
+  aurora-btsync
+  aurora-boot
+  aurora-camera-denoise
+  aurora-diag
+  aurora-fido
+  aurora-firmware
+  aurora-firstboot
+  aurora-flatpak-gl
+  aurora-gamemode
+  aurora-kbd-light
+  aurora-keep-config
+  aurora-keyring
+  aurora-logos
+  aurora-m5-platform-config
+  aurora-neo-platform-config
+  aurora-nvram
+  aurora-omarchy-polkit
+  aurora-panel-nits
+  aurora-power-budget
+  aurora-secboot
+  aurora-sep
+  aurora-sep-host-state
+  aurora-sep-luks
+  aurora-sep-sk
+  aurora-speaker-upgrade
+  aurora-steam-native
+  aurora-system-fixes
+  aurora-touchid-rearm
+  aurora-userpages
+  aurora-wifi-firmware
+  aurora-xart
+  fprintd-aurora
+  gnome-settings-daemon-aurora
+  iio-sensor-proxy-aurora
+  iwd-aurora
+  kwin-aurora
+  libfprint-aurora
+  linux-aurora
+  linux-aurora-headers
+  mesa-aurora
+  mesa-aurora-fex-guest
+  mutter-aurora
+  networkmanager-aurora
+  opencl-rusticl-aurora
+  plymouth-theme-aurora
+  speakersafetyd-aurora-profiles
+  uboot-aurora
+  upower-aurora
+  vulkan-aurora
+  vulkan-lavapipe-aurora
+)
+
+conflicts=("${provides[@]}")
+replaces=("${provides[@]}")
+options=('!strip')
+
+package() {
+  install -Dm644 /dev/null "$pkgdir/usr/share/rom3-j613/package-migration"
+}

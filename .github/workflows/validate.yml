@@ -35,4 +35,5 @@ jobs:
           for package in packages/*/PKGBUILD; do
             bash -n "$package"
           done
+          ! rg -n -i '^pkg(name|base)=.*(aura|aurora)' packages/*/PKGBUILD
 

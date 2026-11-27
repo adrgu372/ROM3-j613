@@ -14,7 +14,7 @@
 > distribution. Only `apple,j613` is tested. Other M3 Macs are not supported.
 
 ROM3-j613 is a downstream Arch Linux ARM and Aurora Silicon integration. It
-does not replace Linux, Mesa, Aura or the Arch package ecosystem. It packages
+does not replace Linux, Mesa, the Aura-derived bootloader or the Arch package ecosystem. It packages
 the known-good combination for one board so a system update cannot silently
 replace components responsible for display, GPU or speaker-safety regressions.
 
@@ -23,10 +23,11 @@ replace components responsible for display, GPU or speaker-safety regressions.
 ```text
 Board:           apple,j613
 Hardware:        MacBook Air 13-inch M3
+Distribution:    ROM3 (VARIANT_ID=j613)
 Kernel:          7.3.0-1-45-ARCH
-Aurora kernel:   linux-aurora 7.3.0.aurora1-45
-Bootloader:      aura 1.0.0b17-1
-U-Boot:          uboot-aurora 2026.07.aurora11-1
+ROM3 kernel:     linux-rom3 7.3.0.aurora1-45
+Bootloader:      rom3 1.0.0b17-2
+U-Boot:          uboot-rom3 2026.07.aurora11-1
 Display:         2560x1664 internal panel, 64-row notch exposed
 GPU:             Apple M3 G15G
 Render node:     /dev/dri/renderD128
@@ -54,6 +55,14 @@ ROM3-j613 turns the tested package combination into an explicit compatibility
 contract. Sensitive packages remain in a signed ROM3 repository and ordinary
 Arch updates are allowed only around that tested core.
 
+Pacman-visible package identifiers use the ROM3 namespace. The
+`rom3-j613-package-migration` package provides and replaces the legacy
+Aura/Aurora identifiers in one transaction; upstream repository URLs and
+source provenance are intentionally unchanged.
+
+The installed operating system reports `NAME="ROM3"`, `ID=rom3` and
+`VARIANT_ID="j613"` through `/etc/os-release`. See [identity.md](docs/identity.md).
+
 ## Architecture
 
 ```text
@@ -63,7 +72,7 @@ Aurora Silicon hardware stack
           |
 ROM3-j613 compatibility overlay
   - patched kernel
-  - patched Aura
+  - patched Aura-derived bootloader
   - tested Mesa/Vulkan
   - tested KWin/audio set when required
           |
@@ -89,22 +98,22 @@ ROM3 Installer catalog and payload
 ## Current milestone
 
 The project starts with the already verified `J613` stack and a fail-closed
-update policy. The tested kernel and Aura recipes, exact-version meta-package,
+update policy. The tested kernel and bootloader recipes, exact-version meta-package,
 update guard and initial local test packages now exist.
 
 The signed package feed is public:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/stable-20261126.1
+https://github.com/adrgu372/ROM3-j613/releases/tag/stable-20261127.2
 
 The snapshot contains the complete direct dependency closure of the
-meta-package. Kernel 44 carries the SIO protocol-10 tables required by Aura b17,
-and both the 47 Aura audio scenarios and the live J613 audio/display checks
-pass. Aura's external-DCP default is explicitly disabled on this board because
+meta-package. Kernel 45 carries the SIO protocol-10 tables required by the b17 bootloader,
+and both the 47 bootloader audio scenarios and the live J613 audio/display checks
+pass. The bootloader's external-DCP default is explicitly disabled on this board because
 it crashes the primary DCP with the current 14.7 firmware. Its keyring package
 repopulates and locally trusts the ROM3 signing key after Aurora creates the
 machine's pacman master key.
 
-The Aura b14.1-to-b17 delta also exposes the full notch-aware panel geometry,
+The b14.1-to-b17 bootloader delta also exposes the full notch-aware panel geometry,
 reads panel brightness metadata from the ADT, selects the matching SIO
 protocol-9/10 layout from kernel 44 and hardens live-DCP, AOP, video-encoder,
 PCIe and NVMe handoff. Firmware-27.2 display/GPU support is included but
@@ -174,17 +183,22 @@ sudo /usr/share/rom3-j613/verify-live-system.sh
 
 Systems still on `stable-20261122.9` or `stable-20261124.2` should install
 `rom3-j613-guard` and `rom3-j613-release` first, then authenticate
-[`override-20261126.2`](https://github.com/adrgu372/ROM3-j613/releases/tag/override-20261126.2)
+[`override-20261127.1`](https://github.com/adrgu372/ROM3-j613/releases/tag/override-20261127.1)
 with `rom3-j613-override configure`. The release notes contain the exact signed
-commands for the Aura b17 and kernel 45 transition.
+commands for the bootloader b17 and kernel 45 transition.
 
 Running `pacman -Syu` directly is not the supported update path for the
 protected ROM3 stack. See [docs/update-model.md](docs/update-model.md).
 
-Upstream kernel, Aura, audio, image-builder and installer changes are checked
+Upstream kernel, bootloader, audio, image-builder and installer changes are checked
 daily by a GitHub Actions workflow. It updates one issue with a
 `BUILD CANDIDATE`, `REVIEW` or `WAIT` recommendation without compiling
 anything automatically. See [docs/upstream-watch.md](docs/upstream-watch.md).
+
+The installed system can instead use the Qt/Plasma
+[ROM3 Control Center](docs/control-center.md) for status, safe updates,
+diagnostics and automatic installation of the newest signed ROM3 override from
+GitHub.
 
 Replacement kernels or other sensitive packages can be delivered through a
 signed override feed hosted in any GitHub repository. See

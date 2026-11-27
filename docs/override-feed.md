@@ -18,8 +18,8 @@ signing key, so it does not add a second boot-time trust root.
 
 Select every package that must move together. If exact dependencies in
 `rom3-j613-meta` change, rebuild and include the new `rom3-j613-meta` package
-in the same feed. Kernel headers should move with the kernel, and Aura or
-`aurora-userpages` should move with a kernel when their ABI requires it.
+in the same feed. Kernel headers should move with the kernel, and the ROM3 bootloader or
+`rom3-userpages` should move with a kernel when their ABI requires it.
 
 The output must include all direct replacement packages, not the complete ROM3
 snapshot. Base packages not named by the override manifest remain pinned to

@@ -1,0 +1,42 @@
+pkgname=rom3-audio
+pkgver=4.1.aurora2
+pkgrel=12
+pkgdesc='ROM3 Apple Silicon PipeWire/WirePlumber DSP profiles including J700'
+arch=('any')
+groups=('rom3-platform-apple-silicon')
+url='https://github.com/aurora-silicon/asahi-audio'
+license=('MIT')
+_commit=c967141161bea3badc7754e23d80b39ffb1bdafd
+makedepends=('make' 'patch')
+provides=("asahi-audio=$pkgver" "asahi-audio-aurora=$pkgver"
+          "rom3-audio=$pkgver-$pkgrel")
+conflicts=('asahi-audio' 'asahi-audio-aurora' 'speakerguardd-v2' 'rom3-audio')
+replaces=('asahi-audio-aurora' 'speakerguardd-v2' 'rom3-audio')
+backup=('etc/mkinitcpio.conf.d/90-rom3-audio.conf')
+source=("rom3-audio-${_commit}.tar.gz::https://codeload.github.com/aurora-silicon/asahi-audio/tar.gz/$_commit"
+        90-rom3-audio.conf rom3-audio.hook 0001-restore-legacy-speaker-graphs.patch)
+sha256sums=('4a5fc1eb37113742791eb632819fb09301f97b76a78586e96760442be6c87dd7' '51aa32a5520783b65c972e9721a571a7a47b802f0b278b5c9a3ff9fbc4885fa7' '782ea1d4f8fd2324eccf22e38b98521bc0fdec25ea352d85d130ffa1b6f26177'
+            '06ec664457f32bba4747fd5498c52a4e68aad04acb84580171b87f378c214f9b')
+prepare() {
+  patch -d "asahi-audio-$_commit" -Np1 < 0001-restore-legacy-speaker-graphs.patch
+}
+check() {
+  make -C "asahi-audio-$_commit" install DESTDIR="$srcdir/check-root" PREFIX=/usr
+  local board
+  for board in j316 j413 j616 j700; do
+    test -s "$srcdir/check-root/usr/share/asahi-audio/$board/graph.json"
+    grep -q "/usr/share/asahi-audio/$board/graph.json" "$srcdir/check-root/usr/share/wireplumber/wireplumber.conf.d/99-asahi.conf"
+  done
+  test -s "$srcdir/check-root/usr/share/asahi-audio/j700/48.wav"
+  rm -rf "$srcdir/check-root"
+}
+package() {
+  # The profile files can be packaged without installing the target audio stack.
+  # Use the established Asahi protection stack without per-Mac macOS tuning.
+  depends=('alsa-ucm-conf-rom3' 'pipewire-audio' 'wireplumber>=0.5.16' 'bankstown' 'triforce-lv2'
+           'lsp-plugins-lv2' 'speakersafetyd' 'speakerguardd' 'alsa-utils-rom3')
+  make -C "asahi-audio-$_commit" install DESTDIR="$pkgdir" PREFIX=/usr
+  install -Dm644 "asahi-audio-$_commit/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 90-rom3-audio.conf "$pkgdir/etc/mkinitcpio.conf.d/90-rom3-audio.conf"
+  install -Dm644 rom3-audio.hook "$pkgdir/usr/share/libalpm/hooks/95-rom3-audio.hook"
+}

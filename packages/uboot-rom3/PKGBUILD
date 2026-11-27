@@ -1,0 +1,36 @@
+pkgname=uboot-rom3
+pkgver=2026.07.aurora11
+pkgrel=1
+pkgdesc='ROM3 common Apple Silicon U-Boot with Neo MTP handoff'
+arch=('aarch64')
+groups=('rom3-platform-apple-silicon')
+url='https://github.com/aurora-silicon/u-boot'
+license=('GPL-2.0-or-later')
+_commit=250385f8c8aaafd47a8f7990f6efe0443c28d0b5
+provides=("uboot-asahi=$pkgver" "uboot-rom3=$pkgver-$pkgrel")
+conflicts=('uboot-asahi' 'uboot-asahi-j700' 'uboot-rom3')
+replaces=('uboot-asahi-j700' 'uboot-rom3')
+makedepends=('git' 'bc' 'dtc' 'python' 'python-pyelftools' 'swig' 'openssl')
+options=('!strip' '!debug')
+source=("u-boot::git+$url.git#commit=$_commit")
+sha256sums=('0beafe6c60f46cdf094d3cd12ef341a54cfe7b93c9b53a53a1598f382d1b8aac')
+build() {
+  cd u-boot
+  # OpenSSL 4 removed the ENGINE API that the host image tools (mkimage,
+  # dumpimage, fit_info) still call. Its headers keep stubs for that code
+  # behind OPENSSL_ENGINE_STUBS: an engine is never found, PEM keys work.
+  # Patching the checkout instead would mark the version -dirty.
+  local _make=(make O=build-aurora CROSS_COMPILE="${CROSS_COMPILE:-}" PYTHON3=/usr/bin/python3
+               HOSTCFLAGS=-DOPENSSL_ENGINE_STUBS)
+  "${_make[@]}" apple_m1_defconfig
+  "${_make[@]}" -j"${OMARCHY_BUILD_JOBS:-10}"
+}
+package() {
+  # A new U-Boot reaches Stage 2 through update-m1n1's trial support.
+  depends=('aurora-stage2-trial')
+  install -Dm644 u-boot/build-aurora/u-boot-nodtb.bin "$pkgdir/usr/lib/asahi-boot/u-boot-nodtb.bin"
+  install -d "$pkgdir/usr/lib/asahi-boot-j700"
+  ln -s ../asahi-boot/u-boot-nodtb.bin "$pkgdir/usr/lib/asahi-boot-j700/u-boot-nodtb.bin"
+  install -Dm644 u-boot/Licenses/gpl-2.0.txt "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  # DTBs come from linux-rom3; generated u-boot.dtb is the default J274 tree.
+}

@@ -5,7 +5,7 @@
       "id": "linux",
       "repository": "aurora-silicon/linux",
       "branch": "main",
-      "pin_file": "packages/linux-aurora/PKGBUILD",
+      "pin_file": "packages/linux-rom3/PKGBUILD",
       "pin_regex": "(?m)^_commit=([0-9a-f]{40})$",
       "role": "kernel",
       "critical_paths": [
@@ -22,12 +22,12 @@
       ]
     },
     {
-      "id": "aura",
+      "id": "rom3-boot",
       "repository": "aurora-silicon/aura",
       "branch": "main",
-      "pin_file": "packages/aura/PKGBUILD",
+      "pin_file": "packages/rom3/PKGBUILD",
       "pin_regex": "(?m)^_commit=([0-9a-f]{40})$",
-      "role": "aura",
+      "role": "boot",
       "critical_paths": [
         "src/"
       ]
@@ -36,7 +36,7 @@
       "id": "asahi-audio",
       "repository": "aurora-silicon/asahi-audio",
       "branch": "main",
-      "pin_file": "packages/aurora-audio/PKGBUILD",
+      "pin_file": "packages/rom3-audio/PKGBUILD",
       "pin_regex": "(?m)^_commit=([0-9a-f]{40})$",
       "role": "audio",
       "critical_paths": [

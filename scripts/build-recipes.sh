@@ -3,7 +3,7 @@ set -euo pipefail
 
 root=$(cd "$(dirname "$0")/.." && pwd)
 artifacts="$root/artifacts"
-packages=${*:-"linux-aurora aura rom3-j613-meta rom3-j613-guard"}
+packages=${*:-"linux-rom3 rom3 rom3-audio mesa-rom3 uboot-rom3 alsa-ucm-conf-rom3 alsa-utils-rom3 speakersafetyd-rom3-profiles rom3-j613-package-migration rom3-j613-meta rom3-j613-guard"}
 
 mkdir -p "$artifacts"
 

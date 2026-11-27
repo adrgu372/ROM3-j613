@@ -1,0 +1,25 @@
+{
+  "repository": "https://github.com/aurora-silicon/linux",
+  "commit": "7cc30f35ecea3e90ceedd44babbde128c1d487a6",
+  "source_directory": "tools/aurora-sep",
+  "upstream_files_sha256": {
+    "load-driver": "abea60bb264ced349f7cf671d8d26e1609a81a60ea4c34d66ec6f7f73b847dbb",
+    "aurora-sep.service": "447f99cc3c7e683134f31b993aa825fadde24e4854954a3035c96e6631d4d4d0",
+    "fprintd-aurora.conf": "f8d0c4b9385e6716d5ac5dd9941a57459fbc551a8238383bcde36cd929d0523f",
+    "README.md": "25e3db3e49d6932d76a73fe9c732e3298b256190c1386714b0bb9b0293e620e1",
+    "XART-SAFETY.md": "4422988e5e7f2417791957d066c501741e929705724083da76cdf1cb70d7a2fc",
+    "OS-IDENTITY.md": "52020e636e62b60f0c3e6251c3b67b8a8c409bff0486bc3463f356fd3073384b",
+    "aurora-sep-ready": "40f0d21446a85bab3e3800b31342e94e553af0fcde2c985503147519737e011d",
+    "aurora-sep-ready.service": "f38421360c2f885bb102bc5076d81006d352d03d12b5fb35b4da8a5132f4ccc0",
+    "fprintd-no-timeout.conf.in": "8d8df0ba2a6861b2edb2110e606906d84ca4848617621ad3cb48493a1522971d",
+    "extract-mesa-calibration": "15a878dcf382a22c5d807f0f2c754fe70d39baec88f65aea183b1fe56cf69441",
+    "aurora-sep-greeter-fingerprint": "5936eb76db666496a8700dade7ac6bcb3785b517958dcea10685690f1822c86f",
+    "aurora-sep-greeter-fingerprint.service": "ffab97b20bfd5f0eb1ab641179a131843349cf16890fff0cf2d893f0b5681b37",
+    "logind-aurora-sep.conf": "0695bd9ce4c207241db13c3ea07819a032d8213417021378f5015ab9317cde12",
+    "aurora-sep": "f8a2eadd5b55be5aedda79e5d1a629b93f13a64fb4ebb8f280aa86d22b6d3a06"
+  },
+  "adaptations": "Late root-filesystem loading, timer, optional per-device calibration, trusted-key-only success without a reader, reader-presence gate on the readiness unit and fprintd; the login screen fingerprint unit ships disabled; the logind power-button snippet is installed as a logind.conf.d drop-in and powerdevilrc makes a short press suspend in Plasma; touchid-pam, run by a pacman hook, puts \"-auth sufficient pam_fprintd.so\" in front of the sudo and polkit-1 stacks only. The calibration is set up on demand by aurora-touchid-setup (when a file is missing, when the enclave refused one, or by hand) instead of at every start, and aurora-sep-ready starts it once per boot after a refusal. No SELinux policy, as Arch Linux ARM does not ship SELinux. README.md is the package's own; XART-SAFETY.md carries the M1 guard default from aurora-silicon/linux#1049 and names aurora-xart reset-touchid (packaged as aurora-xart) for a Touch ID reset, and no longer suggests putting a saved xART guard list back; OS-IDENTITY.md is unmodified. load-driver loads apple_sep with no options, and the package ships no apple_sep options in modprobe.d: SEP writes and identity-keybag provisioning are always on, and the driver has no parameter that turns them off (aurora-silicon/linux#2591). It returns at once when the kernel enabled no SEP (no *.sep platform device, as on a board without an apple_sep profile) instead of waiting out its ready timeout. It also stops at once, and fails, when the driver reports this boot's identity keybag as failed (diag/keybag), since no trusted key can be sealed then; it names aurora-xart status. The sensor-present gate accepts interfaces v4 and v5; aurora-sep-ready uses their common diag attributes. load-driver finishes the key-store-only attach that the aurora-sep-luks initrd starts (complete_attach, keystore_only 1 or 2) instead of running modprobe a second time. aurora-sep (aurora-sep status) is from the commit in file_commits, except that its xART warning names the cases in which the store is read-only (the key-store-only initrd phase, a failed writable reopen) instead of xart_writes=0, and aurora-sep-ready's xART reason no longer names xart_writes=0; aurora-silicon/linux#2591 removed that parameter. sleep-aurora-sep.conf orders systemd-suspend, systemd-hybrid-sleep and systemd-suspend-then-hibernate after aurora-sep.service without starting or retrying the loader. The mem-only suspend policy sets SuspendState=mem and empty MemorySleepMode, independently of sensor presence and SEP activation. It preserves kernel/command-line/runtime mode selection and explicit user overrides, and prevents an implicit standby/freeze retry after refusal. These are distribution policy adaptations, not files from the recorded upstream source commit. The logind drop-in is installed as 05-aurora-sep.conf so later distribution/admin power-key policy wins, following aurora-silicon/linux#1877 and its existing PR #2254; its comment and the package README document that ordering. The recorded upstream commit and original file hashes are unchanged.",
+  "file_commits": {
+    "aurora-sep": "746187598f2eed13f0913df96e15826d09e8ef0f"
+  }
+}

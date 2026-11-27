@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=ROM3-j613 Control Center
+Comment=Update and verify the tested Apple J613 hardware stack
+Exec=rom3-j613-control
+Icon=system-software-update
+Terminal=false
+Categories=System;Settings;
+Keywords=ROM3;Apple;J613;Updates;
+StartupNotify=true
