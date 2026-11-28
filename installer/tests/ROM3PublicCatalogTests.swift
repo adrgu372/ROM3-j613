@@ -6,7 +6,7 @@
   final class ROM3PublicCatalogTests: XCTestCase {
     private let release = URL(
       string:
-        "https://github.com/adrgu372/ROM3-j613/releases/download/image-20261123.2"
+        "https://github.com/adrgu372/ROM3-j613/releases/download/image-20261128.2"
     )!
 
     func testPublicCatalogAdmitsJ613AndArtifactURLs() async throws {
@@ -60,10 +60,10 @@
       }
       XCTAssertEqual(installer.installationProfile, "arch-kde")
       let delivery = try XCTUnwrap(installer.delivery)
-      XCTAssertEqual(delivery.payload.parts.count, 6)
+      XCTAssertEqual(delivery.payload.parts.count, 5)
       XCTAssertEqual(
         delivery.payload.sourceURL.lastPathComponent,
-        "arch-kde-20261123.2.zip"
+        "arch-kde-20261128.2.zip"
       )
       XCTAssertEqual(
         delivery.metadata.sourceURL.lastPathComponent,

@@ -28,20 +28,20 @@ The raw Ed25519 trust root fingerprint is:
 sha256:2b7e847f34019f26eb9fc0dbd675611446357078f3057434be9491ba97c4404c
 ```
 
-The catalog pins package snapshot `stable-20261122.9`, source filesystem release
-`image-20261123.1`, native installer payload release `image-20261123.2`,
-kernel `7.3.0.aurora1-43`, and `speakersafetyd 2.0.1-1.2`.
+The catalog pins package snapshot `stable-20261128.1`, source filesystem release
+`image-20261128.1`, native installer payload release `image-20261128.2`,
+kernel `7.3.0.aurora1-46`, and the tested ROM3 KDE package set.
 
 Native installer payload:
 
 ```text
-sha256:639a6220d99d1691d398c2f5fa1e0227e86765e173d75810825763015939c96e
+sha256:d6c2f56feff16cf1e50f23b26c26fc05665af7a12920c3a16277700cc1332aa1
 ```
 
 Source filesystem archive:
 
 ```text
-sha256:6cb9e140fc904d033d807680c07cc1e065e5344d7ec543819bed9100b710b6d8
+sha256:3abdeb4aa2486b18dede3ee3d2758e82a0a5c96e673d9a4ab719ead162f75386
 ```
 
 The catalog is deliberately `testing`: a clean install, first boot and recovery

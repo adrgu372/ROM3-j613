@@ -131,9 +131,9 @@ provenance, signed checksums and a reassembly script.
 
 The native installer payload assembled from that image is public:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261123.2
+https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261128.2
 
-It contains the native installer ZIP in six parts, `os_list` metadata, the
+It contains the native installer ZIP in five parts, `os_list` metadata, the
 J613-only schema-5 catalog on the `testing` channel, signed checksums and a
 payload reassembly script. The upstream Aurora installer does not trust this
 catalog; a ROM3 installer build must bundle the ROM3 catalog root.
@@ -145,7 +145,7 @@ separate release gates.
 
 A CI-built technical preview is available as a prerelease:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/installer-preview-0.1.5
+https://github.com/adrgu372/ROM3-j613/releases/tag/installer-preview-0.1.6
 
 It targets only `apple,j613`. The package is intentionally unsigned and the
 app is ad-hoc signed; do not treat it as a production installer.

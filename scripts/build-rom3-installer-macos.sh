@@ -6,8 +6,8 @@ commit=a0b34140669f69e3a777c70480e60244a470d50f
 upstream=${ROM3_INSTALLER_SOURCE:-$HOME/aurora-installer-rom3}
 output=${ROM3_INSTALLER_OUTPUT:-$HOME/ROM3-j613-installer-output}
 public_key=$root/installer/keys/catalog-signing.ed25519.pub
-catalog_dir=${ROM3_CATALOG_DIR:-$root/cache/catalog-image-20261123.2}
-catalog_base=https://github.com/adrgu372/ROM3-j613/releases/download/image-20261123.2
+catalog_dir=${ROM3_CATALOG_DIR:-$root/cache/catalog-image-20261128.2}
+catalog_base=https://github.com/adrgu372/ROM3-j613/releases/download/image-20261128.2
 
 [[ $(uname -s) == Darwin ]] || {
     echo "this build must run on macOS with Xcode and Swift 6.2+" >&2
@@ -103,9 +103,9 @@ models = {
 models_path.write_text(json.dumps(models, indent=2) + "\n")
 
 inputs = {
-    "payload_name": "arch-kde-20261123.2.zip",
+    "payload_name": "arch-kde-20261128.2.zip",
     "metadata_name": "installer-data-arch-kde.json",
-    "evidence_revision": "rom3-native-payload-45175999882",
+    "evidence_revision": "rom3-native-payload-46146188224",
     "asahi_installer_tag": "v0.9.2",
     "asahi_installer_revision": "a0b34140669f69e3a777c70480e60244a470d50f",
     "asahi_installer_data_revision": "5c64c2c0d47387b5d84fa760019dca67ca98d45b",
@@ -139,7 +139,7 @@ cd "$source_root"
 AURORA_DEVELOPER_BUILD=1 \
 AURORA_ROM3_J613=1 \
 AURORA_APP_SIGNING_IDENTITY="-" \
-AURORA_APP_VERSION="0.1.5" \
+AURORA_APP_VERSION="0.1.6" \
 bash Packaging/build-app.sh "$release_inputs" "$output/app"
 
 profile_destination="$output/app/ROM3-j613 Installer.app/Contents/Resources/Release/Profiles/arch-kde"
@@ -153,7 +153,7 @@ done
 if [[ -x Packaging/build-developer-pkg.sh ]]; then
     bash Packaging/build-developer-pkg.sh \
         "$output/app/ROM3-j613 Installer.app" \
-        "$output/ROM3-j613-Installer-0.1.5.pkg"
+        "$output/ROM3-j613-Installer-0.1.6.pkg"
 fi
 
 cat <<EOF
