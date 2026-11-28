@@ -37,6 +37,17 @@ move through the normal update transaction.
 The GUI never executes arbitrary shell text as root. Privileged operations use
 fixed `pkexec` argument vectors.
 
+## Storage errors
+
+Apply operations run a storage preflight before configuring a feed or changing
+packages. The updater requires enough free space to create the rollback
+snapshot and then recreate the active swapfile with a 1 GiB reserve. An empty,
+truncated or inactive swapfile also aborts the update before changes are made.
+
+The helper returns exit status `75` for insufficient space and `74` for an
+unsafe swapfile. The Control Center maps these statuses to specific dialogs
+instead of a generic operation failure.
+
 ## Automatic updates
 
 The optional systemd timer runs daily and is disabled by default:

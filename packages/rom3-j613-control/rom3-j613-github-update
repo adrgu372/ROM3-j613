@@ -116,6 +116,8 @@ def configure_override(tag: str) -> str:
 
 
 def update(apply: bool) -> None:
+    if apply:
+        run([UPDATE, "--preflight-apply"])
     tag = latest_override()
     print(f"Latest signed ROM3 override: {tag}", flush=True)
     feed = configure_override(tag)
@@ -207,7 +209,23 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except subprocess.CalledProcessError as error:
-        print(f"GitHub update failed with exit {error.returncode}", file=sys.stderr)
+        if error.returncode == 75:
+            print(
+                "GitHub update cancelled: insufficient free space. "
+                "No packages were changed.",
+                file=sys.stderr,
+            )
+        elif error.returncode == 74:
+            print(
+                "GitHub update cancelled: the configured swapfile is "
+                "missing, empty, truncated or inactive. No packages were changed.",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                f"GitHub update failed with exit {error.returncode}",
+                file=sys.stderr,
+            )
         raise SystemExit(error.returncode or 1)
     except (OSError, urllib.request.URLError) as error:
         print(f"GitHub update failed: {error}", file=sys.stderr)

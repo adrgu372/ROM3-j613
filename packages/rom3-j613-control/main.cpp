@@ -3,11 +3,13 @@
 #include <QDateTime>
 #include <QFile>
 #include <QFileInfo>
+#include <QFont>
 #include <QFontDatabase>
-#include <QFormLayout>
 #include <QFrame>
+#include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QListWidget>
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QPlainTextEdit>
@@ -15,7 +17,11 @@
 #include <QProcessEnvironment>
 #include <QProgressBar>
 #include <QPushButton>
+#include <QScrollArea>
+#include <QSettings>
+#include <QStackedWidget>
 #include <QStatusBar>
+#include <QStyleHints>
 #include <QTextCursor>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -24,241 +30,349 @@ class MainWindow final : public QMainWindow {
 public:
     MainWindow() {
         setWindowTitle("ROM3 Control Center");
-        setMinimumSize(980, 720);
-        resize(1040, 780);
+        setMinimumSize(940, 680);
+        resize(1100, 760);
 
-        auto *central = new QWidget(this);
-        central->setObjectName("root");
-        auto *layout = new QVBoxLayout(central);
-        layout->setContentsMargins(28, 24, 28, 24);
+        auto *shell = new QFrame(this);
+        shell->setObjectName("shell");
+        auto *shellLayout = new QHBoxLayout(shell);
+        shellLayout->setContentsMargins(0, 0, 0, 0);
+        shellLayout->setSpacing(0);
+
+        shellLayout->addWidget(buildSidebar(shell));
+        shellLayout->addWidget(buildContent(shell), 1);
+        setCentralWidget(shell);
+
+        statusBar()->showMessage("Ready");
+        connectSignals();
+
+        QSettings settings;
+        const bool systemDark =
+            QGuiApplication::styleHints()->colorScheme() ==
+            Qt::ColorScheme::Dark;
+        darkMode = settings.value("interface/darkMode", systemDark).toBool();
+        applyTheme();
+        refreshStatus();
+    }
+
+private:
+    bool darkMode = false;
+
+    QListWidget *navigation{};
+    QStackedWidget *pages{};
+    QLabel *pageTitle{};
+    QLabel *pageSubtitle{};
+    QLabel *healthSummary{};
+    QLabel *sidebarKernel{};
+    QLabel *kernelLabel{};
+    QLabel *bootLabel{};
+    QLabel *systemFirmwareLabel{};
+    QLabel *componentFirmwareLabel{};
+    QLabel *packageLabel{};
+    QPushButton *checkButton{};
+    QPushButton *applyButton{};
+    QPushButton *githubCheckButton{};
+    QPushButton *githubApplyButton{};
+    QPushButton *verifyButton{};
+    QPushButton *refreshButton{};
+    QPushButton *themeButton{};
+    QCheckBox *autoCheck{};
+    QPushButton *saveAutoButton{};
+    QProgressBar *progress{};
+    QPlainTextEdit *output{};
+    QProcess process;
+
+    static QFrame *newCard(QWidget *parent) {
+        auto *card = new QFrame(parent);
+        card->setProperty("card", true);
+        return card;
+    }
+
+    static QLabel *newLabel(const QString &text, QWidget *parent,
+                            const char *property = nullptr) {
+        auto *label = new QLabel(text, parent);
+        label->setWordWrap(true);
+        if (property)
+            label->setProperty(property, true);
+        return label;
+    }
+
+    static QWidget *infoRow(const QString &name, QLabel **value,
+                            QWidget *parent) {
+        auto *row = new QWidget(parent);
+        auto *layout = new QHBoxLayout(row);
+        layout->setContentsMargins(0, 5, 0, 5);
         layout->setSpacing(16);
+        auto *key = newLabel(name, row, "muted");
+        key->setMinimumWidth(180);
+        *value = newLabel("Checking...", row, "value");
+        (*value)->setTextInteractionFlags(Qt::TextSelectableByMouse);
+        layout->addWidget(key);
+        layout->addWidget(*value, 1);
+        return row;
+    }
 
-        auto *title = new QLabel("ROM3-j613 Control Center", central);
-        QFont titleFont = title->font();
-        titleFont.setPointSize(titleFont.pointSize() + 9);
-        titleFont.setBold(true);
-        title->setFont(titleFont);
-        layout->addWidget(title);
+    QFrame *buildSidebar(QWidget *parent) {
+        auto *sidebar = new QFrame(parent);
+        sidebar->setObjectName("sidebar");
+        sidebar->setFixedWidth(238);
+        auto *layout = new QVBoxLayout(sidebar);
+        layout->setContentsMargins(18, 22, 18, 18);
+        layout->setSpacing(18);
 
-        auto *subtitle = new QLabel(
-            "Tested Apple J613 system stack · updates, diagnostics and recovery",
-            central);
-        subtitle->setWordWrap(true);
-        subtitle->setProperty("muted", true);
-        layout->addWidget(subtitle);
-        auto *badge = new QLabel("APPLE J613  ·  ROM3 TESTED", central);
-        badge->setProperty("badge", true);
-        layout->addWidget(badge, 0, Qt::AlignLeft);
+        auto *brandRow = new QHBoxLayout();
+        brandRow->setSpacing(12);
+        auto *mark = new QLabel("R3", sidebar);
+        mark->setObjectName("brandMark");
+        mark->setAlignment(Qt::AlignCenter);
+        mark->setFixedSize(44, 44);
+        auto *brandText = new QVBoxLayout();
+        brandText->setSpacing(1);
+        auto *brand = new QLabel("ROM3", sidebar);
+        brand->setObjectName("brandTitle");
+        auto *edition = new QLabel("J613 Control Center", sidebar);
+        edition->setProperty("muted", true);
+        brandText->addWidget(brand);
+        brandText->addWidget(edition);
+        brandRow->addWidget(mark);
+        brandRow->addLayout(brandText, 1);
+        layout->addLayout(brandRow);
 
-        auto *statusFrame = new QFrame(central);
-        statusFrame->setProperty("card", true);
-        auto *statusForm = new QFormLayout(statusFrame);
-        statusForm->setContentsMargins(16, 14, 16, 14);
-        statusForm->setHorizontalSpacing(20);
-        kernelLabel = new QLabel(statusFrame);
-        bootLabel = new QLabel(statusFrame);
-        systemFirmwareLabel = new QLabel(statusFrame);
-        componentFirmwareLabel = new QLabel(statusFrame);
-        packageLabel = new QLabel(statusFrame);
-        packageLabel->setWordWrap(true);
-        statusForm->addRow("Linux kernel", kernelLabel);
-        statusForm->addRow("ROM3 bootloader", bootLabel);
-        statusForm->addRow("Apple system firmware", systemFirmwareLabel);
-        statusForm->addRow("Apple component firmware", componentFirmwareLabel);
-        statusForm->addRow("Protected package set", packageLabel);
-        layout->addWidget(statusFrame);
+        navigation = new QListWidget(sidebar);
+        navigation->setObjectName("navigation");
+        navigation->setFocusPolicy(Qt::NoFocus);
+        navigation->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        navigation->addItem("Updates");
+        navigation->addItem("System");
+        navigation->addItem("Activity");
+        navigation->setCurrentRow(0);
+        layout->addWidget(navigation);
+        layout->addStretch();
 
-        auto *policy = new QLabel(
-            "Safe update mode can upgrade ordinary Arch packages while keeping "
-            "the ROM3 kernel, bootloader, GPU, audio and compositor stack pinned.",
-            central);
-        policy->setWordWrap(true);
-        policy->setProperty("hint", true);
-        layout->addWidget(policy);
+        auto *stateCard = new QFrame(sidebar);
+        stateCard->setProperty("sidebarCard", true);
+        auto *stateLayout = new QVBoxLayout(stateCard);
+        stateLayout->setContentsMargins(14, 13, 14, 13);
+        stateLayout->setSpacing(6);
+        auto *stateBadge = newLabel("ROM3 TESTED", stateCard, "badge");
+        stateBadge->setAlignment(Qt::AlignCenter);
+        sidebarKernel = newLabel("Kernel: checking...", stateCard, "muted");
+        stateLayout->addWidget(stateBadge);
+        stateLayout->addWidget(sidebarKernel);
+        layout->addWidget(stateCard);
 
-        auto *maintenance = new QFrame(central);
-        maintenance->setProperty("card", true);
-        auto *maintenanceLayout = new QVBoxLayout(maintenance);
-        maintenanceLayout->setContentsMargins(16, 12, 16, 14);
-        maintenanceLayout->setSpacing(10);
-        auto *maintenanceCaption =
-            new QLabel("SYSTEM MAINTENANCE", maintenance);
-        maintenanceCaption->setProperty("caption", true);
-        maintenanceLayout->addWidget(maintenanceCaption);
+        themeButton = new QPushButton(sidebar);
+        themeButton->setProperty("secondary", true);
+        layout->addWidget(themeButton);
+        return sidebar;
+    }
 
-        auto *buttons = new QHBoxLayout();
-        buttons->setSpacing(10);
-        checkButton = new QPushButton("Check safe updates", central);
-        applyButton = new QPushButton("Apply safe updates", central);
-        githubCheckButton = new QPushButton("Check ROM3 release", central);
-        githubApplyButton = new QPushButton("Install ROM3 release", central);
-        verifyButton = new QPushButton("Verify system", central);
-        auto *refreshButton = new QPushButton("Refresh status", central);
-        checkButton->setProperty("secondary", true);
-        applyButton->setProperty("primary", true);
-        githubCheckButton->setProperty("secondary", true);
-        githubApplyButton->setProperty("primary", true);
-        verifyButton->setProperty("secondary", true);
+    QWidget *buildContent(QWidget *parent) {
+        auto *content = new QFrame(parent);
+        content->setObjectName("content");
+        auto *layout = new QVBoxLayout(content);
+        layout->setContentsMargins(32, 26, 32, 18);
+        layout->setSpacing(14);
+
+        auto *header = new QHBoxLayout();
+        auto *heading = new QVBoxLayout();
+        heading->setSpacing(3);
+        pageTitle = new QLabel(content);
+        pageTitle->setObjectName("pageTitle");
+        pageSubtitle = newLabel("", content, "muted");
+        heading->addWidget(pageTitle);
+        heading->addWidget(pageSubtitle);
+        header->addLayout(heading, 1);
+
+        refreshButton = new QPushButton("Refresh", content);
         refreshButton->setProperty("secondary", true);
-        buttons->addWidget(checkButton);
-        buttons->addWidget(applyButton);
-        buttons->addWidget(verifyButton);
-        buttons->addStretch();
-        buttons->addWidget(refreshButton);
-        maintenanceLayout->addLayout(buttons);
-        layout->addWidget(maintenance);
+        header->addWidget(refreshButton, 0, Qt::AlignTop);
+        layout->addLayout(header);
 
-        auto *github = new QFrame(central);
-        github->setProperty("card", true);
-        auto *githubLayout = new QVBoxLayout(github);
-        githubLayout->setContentsMargins(16, 12, 16, 14);
-        githubLayout->setSpacing(10);
-        auto *githubCaption =
-            new QLabel("SIGNED ROM3 RELEASES FROM GITHUB", github);
-        githubCaption->setProperty("caption", true);
-        githubLayout->addWidget(githubCaption);
-        auto *githubButtons = new QHBoxLayout();
-        githubButtons->setSpacing(10);
-        githubButtons->addWidget(githubCheckButton);
-        githubButtons->addWidget(githubApplyButton);
-        githubButtons->addStretch();
-        githubLayout->addLayout(githubButtons);
-        layout->addWidget(github);
-
-        auto *automation = new QFrame(central);
-        automation->setProperty("card", true);
-        auto *automatic = new QHBoxLayout(automation);
-        automatic->setContentsMargins(16, 10, 16, 10);
-        automatic->setSpacing(10);
-        autoCheck = new QCheckBox(
-            "Install new signed ROM3 releases automatically", central);
-        saveAutoButton = new QPushButton("Save automation", central);
-        saveAutoButton->setProperty("secondary", true);
-        automatic->addWidget(autoCheck);
-        automatic->addStretch();
-        automatic->addWidget(saveAutoButton);
-        layout->addWidget(automation);
-
-        progress = new QProgressBar(central);
+        progress = new QProgressBar(content);
         progress->setRange(0, 1);
-        progress->setValue(0);
+        progress->setValue(1);
         progress->setTextVisible(false);
         layout->addWidget(progress);
 
-        auto *outputCard = new QFrame(central);
-        outputCard->setProperty("card", true);
-        auto *outputLayout = new QVBoxLayout(outputCard);
-        outputLayout->setContentsMargins(12, 10, 12, 12);
-        outputLayout->setSpacing(8);
-        auto *outputCaption = new QLabel("ACTIVITY LOG", outputCard);
-        outputCaption->setProperty("caption", true);
-        outputLayout->addWidget(outputCaption);
-        output = new QPlainTextEdit(outputCard);
+        pages = new QStackedWidget(content);
+        pages->addWidget(buildUpdatesPage(pages));
+        pages->addWidget(buildSystemPage(pages));
+        pages->addWidget(buildActivityPage(pages));
+        layout->addWidget(pages, 1);
+
+        connect(navigation, &QListWidget::currentRowChanged, this,
+                [this](int row) {
+            pages->setCurrentIndex(row);
+            updatePageHeading(row);
+        });
+        updatePageHeading(0);
+        return content;
+    }
+
+    QWidget *buildUpdatesPage(QWidget *parent) {
+        auto *scroll = new QScrollArea(parent);
+        scroll->setWidgetResizable(true);
+        scroll->setFrameShape(QFrame::NoFrame);
+
+        auto *page = new QWidget(scroll);
+        auto *layout = new QVBoxLayout(page);
+        layout->setContentsMargins(0, 2, 0, 16);
+        layout->setSpacing(12);
+
+        auto *overview = newCard(page);
+        auto *overviewLayout = new QVBoxLayout(overview);
+        overviewLayout->setContentsMargins(20, 17, 20, 17);
+        overviewLayout->setSpacing(7);
+        auto *overviewTop = new QHBoxLayout();
+        auto *overviewTitle = newLabel("System protected", overview, "cardTitle");
+        auto *overviewBadge = newLabel("READY", overview, "badge");
+        overviewTop->addWidget(overviewTitle);
+        overviewTop->addStretch();
+        overviewTop->addWidget(overviewBadge);
+        overviewLayout->addLayout(overviewTop);
+        healthSummary = newLabel("Checking the installed ROM3 stack...", overview,
+                                "muted");
+        overviewLayout->addWidget(healthSummary);
+        layout->addWidget(overview);
+
+        auto *safe = newCard(page);
+        auto *safeLayout = new QVBoxLayout(safe);
+        safeLayout->setContentsMargins(20, 17, 20, 17);
+        safeLayout->setSpacing(7);
+        safeLayout->addWidget(newLabel("Safe Arch updates", safe, "cardTitle"));
+        safeLayout->addWidget(newLabel(
+            "Update ordinary Arch packages while the tested kernel, "
+            "bootloader, graphics, audio and compositor stack remain pinned.",
+            safe, "muted"));
+        auto *safeActions = new QHBoxLayout();
+        safeActions->setSpacing(8);
+        checkButton = new QPushButton("Check safe updates", safe);
+        checkButton->setProperty("secondary", true);
+        applyButton = new QPushButton("Apply safe updates", safe);
+        applyButton->setProperty("primary", true);
+        safeActions->addStretch();
+        safeActions->addWidget(checkButton);
+        safeActions->addWidget(applyButton);
+        safeLayout->addLayout(safeActions);
+        layout->addWidget(safe);
+
+        auto *signedCard = newCard(page);
+        auto *signedLayout = new QVBoxLayout(signedCard);
+        signedLayout->setContentsMargins(20, 17, 20, 17);
+        signedLayout->setSpacing(7);
+        signedLayout->addWidget(
+            newLabel("Signed ROM3 releases", signedCard, "cardTitle"));
+        signedLayout->addWidget(newLabel(
+            "Discover, authenticate and install tested protected package "
+            "updates published on GitHub.",
+            signedCard, "muted"));
+        auto *signedActions = new QHBoxLayout();
+        signedActions->setSpacing(8);
+        githubCheckButton = new QPushButton("Check ROM3 release", signedCard);
+        githubCheckButton->setProperty("secondary", true);
+        githubApplyButton = new QPushButton("Install ROM3 release", signedCard);
+        githubApplyButton->setProperty("primary", true);
+        signedActions->addStretch();
+        signedActions->addWidget(githubCheckButton);
+        signedActions->addWidget(githubApplyButton);
+        signedLayout->addLayout(signedActions);
+        layout->addWidget(signedCard);
+
+        auto *automatic = newCard(page);
+        auto *automaticLayout = new QHBoxLayout(automatic);
+        automaticLayout->setContentsMargins(20, 15, 20, 15);
+        automaticLayout->setSpacing(12);
+        auto *autoText = new QVBoxLayout();
+        autoText->setSpacing(3);
+        autoText->addWidget(newLabel("Automatic updates", automatic, "cardTitle"));
+        autoText->addWidget(newLabel(
+            "Check for signed ROM3 releases daily. Reboots are never automatic.",
+            automatic, "muted"));
+        autoCheck = new QCheckBox(automatic);
+        saveAutoButton = new QPushButton("Save setting", automatic);
+        saveAutoButton->setProperty("secondary", true);
+        automaticLayout->addLayout(autoText, 1);
+        automaticLayout->addWidget(autoCheck);
+        automaticLayout->addWidget(saveAutoButton);
+        layout->addWidget(automatic);
+        layout->addStretch();
+
+        scroll->setWidget(page);
+        return scroll;
+    }
+
+    QWidget *buildSystemPage(QWidget *parent) {
+        auto *page = new QWidget(parent);
+        auto *layout = new QVBoxLayout(page);
+        layout->setContentsMargins(0, 2, 0, 16);
+        layout->setSpacing(12);
+
+        auto *identity = newCard(page);
+        auto *identityLayout = new QVBoxLayout(identity);
+        identityLayout->setContentsMargins(20, 17, 20, 17);
+        identityLayout->setSpacing(6);
+        identityLayout->addWidget(
+            newLabel("Installed system", identity, "cardTitle"));
+        identityLayout->addWidget(infoRow("Linux kernel", &kernelLabel, identity));
+        identityLayout->addWidget(infoRow("ROM3 bootloader", &bootLabel, identity));
+        identityLayout->addWidget(
+            infoRow("Apple system firmware", &systemFirmwareLabel, identity));
+        identityLayout->addWidget(
+            infoRow("Apple component firmware", &componentFirmwareLabel, identity));
+        identityLayout->addWidget(
+            infoRow("Protected package set", &packageLabel, identity));
+        layout->addWidget(identity);
+
+        auto *actions = newCard(page);
+        auto *actionsLayout = new QVBoxLayout(actions);
+        actionsLayout->setContentsMargins(20, 17, 20, 17);
+        actionsLayout->setSpacing(8);
+        actionsLayout->addWidget(
+            newLabel("Diagnostics", actions, "cardTitle"));
+        actionsLayout->addWidget(newLabel(
+            "Verify the kernel, GPU render nodes, device tree handoff, "
+            "audio stack and speaker protection service.",
+            actions, "muted"));
+        auto *actionRow = new QHBoxLayout();
+        verifyButton = new QPushButton("Verify live system", actions);
+        verifyButton->setProperty("primary", true);
+        actionRow->addStretch();
+        actionRow->addWidget(verifyButton);
+        actionsLayout->addLayout(actionRow);
+        layout->addWidget(actions);
+        layout->addStretch();
+        return page;
+    }
+
+    QWidget *buildActivityPage(QWidget *parent) {
+        auto *page = new QWidget(parent);
+        auto *layout = new QVBoxLayout(page);
+        layout->setContentsMargins(0, 2, 0, 12);
+        layout->setSpacing(10);
+
+        auto *card = newCard(page);
+        auto *cardLayout = new QVBoxLayout(card);
+        cardLayout->setContentsMargins(16, 14, 16, 16);
+        cardLayout->setSpacing(8);
+        cardLayout->addWidget(
+            newLabel("Operation output", card, "cardTitle"));
+        output = new QPlainTextEdit(card);
         output->setReadOnly(true);
         output->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
         output->setPlaceholderText(
-            "Update and verification output appears here.");
-        outputLayout->addWidget(output, 1);
-        layout->addWidget(outputCard, 1);
+            "Start an update or verification to see detailed output.");
+        cardLayout->addWidget(output, 1);
+        layout->addWidget(card, 1);
+        return page;
+    }
 
-        setStyleSheet(R"(
-            QWidget#root {
-                background: qlineargradient(
-                    x1: 0, y1: 0, x2: 1, y2: 1,
-                    stop: 0 #07111e, stop: 0.55 #0b1c2d, stop: 1 #122d43);
-                color: #edf6ff;
-                font-family: "Noto Sans", "Noto Sans Display", sans-serif;
-            }
-            QLabel { color: #edf6ff; }
-            QLabel[muted="true"] { color: #8da8c2; font-size: 12px; }
-            QLabel[caption="true"] {
-                color: #7fa5c5;
-                font-size: 10px;
-                font-weight: 700;
-                letter-spacing: 1px;
-            }
-            QLabel[hint="true"] { color: #9bb7cf; }
-            QLabel[badge="true"] {
-                color: #6ff3e4;
-                background: rgba(25, 174, 166, 0.15);
-                border: 1px solid rgba(74, 226, 210, 0.45);
-                border-radius: 11px;
-                padding: 6px 12px;
-                font-size: 10px;
-                font-weight: 700;
-            }
-            QFrame[card="true"] {
-                background: rgba(13, 25, 39, 0.88);
-                border: 1px solid rgba(116, 160, 194, 0.22);
-                border-radius: 14px;
-            }
-            QPushButton {
-                background: #1a334a;
-                color: #eaf6ff;
-                border: 1px solid rgba(133, 183, 219, 0.30);
-                border-radius: 9px;
-                padding: 9px 15px;
-                font-weight: 600;
-            }
-            QPushButton:hover {
-                background: #234562;
-                border-color: rgba(93, 225, 219, 0.70);
-            }
-            QPushButton:pressed { background: #102638; }
-            QPushButton:disabled {
-                color: #647c91;
-                background: #142434;
-            }
-            QPushButton[primary="true"] {
-                color: #04191e;
-                background: #36e5d0;
-                border-color: #7ff8eb;
-            }
-            QPushButton[primary="true"]:hover { background: #66f1e1; }
-            QPushButton[secondary="true"] {
-                background: rgba(28, 55, 77, 0.82);
-            }
-            QCheckBox { color: #d9e9f7; spacing: 9px; }
-            QCheckBox::indicator {
-                width: 17px;
-                height: 17px;
-                border-radius: 5px;
-                border: 1px solid #6485a0;
-                background: #102235;
-            }
-            QCheckBox::indicator:checked {
-                background: #36e5d0;
-                border-color: #8affef;
-            }
-            QPlainTextEdit {
-                color: #cfe7f5;
-                background: rgba(5, 14, 24, 0.92);
-                border: 1px solid rgba(103, 151, 183, 0.20);
-                border-radius: 9px;
-                padding: 9px;
-                selection-background-color: #187f88;
-            }
-            QProgressBar {
-                min-height: 5px;
-                max-height: 5px;
-                background: #10263a;
-                border: none;
-                border-radius: 2px;
-            }
-            QProgressBar::chunk {
-                background: #36e5d0;
-                border-radius: 2px;
-            }
-            QStatusBar {
-                color: #95b2c9;
-                background: #081521;
-                border-top: 1px solid rgba(106, 151, 184, 0.20);
-            }
-        )");
-
-        setCentralWidget(central);
-        statusBar()->showMessage("Ready");
-
+    void connectSignals() {
+        connect(themeButton, &QPushButton::clicked, this, [this] {
+            darkMode = !darkMode;
+            QSettings().setValue("interface/darkMode", darkMode);
+            applyTheme();
+        });
         connect(checkButton, &QPushButton::clicked, this, [this] {
             runRootUpdate("Safe update check", "--check-safe");
         });
@@ -279,7 +393,7 @@ public:
             const auto answer = QMessageBox::question(
                 this, "Install signed ROM3 release",
                 "Download, authenticate and install the newest signed ROM3 "
-                "override from GitHub?",
+                "release from GitHub?",
                 QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
             if (answer == QMessageBox::Yes)
                 runRootProgram("Install signed ROM3 release",
@@ -306,13 +420,50 @@ public:
             setBusy(false);
             const bool success =
                 status == QProcess::NormalExit && exitCode == 0;
-            output->appendPlainText(
-                QString("\n[%1] %2 (exit %3)")
-                    .arg(QDateTime::currentDateTime().toString("HH:mm:ss"),
-                         success ? "Finished" : "Failed")
-                    .arg(exitCode));
-            statusBar()->showMessage(success ? "Operation completed"
-                                             : "Operation failed");
+            if (success) {
+                output->appendPlainText(
+                    QString("\n[%1] Finished (exit 0)")
+                        .arg(QDateTime::currentDateTime().toString(
+                            "HH:mm:ss")));
+                statusBar()->showMessage("Operation completed");
+            } else {
+                const QString log = output->toPlainText();
+                QString reason;
+                if (exitCode == 75 ||
+                    log.contains("insufficient free space",
+                                 Qt::CaseInsensitive)) {
+                    reason =
+                        "Insufficient free space. The rollback snapshot "
+                        "could not be created safely, so no packages were changed.";
+                } else if (exitCode == 74 ||
+                           log.contains("swapfile",
+                                        Qt::CaseInsensitive)) {
+                    reason =
+                        "The configured swapfile is missing, empty, truncated "
+                        "or inactive. The update was cancelled before changing packages.";
+                } else if (log.contains("rollback snapshot",
+                                        Qt::CaseInsensitive) ||
+                           log.contains("Btrfs",
+                                        Qt::CaseInsensitive)) {
+                    reason =
+                        "The rollback snapshot could not be created. "
+                        "No packages were changed.";
+                } else if (exitCode == 126 || exitCode == 127) {
+                    reason =
+                        "Authentication was cancelled or permission was denied.";
+                } else {
+                    reason =
+                        "The operation failed. Review the detailed activity log.";
+                }
+                output->appendPlainText(
+                    QString("\n[%1] Failed: %2 (exit %3)")
+                        .arg(QDateTime::currentDateTime().toString(
+                                 "HH:mm:ss"),
+                             reason)
+                        .arg(exitCode));
+                statusBar()->showMessage(reason);
+                QMessageBox::warning(this, "Operation failed", reason);
+            }
             refreshStatus();
         });
         connect(&process, &QProcess::errorOccurred, this,
@@ -320,30 +471,25 @@ public:
             if (error == QProcess::FailedToStart) {
                 appendProcessOutput();
                 setBusy(false);
-                output->appendPlainText(
-                    "\nCould not start the requested operation.");
+                QMessageBox::critical(
+                    this, "Could not start operation",
+                    "The requested program could not be started.");
             }
         });
-
-        refreshStatus();
     }
 
-private:
-    QLabel *kernelLabel{};
-    QLabel *bootLabel{};
-    QLabel *systemFirmwareLabel{};
-    QLabel *componentFirmwareLabel{};
-    QLabel *packageLabel{};
-    QPushButton *checkButton{};
-    QPushButton *applyButton{};
-    QPushButton *githubCheckButton{};
-    QPushButton *githubApplyButton{};
-    QPushButton *verifyButton{};
-    QCheckBox *autoCheck{};
-    QPushButton *saveAutoButton{};
-    QProgressBar *progress{};
-    QPlainTextEdit *output{};
-    QProcess process;
+    void updatePageHeading(int row) {
+        static const char *titles[] = {
+            "Software Update", "System Information", "Activity"
+        };
+        static const char *subtitles[] = {
+            "Safe updates and signed ROM3 releases",
+            "Hardware stack, firmware and diagnostics",
+            "Detailed command output and recovery information"
+        };
+        pageTitle->setText(titles[row]);
+        pageSubtitle->setText(subtitles[row]);
+    }
 
     static QString readProperty(const QString &path) {
         QFile file(path);
@@ -362,16 +508,19 @@ private:
         command.start(program, arguments);
         if (!command.waitForStarted(1500) ||
             !command.waitForFinished(4000))
-            return "unavailable";
+            return {};
         if (command.exitStatus() != QProcess::NormalExit ||
             command.exitCode() != 0)
-            return "unavailable";
+            return {};
         return QString::fromUtf8(command.readAll()).trimmed();
     }
 
     void refreshStatus() {
-        kernelLabel->setText(
-            readProperty("/proc/sys/kernel/osrelease"));
+        const QString kernel = readProperty("/proc/sys/kernel/osrelease");
+        kernelLabel->setText(kernel);
+        kernelLabel->setToolTip(kernel);
+        sidebarKernel->setText(
+            QString("Kernel %1\nApple J613 · ROM3").arg(kernel));
         bootLabel->setText(readProperty(
             "/sys/firmware/devicetree/base/chosen/"
             "asahi,m1n1-stage2-version"));
@@ -382,11 +531,24 @@ private:
             "/sys/firmware/devicetree/base/chosen/"
             "asahi,os-fw-version"));
 
-        const QString packages = commandOutput(
+        QString packages = commandOutput(
             "/usr/bin/pacman",
             {"-Q", "linux-rom3", "rom3", "mesa-rom3",
              "pipewire", "kwin", "rom3-j613-meta"});
+        if (packages.isEmpty()) {
+            packages = commandOutput(
+                "/usr/bin/pacman",
+                {"-Q", "linux-aurora", "aura", "mesa-aurora",
+                 "pipewire", "kwin", "rom3-j613-meta"});
+        }
         packageLabel->setText(packages.isEmpty() ? "unavailable" : packages);
+        packageLabel->setToolTip(packages);
+        healthSummary->setText(
+            packages.isEmpty()
+                ? "The protected package information could not be read."
+                : QString("Kernel %1 · bootloader, graphics, audio and "
+                          "compositor packages are protected by ROM3.")
+                      .arg(kernel));
 
         QFile automatic("/etc/rom3-j613/auto-update.conf");
         bool enabled = false;
@@ -417,6 +579,7 @@ private:
             return;
         }
 
+        navigation->setCurrentRow(2);
         output->clear();
         output->appendPlainText(
             QString("[%1] %2\n$ %3 %4\n")
@@ -434,8 +597,7 @@ private:
     }
 
     void appendProcessOutput() {
-        const QString text =
-            QString::fromLocal8Bit(process.readAll());
+        const QString text = QString::fromLocal8Bit(process.readAll());
         if (!text.isEmpty()) {
             output->moveCursor(QTextCursor::End);
             output->insertPlainText(text);
@@ -448,10 +610,261 @@ private:
         githubCheckButton->setEnabled(!busy);
         githubApplyButton->setEnabled(!busy);
         verifyButton->setEnabled(!busy);
+        refreshButton->setEnabled(!busy);
         autoCheck->setEnabled(!busy);
         saveAutoButton->setEnabled(!busy);
         progress->setRange(0, busy ? 0 : 1);
         progress->setValue(busy ? 0 : 1);
+    }
+
+    void applyTheme() {
+        themeButton->setText(darkMode ? "Light appearance" : "Dark appearance");
+        setStyleSheet(darkMode ? darkStyle() : lightStyle());
+    }
+
+    static QString commonStyle() {
+        return R"(
+            QFrame#shell { border: none; }
+            QLabel { background: transparent; }
+            QLabel[cardTitle="true"] { font-size: 15px; font-weight: 600; }
+            QLabel[badge="true"] {
+                font-size: 10px;
+                font-weight: 700;
+                padding: 5px 9px;
+                border-radius: 10px;
+            }
+            QPushButton {
+                min-height: 20px;
+                padding: 7px 13px;
+                border-radius: 8px;
+                font-weight: 600;
+            }
+            QPushButton:disabled { opacity: 0.45; }
+            QCheckBox { spacing: 8px; }
+            QCheckBox::indicator {
+                width: 18px;
+                height: 18px;
+                border-radius: 5px;
+            }
+            QPlainTextEdit {
+                border-radius: 9px;
+                padding: 10px;
+                selection-background-color: #0a84ff;
+            }
+            QProgressBar {
+                min-height: 4px;
+                max-height: 4px;
+                border: none;
+                border-radius: 2px;
+            }
+            QProgressBar::chunk { border-radius: 2px; }
+            QMessageBox { min-width: 420px; }
+            QStatusBar { border-top: 1px solid; }
+            QScrollArea { background: transparent; border: none; }
+            QScrollArea > QWidget > QWidget { background: transparent; }
+        )";
+    }
+
+    static QString lightStyle() {
+        return commonStyle() + R"(
+            QFrame#shell, QFrame#content, QStackedWidget {
+                background: #f5f5f7;
+                color: #1d1d1f;
+            }
+            QFrame#sidebar {
+                background: #e9e9ee;
+                border-right: 1px solid #d1d1d6;
+            }
+            QLabel { color: #1d1d1f; }
+            QLabel[muted="true"] { color: #6e6e73; font-size: 12px; }
+            QLabel[value="true"] { color: #3a3a3c; font-size: 12px; }
+            QLabel#brandTitle { font-size: 20px; font-weight: 700; }
+            QLabel#brandMark {
+                color: white;
+                background: #007aff;
+                border-radius: 12px;
+                font-weight: 800;
+                font-size: 16px;
+            }
+            QLabel#pageTitle { font-size: 24px; font-weight: 700; }
+            QLabel[badge="true"] {
+                color: #087a55;
+                background: #d9f5e9;
+                border: 1px solid #b8ead8;
+            }
+            QFrame[card="true"] {
+                background: white;
+                border: 1px solid #e2e2e7;
+                border-radius: 12px;
+            }
+            QFrame[sidebarCard="true"] {
+                background: rgba(255,255,255,0.72);
+                border: 1px solid #d7d7dc;
+                border-radius: 11px;
+            }
+            QListWidget#navigation {
+                background: transparent;
+                border: none;
+                outline: none;
+                font-size: 13px;
+                color: #3a3a3c;
+            }
+            QListWidget#navigation::item {
+                padding: 10px 12px;
+                margin: 2px 0;
+                border-radius: 8px;
+            }
+            QListWidget#navigation::item:hover:!selected {
+                background: rgba(0,0,0,0.05);
+            }
+            QListWidget#navigation::item:selected {
+                color: white;
+                background: #007aff;
+                font-weight: 600;
+            }
+            QPushButton {
+                color: #1d1d1f;
+                background: white;
+                border: 1px solid #d1d1d6;
+            }
+            QPushButton:hover { background: #f2f2f7; }
+            QPushButton[primary="true"] {
+                color: white;
+                background: #007aff;
+                border-color: #007aff;
+            }
+            QPushButton[primary="true"]:hover { background: #0066d6; }
+            QPushButton[secondary="true"] { background: white; }
+            QCheckBox { color: #3a3a3c; }
+            QCheckBox::indicator {
+                border: 1px solid #b8b8be;
+                background: white;
+            }
+            QCheckBox::indicator:checked {
+                background: #007aff;
+                border-color: #007aff;
+            }
+            QPlainTextEdit {
+                color: #2c2c2e;
+                background: #fafafa;
+                border: 1px solid #e2e2e7;
+            }
+            QProgressBar { background: #dedee3; }
+            QProgressBar::chunk { background: #007aff; }
+            QStatusBar {
+                color: #6e6e73;
+                background: #f5f5f7;
+                border-color: #dedee3;
+            }
+            QMessageBox, QMessageBox QLabel {
+                background: #f5f5f7;
+                color: #1d1d1f;
+            }
+            QMessageBox QPushButton {
+                min-width: 82px;
+            }
+        )";
+    }
+
+    static QString darkStyle() {
+        return commonStyle() + R"(
+            QFrame#shell, QFrame#content, QStackedWidget {
+                background: #1c1c1e;
+                color: #f5f5f7;
+            }
+            QFrame#sidebar {
+                background: #242426;
+                border-right: 1px solid #343438;
+            }
+            QLabel { color: #f5f5f7; }
+            QLabel[muted="true"] { color: #98989d; font-size: 12px; }
+            QLabel[value="true"] { color: #d1d1d6; font-size: 12px; }
+            QLabel#brandTitle { font-size: 20px; font-weight: 700; }
+            QLabel#brandMark {
+                color: white;
+                background: #0a84ff;
+                border-radius: 12px;
+                font-weight: 800;
+                font-size: 16px;
+            }
+            QLabel#pageTitle { font-size: 24px; font-weight: 700; }
+            QLabel[badge="true"] {
+                color: #7ff5c7;
+                background: rgba(30,180,120,0.16);
+                border: 1px solid rgba(70,225,160,0.35);
+            }
+            QFrame[card="true"] {
+                background: #2c2c2e;
+                border: 1px solid #3a3a3c;
+                border-radius: 12px;
+            }
+            QFrame[sidebarCard="true"] {
+                background: rgba(44,44,46,0.88);
+                border: 1px solid #3a3a3c;
+                border-radius: 11px;
+            }
+            QListWidget#navigation {
+                background: transparent;
+                border: none;
+                outline: none;
+                font-size: 13px;
+                color: #d1d1d6;
+            }
+            QListWidget#navigation::item {
+                padding: 10px 12px;
+                margin: 2px 0;
+                border-radius: 8px;
+            }
+            QListWidget#navigation::item:hover:!selected {
+                background: rgba(255,255,255,0.06);
+            }
+            QListWidget#navigation::item:selected {
+                color: white;
+                background: #0a84ff;
+                font-weight: 600;
+            }
+            QPushButton {
+                color: #f5f5f7;
+                background: #3a3a3c;
+                border: 1px solid #48484a;
+            }
+            QPushButton:hover { background: #48484a; }
+            QPushButton[primary="true"] {
+                color: white;
+                background: #0a84ff;
+                border-color: #0a84ff;
+            }
+            QPushButton[primary="true"]:hover { background: #0070e0; }
+            QPushButton[secondary="true"] { background: #333335; }
+            QCheckBox { color: #d1d1d6; }
+            QCheckBox::indicator {
+                border: 1px solid #636366;
+                background: #333335;
+            }
+            QCheckBox::indicator:checked {
+                background: #0a84ff;
+                border-color: #0a84ff;
+            }
+            QPlainTextEdit {
+                color: #e5e5ea;
+                background: #202022;
+                border: 1px solid #3a3a3c;
+            }
+            QProgressBar { background: #3a3a3c; }
+            QProgressBar::chunk { background: #0a84ff; }
+            QStatusBar {
+                color: #98989d;
+                background: #1c1c1e;
+                border-color: #343438;
+            }
+            QMessageBox, QMessageBox QLabel {
+                background: #2c2c2e;
+                color: #f5f5f7;
+            }
+            QMessageBox QPushButton {
+                min-width: 82px;
+            }
+        )";
     }
 };
 

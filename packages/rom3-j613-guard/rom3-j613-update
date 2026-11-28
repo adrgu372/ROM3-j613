@@ -8,6 +8,13 @@ mode=${1:---check}
 apply_mode=false
 safe_mode=false
 approved_mode=false
+preflight_only=false
+exit_unsafe_swap=74
+exit_insufficient_space=75
+swapfile=${ROM3_SWAPFILE:-/swap/swapfile}
+proc_swaps=${ROM3_PROC_SWAPS:-/proc/swaps}
+swapfile_kib=
+swapfile_active=false
 
 if (( EUID != 0 )); then
     echo "rom3-j613-update must run as root" >&2
@@ -18,18 +25,83 @@ case $mode in
     --check|--apply) ;;
     --check-safe|--apply-safe) safe_mode=true ;;
     --check-approved|--apply-approved) approved_mode=true ;;
+    --preflight-apply) preflight_only=true ;;
     *)
-        echo "usage: rom3-j613-update [--check|--apply|--check-safe|--apply-safe|--check-approved|--apply-approved]" >&2
+        echo "usage: rom3-j613-update [--check|--apply|--check-safe|--apply-safe|--check-approved|--apply-approved|--preflight-apply]" >&2
         exit 2
         ;;
 esac
-[[ $mode != --apply && $mode != --apply-safe && $mode != --apply-approved ]] ||
+[[ $mode != --apply && $mode != --apply-safe && $mode != --apply-approved && $mode != --preflight-apply ]] ||
     apply_mode=true
 
 [[ -r $quarantine ]] || {
     echo "missing quarantine list: $quarantine" >&2
     exit 1
 }
+
+human_bytes() {
+    numfmt --to=iec-i --suffix=B "$1"
+}
+
+swap_is_active() {
+    awk -v file="$swapfile" \
+        '$1 == file && $2 == "file" { found = 1 } END { exit !found }' \
+        "$proc_swaps"
+}
+
+swapfile_problem() {
+    echo "ROM3 update cancelled: unsafe or inactive swapfile." >&2
+    echo "Swapfile: $swapfile" >&2
+    echo "$1" >&2
+    echo "No packages were changed." >&2
+    exit "$exit_unsafe_swap"
+}
+
+preflight_update_storage() {
+    local free_bytes required_bytes reserve_bytes size
+
+    if [[ ! -e $swapfile ]]; then
+        return 0
+    fi
+    [[ -f $swapfile && ! -L $swapfile ]] ||
+        swapfile_problem "The configured swapfile is not a regular file."
+
+    size=$(stat -c %s "$swapfile")
+    (( size > 0 )) ||
+        swapfile_problem "The configured swapfile is empty or truncated."
+    swap_is_active ||
+        swapfile_problem "The configured swapfile exists but is not active."
+
+    swapfile_kib=$(((size + 1023) / 1024))
+    swapfile_active=true
+    reserve_bytes=$((1024 * 1024 * 1024))
+    required_bytes=$((size + reserve_bytes))
+    free_bytes=$(df -B1 --output=avail / | awk 'NR == 2 { print $1 }')
+    [[ $free_bytes =~ ^[0-9]+$ ]] || {
+        echo "ROM3 update cancelled: could not determine free space on /." >&2
+        echo "No packages were changed." >&2
+        exit "$exit_insufficient_space"
+    }
+
+    if (( free_bytes < required_bytes )); then
+        echo "ROM3 update cancelled: insufficient free space for a safe update." >&2
+        echo "Free on /:          $(human_bytes "$free_bytes")" >&2
+        echo "Active swapfile:    $(human_bytes "$size")" >&2
+        echo "Safety reserve:     $(human_bytes "$reserve_bytes")" >&2
+        echo "Required free:      $(human_bytes "$required_bytes")" >&2
+        echo "Free at least $(human_bytes $((required_bytes - free_bytes))) more and retry." >&2
+        echo "The snapshot was not created, swap remains active and no packages were changed." >&2
+        exit "$exit_insufficient_space"
+    fi
+}
+
+if $apply_mode; then
+    preflight_update_storage
+fi
+if $preflight_only; then
+    echo "ROM3 preflight passed: enough free space for the rollback snapshot and swapfile."
+    exit 0
+fi
 
 pacman -Sy --noconfirm
 
@@ -41,19 +113,22 @@ approved_pending=$(mktemp)
 quarantine_sorted=$(mktemp)
 ordinary_pending=$(mktemp)
 pacman_config=
-swapfile=${ROM3_SWAPFILE:-/swap/swapfile}
-swapfile_kib=
-swapfile_active=false
 
 restore_swapfile() {
     $swapfile_active || return 0
-    if [[ ! -e $swapfile ]]; then
-        [[ -n $swapfile_kib ]] || {
-            echo "cannot restore swapfile: $swapfile is missing" >&2
-            return 1
-        }
-        btrfs filesystem mkswapfile --size "${swapfile_kib}K" "$swapfile"
-        chmod 600 "$swapfile"
+    local current_size temporary
+    [[ -n $swapfile_kib ]] || {
+        echo "cannot restore swapfile: expected size is unknown" >&2
+        return 1
+    }
+    current_size=0
+    [[ ! -f $swapfile ]] || current_size=$(stat -c %s "$swapfile")
+    if (( current_size != swapfile_kib * 1024 )); then
+        temporary="${swapfile}.rom3-restore-$$"
+        rm -f -- "$temporary"
+        btrfs filesystem mkswapfile --size "${swapfile_kib}K" "$temporary"
+        chmod 600 "$temporary"
+        mv -f -- "$temporary" "$swapfile"
     fi
     systemctl reset-failed swap-swapfile.swap 2>/dev/null || true
     systemctl start swap-swapfile.swap || swapon "$swapfile"
@@ -180,14 +255,10 @@ install -d -m755 "$snapshot_root"
 
 # Btrfs refuses to snapshot a subvolume with an active swapfile. Snapshot
 # first, then replace the old swapfile with an independent one and re-enable
-# it. Keeping swap disabled until the snapshot is removed would be unsafe on
-# a 16 GiB machine, and the old file remains recoverable from the snapshot.
-if [[ -f $swapfile ]] &&
-    awk -v file="$swapfile" '$1 == file && $2 == "file" { found = 1 } END { exit !found }' \
-        /proc/swaps; then
-    swapfile_size=$(stat -c %s "$swapfile")
-    swapfile_kib=$(((swapfile_size + 1023) / 1024))
-    swapfile_active=true
+# it. The preflight above guarantees enough space, and creation uses a
+# temporary file so a failed allocation cannot destroy the active swapfile.
+snapshot_path=$snapshot_root/$stamp
+if $swapfile_active; then
     echo "Temporarily disabling $swapfile for the Btrfs snapshot..."
     if systemctl cat swap-swapfile.swap >/dev/null 2>&1; then
         systemctl stop swap-swapfile.swap
@@ -196,12 +267,28 @@ if [[ -f $swapfile ]] &&
     fi
 fi
 
-btrfs subvolume snapshot -r / "$snapshot_root/$stamp"
+if ! btrfs subvolume snapshot -r / "$snapshot_path"; then
+    restore_swapfile || true
+    echo "ROM3 update cancelled: could not create the rollback snapshot." >&2
+    echo "This usually means the filesystem ran out of space while snapshotting." >&2
+    echo "Snapshot path: $snapshot_path" >&2
+    echo "No packages were changed." >&2
+    exit "$exit_insufficient_space"
+fi
 
 if $swapfile_active; then
-    rm -f -- "$swapfile"
-    btrfs filesystem mkswapfile --size "${swapfile_kib}K" "$swapfile"
-    chmod 600 "$swapfile"
+    new_swapfile="${swapfile}.rom3-new-$stamp"
+    rm -f -- "$new_swapfile"
+    if ! btrfs filesystem mkswapfile --size "${swapfile_kib}K" "$new_swapfile"; then
+        rm -f -- "$new_swapfile"
+        restore_swapfile || true
+        btrfs subvolume delete "$snapshot_path" >/dev/null 2>&1 || true
+        echo "ROM3 update cancelled: the snapshot was created, but a new swapfile could not be allocated." >&2
+        echo "The previous swapfile was kept and re-enabled; no packages were changed." >&2
+        exit "$exit_insufficient_space"
+    fi
+    chmod 600 "$new_swapfile"
+    mv -f -- "$new_swapfile" "$swapfile"
     systemctl reset-failed swap-swapfile.swap 2>/dev/null || true
     systemctl start swap-swapfile.swap || swapon "$swapfile"
     swapfile_active=false

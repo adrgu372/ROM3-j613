@@ -1,6 +1,6 @@
 pkgname=rom3-j613-guard
 pkgver=1
-pkgrel=12
+pkgrel=13
 pkgdesc='Fail-closed update guard and live checks for ROM3-j613'
 arch=('any')
 url='https://github.com/adrgu372/ROM3-j613'
@@ -16,7 +16,7 @@ source=(
 )
 sha256sums=(
   'e25693a48cf4012a9f9cc96848e78db9526ed7fbf8a454d055ca59858a64f48c'
-  '352669cef073a3f5a6cab9199d800ec42848a00025279327b3de50f10cf2fd52'
+  'd9826980674e3867c7064aa7d2e8ad91e004851f244daba682aedc090e669cb0'
   '8f3b3c5f51a71ff4ef876f288a62bc7046e41b9bdbf030e39716313569251a61'
   '078188af6f3bcae1a9b5f7e3f2057a13a98df9138dfade7053a11255c9d7d9a6'
   'e71a9e97f32f6c3c151708199525a6beeb597cfe96d3b4409062b7684e6a158b'
