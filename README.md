@@ -183,11 +183,18 @@ after the transaction. A kernel update requires a reboot followed by:
 sudo /usr/share/rom3-j613/verify-live-system.sh
 ```
 
-Systems still on `stable-20261122.9` or `stable-20261124.2` should install
-`rom3-j613-guard` and `rom3-j613-release` first, then authenticate
-[`override-20261127.1`](https://github.com/adrgu372/ROM3-j613/releases/tag/override-20261127.1)
-with `rom3-j613-override configure`. The release notes contain the exact signed
-commands for the bootloader b17 and kernel 45 transition.
+Systems on an older snapshot can install the
+[`rom3-updater-1.3`](https://github.com/adrgu372/ROM3-j613/releases/tag/rom3-updater-1.3)
+bundle without rebuilding the image. Download `install.sh` from that release
+and run:
+
+```bash
+chmod +x install.sh
+sudo bash install.sh
+```
+
+The installer verifies the signed checksums and installs the current Control
+Center, guard, meta, release and keyring packages in one transaction.
 
 Running `pacman -Syu` directly is not the supported update path for the
 protected ROM3 stack. See [docs/update-model.md](docs/update-model.md).
@@ -197,10 +204,10 @@ daily by a GitHub Actions workflow. It updates one issue with a
 `BUILD CANDIDATE`, `REVIEW` or `WAIT` recommendation without compiling
 anything automatically. See [docs/upstream-watch.md](docs/upstream-watch.md).
 
-The installed system can instead use the Qt/Plasma
+The installed system can use the Qt/Plasma
 [ROM3 Control Center](docs/control-center.md) for status, safe updates,
-diagnostics and automatic installation of the newest signed ROM3 override from
-GitHub.
+diagnostics and signed-release management. Obsolete signed overrides that still
+use Aurora package names are rejected.
 
 Replacement kernels or other sensitive packages can be delivered through a
 signed override feed hosted in any GitHub repository. See
