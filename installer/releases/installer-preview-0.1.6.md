@@ -26,6 +26,25 @@ endpoints were verified before the installer build. The installer publishes
 only after the macOS CI build, embedded-profile check, deep code-signature
 verification and unsigned-package check pass.
 
+Built by
+[workflow run 46149131391](https://github.com/adrgu372/ROM3-j613/actions/runs/46149131391)
+on the macOS 26 arm64 runner with Xcode 26.2.
+
+Payload summary:
+
+```text
+native payload SHA-256   d6c2f56feff16cf1e50f23b26c26fc05665af7a12920c3a16277700cc1332aa1
+catalog SHA-256          ff9ce768699ae458b9bd9a4e55a910995c4240a78342705a2c28dbd069c1db14
+installer app bundle     0.1.6
+```
+
+Installer artifacts:
+
+```text
+2b39902ce78981143536adec9e1843ab6e97068a6c6ec5dafdb34f92293c14a3  ROM3-j613-Installer-0.1.6.pkg
+3222255deea41cd0ca15605c6952cb626e645aeb901c3f0f2372b24eb308ae61  ROM3-j613-Installer-0.1.6.app.zip
+```
+
 ## Not yet production-qualified
 
 - Apple Developer ID signing and notarization
