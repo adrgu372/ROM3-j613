@@ -103,7 +103,7 @@ update guard and initial local test packages now exist.
 
 The signed package feed is public:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/stable-20261127.5
+https://github.com/adrgu372/ROM3-j613/releases/tag/stable-20261128.1
 
 The snapshot contains the complete direct dependency closure of the
 meta-package. Kernel 46 retains the SIO protocol-10 tables required by the b17

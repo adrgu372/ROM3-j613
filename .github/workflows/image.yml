@@ -54,7 +54,7 @@ jobs:
 
       - name: Build KDE image
         env:
-          ROM3_FEED: https://github.com/adrgu372/ROM3-j613/releases/download/stable-20261127.5
+          ROM3_FEED: https://github.com/adrgu372/ROM3-j613/releases/download/stable-20261128.1
           ROM3_OVERRIDE_FEED: ${{ inputs.override_feed }}
           ROM3_OVERRIDE_MANIFEST_URL: ${{ inputs.override_manifest_url }}
           ROM3_OVERRIDE_FINGERPRINT: FA80FF234BCDF36211649321EB9845C8BAA89A4A
