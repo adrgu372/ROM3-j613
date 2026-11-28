@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-tag=${ROM3_IMAGE_TAG:-image-20261123.1}
+tag=${ROM3_IMAGE_TAG:-image-20261128.1}
 base=${ROM3_RELEASE_BASE:-https://github.com/adrgu372/ROM3-j613/releases/download/$tag}
 destination=${1:-rom3-j613-$tag}
 

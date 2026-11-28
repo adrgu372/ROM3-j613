@@ -4,7 +4,7 @@
   "profile": "arch-kde",
   "base_image_layout": "alarm-btrfs-v1",
   "package_snapshot": "stable-20261122.9",
-  "image_release": "https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261123.1",
+  "image_release": "https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261128.1",
   "installer_payload_release": "https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261123.2",
   "payload_manifest_asset": "payload.json",
   "source_commit": "5e01caa2a58797ce2319e0bd61baf674a89b5295",

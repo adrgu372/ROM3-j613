@@ -37,7 +37,7 @@ wait until a clean install from the standard `arch-kde` path is qualified.
 
 ## Published payload
 
-The verified `arch-kde` payload is published at `image-20261123.1`. It was
+The verified `arch-kde` payload is published at `image-20261128.1`. It was
 built from `stable-20261122.9`, includes automatic ROM3 keyring restoration and
 the signed override-feed guard, and has Sigstore provenance for the filesystem
 archive.

@@ -124,7 +124,7 @@ disabled until that handoff is qualified on J613.
 
 The source filesystem image is public:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261123.1
+https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261128.1
 
 It contains the filesystem archive split into GitHub-sized parts, Sigstore
 provenance, signed checksums and a reassembly script.

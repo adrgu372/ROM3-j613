@@ -28,7 +28,7 @@ the final signed catalog is generated.
 
 The verified source filesystem image is published at:
 
-https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261123.1
+https://github.com/adrgu372/ROM3-j613/releases/tag/image-20261128.1
 
 The release splits the filesystem archive below GitHub's per-asset size limit.
 Its signed `SHA256SUMS` and `reassemble-image-payload.sh` reconstruct the exact
