@@ -361,7 +361,7 @@ while IFS=$'\t' read -r package version; do
     [[ -n $package ]] || continue
     targets+=("$package=$version")
 done < "$approved"
-pacman -Syu --config "$pacman_config" "${targets[@]}"
+pacman -Syu --noconfirm --config "$pacman_config" "${targets[@]}"
 rom3-j613-check
 
 echo

@@ -17,9 +17,11 @@ run_preflight() {
         bash "$update" --preflight-apply >"$output" 2>"$error"
 }
 
-truncate -s 8G "$temporary/full-swap"
-printf 'Filename Type Size Used Priority\n%s file 8388608 0 -2\n' \
-    "$temporary/full-swap" > "$temporary/full-swaps"
+free_bytes=$(df -B1 --output=avail / | awk 'NR == 2 { print $1 }')
+oversized_bytes=$((free_bytes + (2 * 1024 * 1024 * 1024)))
+truncate -s "$oversized_bytes" "$temporary/full-swap"
+printf 'Filename Type Size Used Priority\n%s file %s 0 -2\n' \
+    "$temporary/full-swap" "$((oversized_bytes / 1024))" > "$temporary/full-swaps"
 set +e
 run_preflight "$temporary/full-swap" "$temporary/full-swaps" \
     "$temporary/full.out" "$temporary/full.err"
