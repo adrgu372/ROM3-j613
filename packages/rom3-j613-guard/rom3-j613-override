@@ -345,9 +345,20 @@ def status(_: argparse.Namespace) -> int:
 def disable(_: argparse.Namespace) -> int:
     require_root()
     manifest_path = STATE_DIR / "manifest.json"
+    names: set[str] = set()
     if manifest_path.is_file():
-        manifest = validate_manifest(json.loads(manifest_path.read_text()))
-        update_ignore_pkg(PACMAN_CONF, set(manifest["packages"]), remove=True)
+        try:
+            manifest = json.loads(manifest_path.read_text())
+            packages = manifest.get("packages", {})
+            if isinstance(packages, dict):
+                names = {
+                    name
+                    for name in packages
+                    if isinstance(name, str) and PACKAGE_RE.fullmatch(name)
+                }
+        except (OSError, ValueError):
+            names = set()
+        update_ignore_pkg(PACMAN_CONF, names, remove=True)
     update_include(PACMAN_CONF, add=False)
     REPO_CONF.unlink(missing_ok=True)
     MIRRORLIST.unlink(missing_ok=True)
