@@ -34,6 +34,12 @@ jobs:
           path: upstream
           persist-credentials: false
 
+      - name: Apply J613-only payload assembly policy
+        run: |
+          set -euo pipefail
+          git -C upstream apply \
+            "$GITHUB_WORKSPACE/rom3/patches/0003-assembler-j613-only.patch"
+
       - name: Install assembly tools
         run: |
           set -euo pipefail

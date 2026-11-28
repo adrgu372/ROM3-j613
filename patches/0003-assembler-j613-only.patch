@@ -1,0 +1,14 @@
+diff --git a/macOS/scripts/assemble-distribution-payload.py b/macOS/scripts/assemble-distribution-payload.py
+--- a/macOS/scripts/assemble-distribution-payload.py
++++ b/macOS/scripts/assemble-distribution-payload.py
+@@ -31,7 +31,9 @@ DISTRIBUTION_ICONS = {
+ 
+ 
+ # The M4 and later Macs the payload must carry a board Stage 2 for, besides the Neo.
+-OLED_STAGE2_REQUIRED = ('k114c', 'k114s', 'k116c', 'k116s')
++# ROM3 supports only apple,j613. Requiring unrelated OLED board payloads makes
++# an otherwise valid J613 image impossible to package when those trees are absent.
++OLED_STAGE2_REQUIRED = ()
+ T6050_STAGE2_REQUIRED = (
+     'j714c', 'j714s', 'j716c', 'j716s', 'j775c', 'j775d', 'j873s',
+ ) + OLED_STAGE2_REQUIRED
